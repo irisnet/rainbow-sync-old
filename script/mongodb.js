@@ -1,7 +1,7 @@
 // create table
 db.createCollection("sync_iris_asset_detail");
-db.sync_block.renameCollection("sync_iris_block");
-db.sync_task.renameCollection("sync_iris_task");
+db.createCollection("sync_iris_block");
+db.createCollection("sync_iris_task");
 db.createCollection("sync_iris_tx");
 db.createCollection("sync_cosmos_tx");
 db.createCollection("sync_cosmos_block");
