@@ -98,7 +98,14 @@ func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
 
 	res, err := client.Tx(txHash, false)
 	if err != nil {
-		return "unknown", resDeliverTx, err
+		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
+		var err1 error
+		client2 := helper.GetClient()
+		res, err1 = client2.Tx(txHash, false)
+		client2.Release()
+		if err1 != nil {
+			return "unknown", resDeliverTx, err1
+		}
 	}
 	result := res.TxResult
 	if result.Code != 0 {
