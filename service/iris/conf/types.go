@@ -80,9 +80,10 @@ func init() {
 	}
 	logger.Info("Env Value", logger.Int(EnvNameBlockNumPerWorkerHandle, BlockNumPerWorkerHandle))
 	network, found := os.LookupEnv(EnvNameIrisNetwork)
-	if !found {
+	if found {
+		IrisNetwork = network
+	} else {
 		panic("not found " + EnvNameIrisNetwork)
 	}
-	IrisNetwork = network
 	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
 }
