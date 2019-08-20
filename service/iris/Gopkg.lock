@@ -169,7 +169,7 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:67ffbde1dfe76c8e94467f77952623a7978ee2398ab78772059e1a72d906dfd1"
+  digest = "1:543318d3e12f214fdcc3edf5a4aaaa3d4cefa39325e470d4e84a15f25c4caaf1"
   name = "github.com/irisnet/irishub"
   packages = [
     "app",
@@ -177,7 +177,9 @@
     "app/v0",
     "app/v1",
     "app/v1/asset",
-    "app/v1/asset/tags",
+    "app/v1/asset/exported",
+    "app/v1/asset/internal/keeper",
+    "app/v1/asset/internal/types",
     "app/v1/auth",
     "app/v1/bank",
     "app/v1/distribution",
@@ -192,6 +194,9 @@
     "app/v1/mock/baseapp",
     "app/v1/params",
     "app/v1/params/subspace",
+    "app/v1/rand",
+    "app/v1/rand/internal/keeper",
+    "app/v1/rand/internal/types",
     "app/v1/service",
     "app/v1/service/tags",
     "app/v1/slashing",
@@ -236,13 +241,14 @@
     "server",
     "server/config",
     "store",
+    "tools/prometheus",
     "tools/protoidl",
     "types",
     "version",
   ]
   pruneopts = "UT"
-  revision = "a24e69105097d7eddd1cabada2f652bd19c3aa17"
-  version = "v0.15.0-rc1"
+  revision = "fdc78914a514ead0fc62d4773dcbae1a31b66fac"
+  version = "v0.15.0"
 
 [[projects]]
   digest = "1:a74b5a8e34ee5843cd6e65f698f3e75614f812ff170c2243425d75bc091e9af2"
