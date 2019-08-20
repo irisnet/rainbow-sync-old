@@ -83,7 +83,7 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 }
 
 func getPrecision(amount, denom string) string {
-	if denom == types.NativeTokenMinDenom {
+	if denom == types.NativeTokenMinDenom && len(amount) > 16 {
 		amount = string([]byte(amount)[:16]) + "00"
 	}
 	return amount
