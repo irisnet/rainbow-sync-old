@@ -290,6 +290,22 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Amount = []*imodel.Coin{}
 		docTx.Type = constant.Iris_TxTypeVote
 
+	case imodel.MsgRequestRand:
+		msg := msg.(imodel.MsgRequestRand)
+
+		docTx.From = msg.Consumer.String()
+		docTx.Initiator = msg.Consumer.String()
+		docTx.Amount = []*imodel.Coin{}
+		docTx.Type = constant.Iris_TxTypeRequestRand
+		txMsg := imodel.DocTxMsgRequestRand{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+
+		return docTx
+
 	case imodel.AssetIssueToken:
 		msg := msg.(imodel.AssetIssueToken)
 

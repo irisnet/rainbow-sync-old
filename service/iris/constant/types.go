@@ -18,6 +18,7 @@ const (
 	Iris_TxTypeSubmitTokenAdditionProposal = "SubmitTokenAdditionProposal"
 	Iris_TxTypeDeposit                     = "Deposit"
 	Iris_TxTypeVote                        = "Vote"
+	Iris_TxTypeRequestRand                 = "RequestRand"
 
 	TxTypeAssetIssueToken           = "IssueToken"
 	TxTypeAssetEditToken            = "EditToken"
