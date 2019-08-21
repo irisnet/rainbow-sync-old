@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 var (
@@ -82,6 +83,8 @@ func init() {
 	network, found := os.LookupEnv(EnvNameIrisNetwork)
 	if found {
 		IrisNetwork = network
+	} else {
+		panic(fmt.Sprintf("%v not found", EnvNameIrisNetwork))
 	}
 	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
 }

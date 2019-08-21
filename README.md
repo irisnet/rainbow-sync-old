@@ -27,6 +27,7 @@ docker run --name rainbow-sync \&
 -v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
 -e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
 -e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
+-e "IRIS_NETWORK=testnet"  \&
 -e "SER_BC_FULL_NODE=tcp://localhost:26657,..." rainbow-sync:dev01
 ```
 ### Cosmos 
