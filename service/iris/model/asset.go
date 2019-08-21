@@ -4,6 +4,7 @@ import (
 	"strings"
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
+	"strconv"
 )
 
 type (
@@ -97,10 +98,10 @@ func (m *DocTxMsgIssueToken) BuildMsg(txMsg interface{}) {
 	m.Source = msg.Source.String()
 	m.Gateway = msg.Gateway
 	m.Symbol = msg.Symbol
-	m.SymbolAtSource = msg.SymbolAtSource
+	m.SymbolAtSource = msg.CanonicalSymbol
 	m.Name = msg.Name
 	m.Decimal = msg.Decimal
-	m.SymbolMinAlias = msg.SymbolMinAlias
+	m.SymbolMinAlias = msg.MinUnitAlias
 	m.InitialSupply = msg.InitialSupply
 	m.MaxSupply = msg.MaxSupply
 	m.Mintable = msg.Mintable
@@ -119,12 +120,16 @@ func (m *DocTxMsgEditToken) Type() string {
 func (m *DocTxMsgEditToken) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(AssetEditToken)
 
+	mintable, err := strconv.ParseBool(string(msg.Mintable))
+	if err != nil {
+		logger.Error("ParseBool mintable have error", logger.String("error", err.Error()))
+	}
 	m.TokenId = msg.TokenId
 	m.Owner = msg.Owner.String()
-	m.SymbolAtSource = msg.SymbolAtSource
-	m.SymbolMinAlias = msg.SymbolMinAlias
+	m.SymbolAtSource = msg.CanonicalSymbol
+	m.SymbolMinAlias = msg.MinUnitAlias
 	m.MaxSupply = msg.MaxSupply
-	m.Mintable = msg.Mintable
+	m.Mintable = &mintable
 	m.Name = msg.Name
 	m.UdInfo = getAssetTokenUdInfo(msg.TokenId)
 }

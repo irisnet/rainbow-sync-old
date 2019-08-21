@@ -44,8 +44,8 @@
 
  [[override]]
    name = "github.com/tendermint/iavl"
-   version = "=v0.12.1"
-
+   source = "https://github.com/irisnet/iavl"
+   version = "=v0.12.2"
 
 [[constraint]]
   name = "github.com/syndtr/goleveldb"
