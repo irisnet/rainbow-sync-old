@@ -3,6 +3,7 @@ package constant
 const (
 	Iris_TxTypeTransfer                    = "Transfer"
 	Iris_TxTypeBurn                        = "Burn"
+	Iris_TxTypeSetMemoRegexp               = "SetMemoRegexp"
 	Iris_TxTypeStakeCreateValidator        = "CreateValidator"
 	Iris_TxTypeStakeEditValidator          = "EditValidator"
 	Iris_TxTypeStakeDelegate               = "Delegate"
@@ -14,6 +15,7 @@ const (
 	Iris_TxTypeWithdrawDelegatorRewardsAll = "WithdrawDelegatorRewardsAll"
 	Iris_TxTypeWithdrawValidatorRewardsAll = "WithdrawValidatorRewardsAll"
 	Iris_TxTypeSubmitProposal              = "SubmitProposal"
+	Iris_TxTypeSubmitTokenAdditionProposal = "SubmitTokenAdditionProposal"
 	Iris_TxTypeDeposit                     = "Deposit"
 	Iris_TxTypeVote                        = "Vote"
 
