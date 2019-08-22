@@ -12,6 +12,7 @@ import (
 	dtags "github.com/irisnet/irishub/app/v1/distribution/tags"
 	"github.com/irisnet/irishub/types"
 	"github.com/irisnet/irishub/app/v1/asset"
+	"github.com/irisnet/irishub/app/v1/rand"
 )
 
 type IrisTx struct {
@@ -57,6 +58,7 @@ func (d IrisTx) PkKvPair() map[string]interface{} {
 type (
 	MsgTransfer = bank.MsgSend
 	MsgBurn = bank.MsgBurn
+	MsgSetMemoRegexp = bank.MsgSetMemoRegexp
 
 	MsgStakeCreate = stake.MsgCreateValidator
 	MsgStakeEdit = stake.MsgEditValidator
@@ -68,17 +70,15 @@ type (
 	MsgWithdrawDelegatorReward = distribution.MsgWithdrawDelegatorReward
 	MsgWithdrawDelegatorRewardsAll = distribution.MsgWithdrawDelegatorRewardsAll
 	MsgWithdrawValidatorRewardsAll = distribution.MsgWithdrawValidatorRewardsAll
-	StakeValidator = stake.Validator
-	Delegation = stake.Delegation
-	UnbondingDelegation = stake.UnbondingDelegation
 
 	MsgDeposit = gov.MsgDeposit
 	MsgSubmitProposal = gov.MsgSubmitProposal
 	MsgSubmitSoftwareUpgradeProposal = gov.MsgSubmitSoftwareUpgradeProposal
-	MsgSubmitTaxUsageProposal = gov.MsgSubmitTxTaxUsageProposal
+	MsgSubmitTaxUsageProposal = gov.MsgSubmitCommunityTaxUsageProposal
+	MsgSubmitTokenAdditionProposal = gov.MsgSubmitTokenAdditionProposal
 	MsgVote = gov.MsgVote
-	Proposal = gov.Proposal
-	SdkVote = gov.Vote
+
+	MsgRequestRand = rand.MsgRequestRand
 
 	AssetIssueToken = asset.MsgIssueToken
 	AssetEditToken = asset.MsgEditToken

@@ -16,6 +16,7 @@ import (
 	"github.com/irisnet/irishub/app"
 	"github.com/irisnet/irishub/types"
 	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"time"
 )
 
 var (
@@ -69,6 +70,7 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 	}
 	denom, amount := matches[2], matches[1]
 
+	amount = getPrecision(amount, denom)
 	amt, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
 		logger.Error("Convert str to int failed", logger.Any("amount", amount))
@@ -79,6 +81,17 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 		Denom:  denom,
 		Amount: amt,
 	}
+}
+
+func getPrecision(amount, denom string) string {
+	length := len(amount)
+	if denom == types.IrisAtto && length > 15 {
+		amount = string([]byte(amount)[:15])
+		for i := 1; i <= length-15; i++ {
+			amount += "0"
+		}
+	}
+	return amount
 }
 
 func BuildFee(fee auth.StdFee) *imodel.Fee {
@@ -98,7 +111,15 @@ func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
 
 	res, err := client.Tx(txHash, false)
 	if err != nil {
-		return "unknown", resDeliverTx, err
+		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
+		time.Sleep(time.Duration(1) * time.Second)
+		var err1 error
+		client2 := helper.GetClient()
+		res, err1 = client2.Tx(txHash, false)
+		client2.Release()
+		if err1 != nil {
+			return "unknown", resDeliverTx, err1
+		}
 	}
 	result := res.TxResult
 	if result.Code != 0 {

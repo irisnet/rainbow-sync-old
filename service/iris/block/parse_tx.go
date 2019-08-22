@@ -110,6 +110,20 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Owner.String()
 		docTx.Amount = utils.ParseCoins(msg.Coins.String())
 		docTx.Type = constant.Iris_TxTypeBurn
+	case imodel.MsgSetMemoRegexp:
+		msg := msg.(imodel.MsgSetMemoRegexp)
+		docTx.From = msg.Owner.String()
+		docTx.To = ""
+		docTx.Initiator = msg.Owner.String()
+		docTx.Amount = []*imodel.Coin{}
+		docTx.Type = constant.Iris_TxTypeSetMemoRegexp
+		txMsg := imodel.DocTxMsgSetMemoRegexp{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+		return docTx
 
 	case imodel.MsgStakeCreate:
 		msg := msg.(imodel.MsgStakeCreate)
@@ -245,6 +259,22 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
 		docTx.Type = constant.Iris_TxTypeSubmitProposal
 
+	case imodel.MsgSubmitTokenAdditionProposal:
+		msg := msg.(imodel.MsgSubmitTokenAdditionProposal)
+
+		docTx.From = msg.Proposer.String()
+		docTx.To = ""
+		docTx.Initiator = msg.Proposer.String()
+		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
+		docTx.Type = constant.Iris_TxTypeSubmitProposal
+		txMsg := imodel.DocTxMsgSubmitTokenAdditionProposal{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+		return docTx
+
 	case imodel.MsgDeposit:
 		msg := msg.(imodel.MsgDeposit)
 
@@ -259,6 +289,22 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Voter.String()
 		docTx.Amount = []*imodel.Coin{}
 		docTx.Type = constant.Iris_TxTypeVote
+
+	case imodel.MsgRequestRand:
+		msg := msg.(imodel.MsgRequestRand)
+
+		docTx.From = msg.Consumer.String()
+		docTx.Initiator = msg.Consumer.String()
+		docTx.Amount = []*imodel.Coin{}
+		docTx.Type = constant.Iris_TxTypeRequestRand
+		txMsg := imodel.DocTxMsgRequestRand{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+
+		return docTx
 
 	case imodel.AssetIssueToken:
 		msg := msg.(imodel.AssetIssueToken)
