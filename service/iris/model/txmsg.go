@@ -31,7 +31,7 @@ type DocTxMsgSetMemoRegexp struct {
 }
 
 func (doctx *DocTxMsgSetMemoRegexp) Type() string {
-	return constant.Iris_TxTypeSubmitTokenAdditionProposal
+	return constant.Iris_TxTypeSetMemoRegexp
 }
 
 func (doctx *DocTxMsgSetMemoRegexp) BuildMsg(txMsg interface{}) {
