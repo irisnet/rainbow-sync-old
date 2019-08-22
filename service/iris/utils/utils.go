@@ -16,6 +16,7 @@ import (
 	"github.com/irisnet/irishub/app"
 	"github.com/irisnet/irishub/types"
 	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"time"
 )
 
 var (
@@ -111,6 +112,7 @@ func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
 	res, err := client.Tx(txHash, false)
 	if err != nil {
 		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
+		time.Sleep(time.Duration(1) * time.Second)
 		var err1 error
 		client2 := helper.GetClient()
 		res, err1 = client2.Tx(txHash, false)
