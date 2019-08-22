@@ -266,7 +266,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.To = ""
 		docTx.Initiator = msg.Proposer.String()
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
-		docTx.Type = constant.Iris_TxTypeSubmitTokenAdditionProposal
+		docTx.Type = constant.Iris_TxTypeSubmitProposal
 		txMsg := imodel.DocTxMsgSubmitTokenAdditionProposal{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{

@@ -15,7 +15,6 @@ const (
 	Iris_TxTypeWithdrawDelegatorRewardsAll = "WithdrawDelegatorRewardsAll"
 	Iris_TxTypeWithdrawValidatorRewardsAll = "WithdrawValidatorRewardsAll"
 	Iris_TxTypeSubmitProposal              = "SubmitProposal"
-	Iris_TxTypeSubmitTokenAdditionProposal = "SubmitTokenAdditionProposal"
 	Iris_TxTypeDeposit                     = "Deposit"
 	Iris_TxTypeVote                        = "Vote"
 	Iris_TxTypeRequestRand                 = "RequestRand"
