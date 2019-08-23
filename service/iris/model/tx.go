@@ -3,14 +3,16 @@ package iris
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"github.com/irisnet/irishub/modules/stake"
-	"github.com/irisnet/irishub/modules/distribution"
-	"github.com/irisnet/irishub/modules/gov"
-	"github.com/irisnet/irishub/modules/bank"
-	"github.com/irisnet/irishub/modules/slashing"
-	dtypes "github.com/irisnet/irishub/modules/distribution/types"
-	dtags "github.com/irisnet/irishub/modules/distribution/tags"
+	"github.com/irisnet/irishub/app/v1/stake"
+	"github.com/irisnet/irishub/app/v1/distribution"
+	"github.com/irisnet/irishub/app/v1/gov"
+	"github.com/irisnet/irishub/app/v1/bank"
+	"github.com/irisnet/irishub/app/v1/slashing"
+	dtypes "github.com/irisnet/irishub/app/v1/distribution/types"
+	dtags "github.com/irisnet/irishub/app/v1/distribution/tags"
 	"github.com/irisnet/irishub/types"
+	"github.com/irisnet/irishub/app/v1/asset"
+	"github.com/irisnet/irishub/app/v1/rand"
 )
 
 type IrisTx struct {
@@ -28,7 +30,17 @@ type IrisTx struct {
 	Status    string            `json:"status" bson:"status"`
 	Code      uint32            `json:"code" bson:"code"`
 	Tags      map[string]string `json:"tags" bson:"tags"`
-	//Msg    Msg       `bson:"msg"`
+	Msgs      []DocTxMsg        `bson:"msgs"`
+}
+
+type DocTxMsg struct {
+	Type string `bson:"type"`
+	Msg  Msg    `bson:"msg"`
+}
+
+type Msg interface {
+	Type() string
+	BuildMsg(msg interface{})
 }
 
 const (
@@ -46,6 +58,7 @@ func (d IrisTx) PkKvPair() map[string]interface{} {
 type (
 	MsgTransfer = bank.MsgSend
 	MsgBurn = bank.MsgBurn
+	MsgSetMemoRegexp = bank.MsgSetMemoRegexp
 
 	MsgStakeCreate = stake.MsgCreateValidator
 	MsgStakeEdit = stake.MsgEditValidator
@@ -57,17 +70,23 @@ type (
 	MsgWithdrawDelegatorReward = distribution.MsgWithdrawDelegatorReward
 	MsgWithdrawDelegatorRewardsAll = distribution.MsgWithdrawDelegatorRewardsAll
 	MsgWithdrawValidatorRewardsAll = distribution.MsgWithdrawValidatorRewardsAll
-	StakeValidator = stake.Validator
-	Delegation = stake.Delegation
-	UnbondingDelegation = stake.UnbondingDelegation
 
 	MsgDeposit = gov.MsgDeposit
 	MsgSubmitProposal = gov.MsgSubmitProposal
 	MsgSubmitSoftwareUpgradeProposal = gov.MsgSubmitSoftwareUpgradeProposal
-	MsgSubmitTaxUsageProposal = gov.MsgSubmitTxTaxUsageProposal
+	MsgSubmitTaxUsageProposal = gov.MsgSubmitCommunityTaxUsageProposal
+	MsgSubmitTokenAdditionProposal = gov.MsgSubmitTokenAdditionProposal
 	MsgVote = gov.MsgVote
-	Proposal = gov.Proposal
-	SdkVote = gov.Vote
+
+	MsgRequestRand = rand.MsgRequestRand
+
+	AssetIssueToken = asset.MsgIssueToken
+	AssetEditToken = asset.MsgEditToken
+	AssetMintToken = asset.MsgMintToken
+	AssetTransferTokenOwner = asset.MsgTransferTokenOwner
+	AssetCreateGateway = asset.MsgCreateGateway
+	AssetEditGateWay = asset.MsgEditGateway
+	AssetTransferGatewayOwner = asset.MsgTransferGatewayOwner
 
 	SdkCoins = types.Coins
 	KVPair = types.KVPair
