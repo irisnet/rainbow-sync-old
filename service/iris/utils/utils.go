@@ -16,6 +16,7 @@ import (
 	"github.com/irisnet/irishub/app"
 	"github.com/irisnet/irishub/types"
 	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"time"
 )
 
 var (
@@ -54,7 +55,7 @@ func ParseCoins(coinsStr string) (coins imodel.Coins) {
 
 func ParseCoin(coinStr string) (coin *imodel.Coin) {
 	var (
-		reDnm  = `[A-Za-z\-]{2,15}`
+		reDnm  = `[A-Za-z0-9]{2,}\S*`
 		reAmt  = `[0-9]+[.]?[0-9]*`
 		reSpc  = `[[:space:]]*`
 		reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
@@ -84,7 +85,7 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 
 func getPrecision(amount, denom string) string {
 	length := len(amount)
-	if denom == types.NativeTokenMinDenom && length > 15 {
+	if denom == types.IrisAtto && length > 15 {
 		amount = string([]byte(amount)[:15])
 		for i := 1; i <= length-15; i++ {
 			amount += "0"
@@ -111,6 +112,7 @@ func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
 	res, err := client.Tx(txHash, false)
 	if err != nil {
 		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
+		time.Sleep(time.Duration(1) * time.Second)
 		var err1 error
 		client2 := helper.GetClient()
 		res, err1 = client2.Tx(txHash, false)
