@@ -3,6 +3,7 @@ package block
 import (
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
+	imsg "github.com/irisnet/rainbow-sync/service/iris/model/msg"
 	"github.com/irisnet/rainbow-sync/service/iris/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/irisnet/irishub/app/v1/auth"
@@ -117,7 +118,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Owner.String()
 		docTx.Amount = []*imodel.Coin{}
 		docTx.Type = constant.Iris_TxTypeSetMemoRegexp
-		txMsg := imodel.DocTxMsgSetMemoRegexp{}
+		txMsg := imsg.DocTxMsgSetMemoRegexp{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -267,7 +268,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Proposer.String()
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
 		docTx.Type = constant.Iris_TxTypeSubmitProposal
-		txMsg := imodel.DocTxMsgSubmitTokenAdditionProposal{}
+		txMsg := imsg.DocTxMsgSubmitTokenAdditionProposal{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -297,7 +298,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Consumer.String()
 		docTx.Amount = []*imodel.Coin{}
 		docTx.Type = constant.Iris_TxTypeRequestRand
-		txMsg := imodel.DocTxMsgRequestRand{}
+		txMsg := imsg.DocTxMsgRequestRand{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -311,7 +312,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 		docTx.From = msg.Owner.String()
 		docTx.Type = constant.TxTypeAssetIssueToken
-		txMsg := imodel.DocTxMsgIssueToken{}
+		txMsg := imsg.DocTxMsgIssueToken{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -324,7 +325,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 		docTx.From = msg.Owner.String()
 		docTx.Type = constant.TxTypeAssetEditToken
-		txMsg := imodel.DocTxMsgEditToken{}
+		txMsg := imsg.DocTxMsgEditToken{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -338,7 +339,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.From = msg.Owner.String()
 		docTx.To = msg.To.String()
 		docTx.Type = constant.TxTypeAssetMintToken
-		txMsg := imodel.DocTxMsgMintToken{}
+		txMsg := imsg.DocTxMsgMintToken{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -352,7 +353,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.From = msg.SrcOwner.String()
 		docTx.To = msg.DstOwner.String()
 		docTx.Type = constant.TxTypeAssetTransferTokenOwner
-		txMsg := imodel.DocTxMsgTransferTokenOwner{}
+		txMsg := imsg.DocTxMsgTransferTokenOwner{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -365,7 +366,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 		docTx.From = msg.Owner.String()
 		docTx.Type = constant.TxTypeAssetCreateGateway
-		txMsg := imodel.DocTxMsgCreateGateway{}
+		txMsg := imsg.DocTxMsgCreateGateway{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -378,7 +379,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 		docTx.From = msg.Owner.String()
 		docTx.Type = constant.TxTypeAssetEditGateway
-		txMsg := imodel.DocTxMsgEditGateway{}
+		txMsg := imsg.DocTxMsgEditGateway{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),
@@ -392,7 +393,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.From = msg.Owner.String()
 		docTx.To = msg.To.String()
 		docTx.Type = constant.TxTypeAssetTransferGatewayOwner
-		txMsg := imodel.DocTxMsgTransferGatewayOwner{}
+		txMsg := imsg.DocTxMsgTransferGatewayOwner{}
 		txMsg.BuildMsg(msg)
 		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
 			Type: txMsg.Type(),

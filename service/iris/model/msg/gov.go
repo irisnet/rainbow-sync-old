@@ -1,7 +1,8 @@
-package iris
+package msg
 
 import (
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
+	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
 	"github.com/irisnet/irishub/app/v1/gov"
 	"strconv"
 )
@@ -15,12 +16,12 @@ type Param struct {
 type Params []Param
 
 type DocTxMsgSubmitProposal struct {
-	Title          string `bson:"title"`          //  Title of the proposal
-	Description    string `bson:"description"`    //  Description of the proposal
-	Proposer       string `bson:"proposer"`       //  Address of the proposer
-	InitialDeposit Coins  `bson:"initialDeposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	ProposalType   string `bson:"proposalType"`   //  Initial deposit paid by sender. Must be strictly positive.
-	Params         Params `bson:"params"`
+	Title          string       `bson:"title"`          //  Title of the proposal
+	Description    string       `bson:"description"`    //  Description of the proposal
+	Proposer       string       `bson:"proposer"`       //  Address of the proposer
+	InitialDeposit imodel.Coins `bson:"initialDeposit"` //  Initial deposit paid by sender. Must be strictly positive.
+	ProposalType   string       `bson:"proposalType"`   //  Initial deposit paid by sender. Must be strictly positive.
+	Params         Params       `bson:"params"`
 }
 
 type DocTxMsgSubmitTokenAdditionProposal struct {
@@ -38,7 +39,7 @@ func (doctx *DocTxMsgSubmitTokenAdditionProposal) Type() string {
 }
 
 func (doctx *DocTxMsgSubmitTokenAdditionProposal) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(MsgSubmitTokenAdditionProposal)
+	msg := txMsg.(imodel.MsgSubmitTokenAdditionProposal)
 	doctx.Title = msg.Title
 	doctx.Description = msg.Description
 	doctx.ProposalType = msg.ProposalType.String()
@@ -60,40 +61,10 @@ func loadParams(params []gov.Param) (result []Param) {
 	return
 }
 
-func loadInitialDeposit(coins SdkCoins) (result Coins) {
+func loadInitialDeposit(coins imodel.SdkCoins) (result imodel.Coins) {
 	for _, val := range coins {
 		amt, _ := strconv.ParseFloat(val.Amount.String(), 64)
-		result = append(result, &Coin{Amount: amt, Denom: val.Denom})
+		result = append(result, &imodel.Coin{Amount: amt, Denom: val.Denom})
 	}
 	return
-}
-
-type DocTxMsgSetMemoRegexp struct {
-	Owner      string `bson:"owner"`
-	MemoRegexp string `bson:"memo_regexp"`
-}
-
-func (doctx *DocTxMsgSetMemoRegexp) Type() string {
-	return constant.Iris_TxTypeSetMemoRegexp
-}
-
-func (doctx *DocTxMsgSetMemoRegexp) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(MsgSetMemoRegexp)
-	doctx.MemoRegexp = msg.MemoRegexp
-	doctx.Owner = msg.Owner.String()
-}
-
-type DocTxMsgRequestRand struct {
-	Consumer      string `bson:"consumer"`       // request address
-	BlockInterval uint64 `bson:"block-interval"` // block interval after which the requested random number will be generated
-}
-
-func (doctx *DocTxMsgRequestRand) Type() string {
-	return constant.Iris_TxTypeRequestRand
-}
-
-func (doctx *DocTxMsgRequestRand) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(MsgRequestRand)
-	doctx.Consumer = msg.Consumer.String()
-	doctx.BlockInterval = msg.BlockInterval
 }

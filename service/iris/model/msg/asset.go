@@ -1,9 +1,10 @@
-package iris
+package msg
 
 import (
 	"strings"
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
+	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
 )
 
 type (
@@ -91,7 +92,7 @@ func (m *DocTxMsgIssueToken) Type() string {
 }
 
 func (m *DocTxMsgIssueToken) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetIssueToken)
+	msg := txMsg.(imodel.AssetIssueToken)
 
 	m.Family = msg.Family.String()
 	m.Source = msg.Source.String()
@@ -117,7 +118,7 @@ func (m *DocTxMsgEditToken) Type() string {
 }
 
 func (m *DocTxMsgEditToken) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetEditToken)
+	msg := txMsg.(imodel.AssetEditToken)
 
 	m.TokenId = msg.TokenId
 	m.Owner = msg.Owner.String()
@@ -134,7 +135,7 @@ func (m *DocTxMsgMintToken) Type() string {
 }
 
 func (m *DocTxMsgMintToken) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetMintToken)
+	msg := txMsg.(imodel.AssetMintToken)
 
 	m.TokenId = msg.TokenId
 	m.Owner = msg.Owner.String()
@@ -148,7 +149,7 @@ func (m *DocTxMsgTransferTokenOwner) Type() string {
 }
 
 func (m *DocTxMsgTransferTokenOwner) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetTransferTokenOwner)
+	msg := txMsg.(imodel.AssetTransferTokenOwner)
 
 	m.SrcOwner = msg.SrcOwner.String()
 	m.DstOwner = msg.DstOwner.String()
@@ -161,7 +162,7 @@ func (m *DocTxMsgCreateGateway) Type() string {
 }
 
 func (m *DocTxMsgCreateGateway) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetCreateGateway)
+	msg := txMsg.(imodel.AssetCreateGateway)
 
 	m.Owner = msg.Owner.String()
 	m.Moniker = msg.Moniker
@@ -175,7 +176,7 @@ func (m *DocTxMsgEditGateway) Type() string {
 }
 
 func (m *DocTxMsgEditGateway) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetEditGateWay)
+	msg := txMsg.(imodel.AssetEditGateWay)
 
 	m.Owner = msg.Owner.String()
 	m.Moniker = msg.Moniker
@@ -189,7 +190,7 @@ func (m *DocTxMsgTransferGatewayOwner) Type() string {
 }
 
 func (m *DocTxMsgTransferGatewayOwner) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(AssetTransferGatewayOwner)
+	msg := txMsg.(imodel.AssetTransferGatewayOwner)
 
 	m.Owner = msg.Owner.String()
 	m.Moniker = msg.Moniker
