@@ -1,6 +1,7 @@
 # rainbow-sync
 A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 
+
 ## Run
 - Cosmos
 ```bash
@@ -15,27 +16,27 @@ nohup ./rainbow-sync > debug.log 2>&1 &
 
 ## Run with docker
 You can run application with docker.
-### Iris 
+### Iris
 - Build Rainbow-sync Image
 ```$xslt
 cd service/iris && docker build -t rainbow-sync:dev01 .
 ```
 
-- Run Application 
+- Run Application
 ```$xslt
 docker run --name rainbow-sync \&
 -v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
 -e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
 -e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
--e "IRIS_NETWORK=testnet"  \&
+-e "IRIS_NETWORK=testnet" \&
 -e "SER_BC_FULL_NODE=tcp://localhost:26657,..." rainbow-sync:dev01
 ```
-### Cosmos 
+### Cosmos
 - Build Rainbow-sync Image
 ```$xslt
 cd service/cosmos && docker build -t rainbow-sync:dev01 .
 ```
-- Run Application 
+- Run Application
 ```$xslt
 docker run --name rainbow-sync \&
 -v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
@@ -45,7 +46,7 @@ docker run --name rainbow-sync \&
 ```
 
 
-## environment params 
+## environment params
 
 | param | type | default |description | example |
 | :--- | :--- | :--- | :---: | :---: |

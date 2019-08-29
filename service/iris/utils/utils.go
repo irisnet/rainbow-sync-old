@@ -16,6 +16,7 @@ import (
 	"github.com/irisnet/irishub/app"
 	"github.com/irisnet/irishub/types"
 	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"time"
 )
 
 var (
@@ -54,7 +55,7 @@ func ParseCoins(coinsStr string) (coins imodel.Coins) {
 
 func ParseCoin(coinStr string) (coin *imodel.Coin) {
 	var (
-		reDnm  = `[A-Za-z\-]{2,15}`
+		reDnm  = `[A-Za-z0-9]{2,}\S*`
 		reAmt  = `[0-9]+[.]?[0-9]*`
 		reSpc  = `[[:space:]]*`
 		reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
@@ -69,7 +70,7 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 	}
 	denom, amount := matches[2], matches[1]
 
-	amount = getPrecision(amount, denom)
+	amount = getPrecision(amount)
 	amt, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
 		logger.Error("Convert str to int failed", logger.Any("amount", amount))
@@ -82,12 +83,26 @@ func ParseCoin(coinStr string) (coin *imodel.Coin) {
 	}
 }
 
-func getPrecision(amount, denom string) string {
+func getPrecision(amount string) string {
 	length := len(amount)
-	if denom == types.NativeTokenMinDenom && length > 15 {
-		amount = string([]byte(amount)[:15])
-		for i := 1; i <= length-15; i++ {
-			amount += "0"
+	if length > 15 {
+		nums := strings.Split(amount, ".")
+		if len(nums) > 2 {
+			return amount
+		}
+
+		if len_num0 := len(nums[0]); len_num0 > 15 {
+			amount = string([]byte(nums[0])[:15])
+			for i := 1; i <= len_num0-15; i++ {
+				amount += "0"
+			}
+		} else {
+			//leng_num1 := len(nums[1])
+			leng_append := 16 - len_num0
+			amount = nums[0] + "." + string([]byte(nums[1])[:leng_append])
+			//for i := 1; i <= leng_num1-leng_append; i++ {
+			//	amount += "0"
+			//}
 		}
 	}
 	return amount
@@ -111,6 +126,7 @@ func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
 	res, err := client.Tx(txHash, false)
 	if err != nil {
 		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
+		time.Sleep(time.Duration(1) * time.Second)
 		var err1 error
 		client2 := helper.GetClient()
 		res, err1 = client2.Tx(txHash, false)
