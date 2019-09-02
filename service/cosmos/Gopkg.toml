@@ -26,16 +26,16 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.31.4"
+  version = "=v0.32.2"
 
- [[override]]
-   name = "github.com/tendermint/iavl"
-   version = "=v0.12.1"
+[[override]]
+  name = "github.com/tendermint/iavl"
+  version = "=v0.12.4"
 
- [[override]]
-   name = "github.com/cosmos/cosmos-sdk"
-   source = "https://github.com/cosmos/cosmos-sdk.git"
-   version = "=v0.34.1"
+[[override]]
+  name = "github.com/cosmos/cosmos-sdk"
+  source = "https://github.com/cosmos/cosmos-sdk.git"
+  version = "=v0.37.0"
 
 [[constraint]]
   name = "github.com/syndtr/goleveldb"
