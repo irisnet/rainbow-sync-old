@@ -320,9 +320,6 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			txdetail.Initiator = msg.DelegatorAddress.String()
 			txdetail.From = msg.DelegatorAddress.String()
 			txdetail.To = msg.ValidatorAddress.String()
-			if val, ok := txdetail.Tags["rewards"]; ok {
-				txdetail.Amount = []*cmodel.Coin{cutils.ParseRewards(val)}
-			}
 			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorReward
 			txs = append(txs, txdetail)
 
@@ -330,7 +327,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			msg := msg.(MsgWithdrawValidatorCommission)
 			txdetail.Initiator = msg.ValidatorAddress.String()
 			txdetail.From = msg.ValidatorAddress.String()
-			txdetail.Type = constant.Cosmos_TxTypeWithdrawValidatorCommission
+			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorRewardsAll
 			txs = append(txs, txdetail)
 
 		case MsgSubmitProposal:
