@@ -155,7 +155,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxs(b int64, client *cosmoshelper.CosmosC
 		}
 	}
 
-	//fmt.Printf("======>>resblock.Block:%+v\n",resblock.Block)
+	//fmt.Printf("======>>resblock.Block.Txs:%+v\n",resblock.Block.Txs)
 	//fmt.Println("length:",len(resblock.Block.Txs))
 
 	cosmosTxs := make([]cmodel.CosmosTx, 0, len(resblock.Block.Txs))
@@ -181,7 +181,6 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 		logger.Error(err.Error())
 		return nil
 	}
-	//fmt.Printf("=====>authTx:%+v\n",authTx)
 	status, result, err := QueryTxResult(txBytes.Hash())
 	if err != nil {
 		logger.Error("get txResult err", logger.String("method", methodName),
@@ -203,10 +202,8 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 	txdetail.Time = block.Time
 	txdetail.Status = status
 	txdetail.Code = result.Code
-	Tags := parseTags(result)
 
 	length_msgStat := len(msgStat)
-	length_Tags := len(Tags)
 
 	msgs := authTx.GetMsgs()
 	len_msgs := len(msgs)
@@ -222,9 +219,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 		txdetail.To = ""
 		txdetail.Amount = nil
 		txdetail.Type = ""
-		if length_Tags > i {
-			txdetail.Tags = Tags[i]
-		}
+		txdetail.Event = parseEvents(result)
 		if length_msgStat > i {
 			txdetail.Status = msgStat[i]
 		}
@@ -327,7 +322,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			msg := msg.(MsgWithdrawValidatorCommission)
 			txdetail.Initiator = msg.ValidatorAddress.String()
 			txdetail.From = msg.ValidatorAddress.String()
-			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorRewardsAll
+			txdetail.Type = constant.Cosmos_TxTypeWithdrawValidatorCommission
 			txs = append(txs, txdetail)
 
 		case MsgSubmitProposal:
@@ -381,22 +376,40 @@ func QueryTxResult(txHash []byte) (string, *abci.ResponseDeliverTx, error) {
 	return status, &result, nil
 }
 
-func parseTags(result *abci.ResponseDeliverTx) []cmodel.Tag {
-	var tags []cmodel.Tag
-	tags_opt := make(cmodel.Tag, 0)
-	for i, tag := range result.Tags {
-		key := string(tag.Key)
-		value := string(tag.Value)
-		tags_opt[key] = value
-		if i > 0 && string(result.Tags[i].Key) == "action" {
-			tags = append(tags, tags_opt)
-			tags_opt = make(cmodel.Tag, 0)
-		} else if i == len(result.Tags)-1 {
-			tags = append(tags, tags_opt)
+//func parseTags(result *abci.ResponseDeliverTx) []cmodel.Tag {
+//	var tags []cmodel.Tag
+//	tags_opt := make(cmodel.Tag, 0)
+//	for i, tag := range result.Tags {
+//		key := string(tag.Key)
+//		value := string(tag.Value)
+//		tags_opt[key] = value
+//		if i > 0 && string(result.Tags[i].Key) == "action" {
+//			tags = append(tags, tags_opt)
+//			tags_opt = make(cmodel.Tag, 0)
+//		} else if i == len(result.Tags)-1 {
+//			tags = append(tags, tags_opt)
+//		}
+//	}
+//	return tags
+//}
+
+func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
+
+	var events []cmodel.Event
+	for _, val := range result.GetEvents() {
+		one := cmodel.Event{
+			Type: val.Type,
 		}
+		one.Attributes = make(map[string]string, len(val.Attributes))
+		for _, attr := range val.Attributes {
+			one.Attributes[string(attr.Key)] = string(attr.Value)
+		}
+		events = append(events, one)
 	}
-	return tags
+
+	return events
 }
+
 
 func parseRawlog(rawlog string) (map[int]string, error) {
 

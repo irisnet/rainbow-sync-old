@@ -19,7 +19,8 @@ type (
 		Memo      string            `bson:"memo"`
 		Status    string            `bson:"status"`
 		Code      uint32            `bson:"code"`
-		Tags      map[string]string `bson:"tags"`
+		//Tags      map[string]string `bson:"tags"`
+		Event []Event `bson:"tags"`
 		//Msg    Msg       `bson:"msg"`
 	}
 )
@@ -54,4 +55,9 @@ type RawLog struct {
 	MsgIndex int    `json:"msg_index,string"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
+}
+
+type Event struct {
+	Type       string            `bson:"type" json:"type"`
+	Attributes map[string]string `bson:"attributes" json:"attributes"`
 }
