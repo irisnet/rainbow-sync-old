@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"regexp"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -82,33 +80,4 @@ func ParseCoin(sdkcoin sdk.Coin) (coin cmodel.Coin) {
 		Amount: amount,
 	}
 
-}
-
-func ParseRewards(coinStr string) (coin *cmodel.Coin) {
-	var (
-		reDnm  = `[A-Za-z0-9]{2,}\S*`
-		reAmt  = `[0-9]+[.]?[0-9]*`
-		reSpc  = `[[:space:]]*`
-		reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	)
-
-	coinStr = strings.TrimSpace(coinStr)
-
-	matches := reCoin.FindStringSubmatch(coinStr)
-	if matches == nil {
-		logger.Error("invalid coin expression", logger.Any("coin", coinStr))
-		return coin
-	}
-	denom, amount := matches[2], matches[1]
-
-	amt, err := strconv.ParseInt(amount, 10, 64)
-	if err != nil {
-		logger.Error("Convert str to int failed", logger.Any("amount", amount))
-		return coin
-	}
-
-	return &cmodel.Coin{
-		Denom:  denom,
-		Amount: amt,
-	}
 }
