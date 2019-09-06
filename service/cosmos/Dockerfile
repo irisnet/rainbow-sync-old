@@ -10,19 +10,19 @@ ENV REPO_PATH    $GOPATH/src/github.com/irisnet/rainbow-sync/service/cosmos
 ENV PATH         $GOPATH/bin:$PATH
 ENV GO111MODULE  on
 
-RUN mkdir -p $GOPATH $REPO_PATH
+RUN mkdir -p $GOPATH/bin $REPO_PATH
 
 COPY . $REPO_PATH
 WORKDIR $REPO_PATH
 
-VOLUME $REPO_PATH/logs
+VOLUME $GOPATH/src/github.com/irisnet/rainbow-sync/logs
 
 # Install minimum necessary dependencies, build binary
 RUN apk add --no-cache $PACKAGES && \
     cd $REPO_PATH && make all && \
     mv $REPO_PATH/$BINARY_NAME $GOPATH/bin && \
     rm -rf $REPO_PATH/vendor && \
-    rm -rf $GOPATH/src/github.com/golang $GOPATH/pkg/* && \
+    rm -rf $GOPATH/pkg/* && \
     apk del $PACKAGES
 
 CMD $BINARY_NAME
