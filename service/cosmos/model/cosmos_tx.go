@@ -19,8 +19,7 @@ type (
 		Memo      string    `bson:"memo"`
 		Status    string    `bson:"status"`
 		Code      uint32    `bson:"code"`
-		//Tags      map[string]string `bson:"tags"`
-		Event []Event `bson:"event"`
+		Events    []Event   `bson:"events"`
 		//Msg    Msg       `bson:"msg"`
 	}
 )

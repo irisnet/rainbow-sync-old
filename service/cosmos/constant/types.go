@@ -17,6 +17,8 @@ const (
 	Cosmos_TxTypeDeposit                     = "Deposit"
 	Cosmos_TxTypeVote                        = "Vote"
 
+	Cosmos_TxEventWithdrawRewards = "withdraw_rewards"
+
 	TxStatusSuccess = "success"
 	TxStatusFail    = "fail"
 )
