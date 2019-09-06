@@ -6,19 +6,44 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"encoding/hex"
 	"strings"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
 	"strconv"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
+	"github.com/cosmos/cosmos-sdk/types/module"
+
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/supply"
+	dtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 var (
-	cdc *codec.Codec
+	cdc          *codec.Codec
+	ModuleBasics = module.NewBasicManager(
+		bank.AppModuleBasic{},
+		auth.AppModuleBasic{},
+		staking.AppModuleBasic{},
+		gov.AppModuleBasic{},
+		params.AppModuleBasic{},
+		crisis.AppModuleBasic{},
+		slashing.AppModuleBasic{},
+		supply.AppModuleBasic{},
+	)
 )
 
 // 初始化账户地址前缀
 func init() {
-	cdc = app.MakeCodec()
+	cdc = codec.New()
+
+	ModuleBasics.RegisterCodec(cdc)
+	dtypes.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	codec.RegisterEvidences(cdc)
 }
 
 func GetCodec() *codec.Codec {
