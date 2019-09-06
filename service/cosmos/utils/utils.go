@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	dtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 var (
@@ -25,7 +26,6 @@ var (
 	ModuleBasics = module.NewBasicManager(
 		bank.AppModuleBasic{},
 		auth.AppModuleBasic{},
-		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		gov.AppModuleBasic{},
 		params.AppModuleBasic{},
@@ -40,6 +40,7 @@ func init() {
 	cdc = codec.New()
 
 	ModuleBasics.RegisterCodec(cdc)
+	dtypes.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	codec.RegisterEvidences(cdc)
