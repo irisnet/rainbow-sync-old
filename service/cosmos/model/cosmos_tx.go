@@ -7,20 +7,20 @@ import (
 
 type (
 	CosmosTx struct {
-		Time      time.Time         `bson:"time"`
-		Height    int64             `bson:"height"`
-		TxHash    string            `bson:"tx_hash"`
-		From      string            `bson:"from"`
-		To        string            `bson:"to"`
-		Initiator string            `bson:"initiator"`
-		Amount    []*Coin           `bson:"amount"`
-		Type      string            `bson:"type"`
-		Fee       *Fee              `bson:"fee"`
-		Memo      string            `bson:"memo"`
-		Status    string            `bson:"status"`
-		Code      uint32            `bson:"code"`
+		Time      time.Time `bson:"time"`
+		Height    int64     `bson:"height"`
+		TxHash    string    `bson:"tx_hash"`
+		From      string    `bson:"from"`
+		To        string    `bson:"to"`
+		Initiator string    `bson:"initiator"`
+		Amount    []*Coin   `bson:"amount"`
+		Type      string    `bson:"type"`
+		Fee       *Fee      `bson:"fee"`
+		Memo      string    `bson:"memo"`
+		Status    string    `bson:"status"`
+		Code      uint32    `bson:"code"`
 		//Tags      map[string]string `bson:"tags"`
-		Event []Event `bson:"tags"`
+		Event []Event `bson:"event"`
 		//Msg    Msg       `bson:"msg"`
 	}
 )
