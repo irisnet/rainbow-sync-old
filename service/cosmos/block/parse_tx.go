@@ -219,7 +219,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 		txdetail.To = ""
 		txdetail.Amount = nil
 		txdetail.Type = ""
-		txdetail.Event = parseEvents(result)
+		txdetail.Events = parseEvents(result)
 		if length_msgStat > i {
 			txdetail.Status = msgStat[i]
 		}
@@ -315,6 +315,11 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			txdetail.Initiator = msg.DelegatorAddress.String()
 			txdetail.From = msg.DelegatorAddress.String()
 			txdetail.To = msg.ValidatorAddress.String()
+			txdetail.Amount = []*cmodel.Coin{}
+			coin := parseRewards(txdetail.Events)
+			if coin != nil {
+				txdetail.Amount = []*cmodel.Coin{coin}
+			}
 			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorReward
 			txs = append(txs, txdetail)
 
@@ -376,22 +381,14 @@ func QueryTxResult(txHash []byte) (string, *abci.ResponseDeliverTx, error) {
 	return status, &result, nil
 }
 
-//func parseTags(result *abci.ResponseDeliverTx) []cmodel.Tag {
-//	var tags []cmodel.Tag
-//	tags_opt := make(cmodel.Tag, 0)
-//	for i, tag := range result.Tags {
-//		key := string(tag.Key)
-//		value := string(tag.Value)
-//		tags_opt[key] = value
-//		if i > 0 && string(result.Tags[i].Key) == "action" {
-//			tags = append(tags, tags_opt)
-//			tags_opt = make(cmodel.Tag, 0)
-//		} else if i == len(result.Tags)-1 {
-//			tags = append(tags, tags_opt)
-//		}
-//	}
-//	return tags
-//}
+func parseRewards(events []cmodel.Event) (rewards *cmodel.Coin) {
+	for _, val := range events {
+		if val.Type == constant.Cosmos_TxEventWithdrawRewards {
+			rewards = cutils.ParseRewards(val.Attributes["amount"])
+		}
+	}
+	return
+}
 
 func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 
