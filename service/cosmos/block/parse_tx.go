@@ -382,10 +382,23 @@ func QueryTxResult(txHash []byte) (string, *abci.ResponseDeliverTx, error) {
 }
 
 func parseRewards(events []cmodel.Event) (rewards *cmodel.Coin) {
+
+	var totalrewards cmodel.Coin
 	for _, val := range events {
+
 		if val.Type == constant.Cosmos_TxEventWithdrawRewards {
-			rewards = cutils.ParseRewards(val.Attributes["amount"])
+			amount := cutils.ParseRewards(val.Attributes["amount"])
+			if amount != nil {
+				if totalrewards.Denom == "" {
+					totalrewards.Denom = amount.Denom
+				}
+				totalrewards.Amount += amount.Amount
+			}
 		}
+	}
+
+	if totalrewards.Amount > 0 {
+		rewards = &totalrewards
 	}
 	return
 }
