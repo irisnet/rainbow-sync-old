@@ -92,6 +92,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		ActualFee: actualFee,
 		Memo:      memo,
 		Status:    status,
+		Log:       result.Log,
 		Code:      result.Code,
 		Tags:      parseTags(result),
 	}
