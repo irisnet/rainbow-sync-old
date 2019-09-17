@@ -24,6 +24,70 @@ type DocTxMsgSubmitProposal struct {
 	Params         Params       `bson:"params"`
 }
 
+func (doctx *DocTxMsgSubmitProposal) Type() string {
+	return constant.Iris_TxTypeSubmitProposal
+}
+
+func (doctx *DocTxMsgSubmitProposal) BuildMsg(txMsg interface{}) {
+	msg := txMsg.(imodel.MsgSubmitProposal)
+	doctx.Title = msg.Title
+	doctx.Description = msg.Description
+	doctx.ProposalType = msg.ProposalType.String()
+	doctx.Proposer = msg.Proposer.String()
+	doctx.Params = loadParams(msg.Params)
+	doctx.InitialDeposit = loadInitialDeposit(msg.InitialDeposit)
+}
+
+type DocTxMsgSubmitSoftwareUpgradeProposal struct {
+	DocTxMsgSubmitProposal
+	Version      uint64 `bson:"version"`
+	Software     string `bson:"software"`
+	SwitchHeight uint64 `bson:"switch_height"`
+	Threshold    string `bson:"threshold"`
+}
+
+func (doctx *DocTxMsgSubmitSoftwareUpgradeProposal) Type() string {
+	return constant.Iris_TxTypeSubmitProposal
+}
+
+func (doctx *DocTxMsgSubmitSoftwareUpgradeProposal) BuildMsg(txMsg interface{}) {
+	msg := txMsg.(imodel.MsgSubmitSoftwareUpgradeProposal)
+	doctx.Title = msg.Title
+	doctx.Description = msg.Description
+	doctx.ProposalType = msg.ProposalType.String()
+	doctx.Proposer = msg.Proposer.String()
+	doctx.Params = loadParams(msg.Params)
+	doctx.InitialDeposit = loadInitialDeposit(msg.InitialDeposit)
+	doctx.Version = msg.Version
+	doctx.Software = msg.Software
+	doctx.SwitchHeight = msg.SwitchHeight
+	doctx.Threshold = msg.Threshold.String()
+}
+
+type DocTxMsgSubmitCommunityTaxUsageProposal struct {
+	DocTxMsgSubmitProposal
+	Usage       string `bson:"usage"`
+	DestAddress string `bson:"dest_address"`
+	Percent     string `bson:"percent"`
+}
+
+func (doctx *DocTxMsgSubmitCommunityTaxUsageProposal) Type() string {
+	return constant.Iris_TxTypeSubmitProposal
+}
+
+func (doctx *DocTxMsgSubmitCommunityTaxUsageProposal) BuildMsg(txMsg interface{}) {
+	msg := txMsg.(imodel.MsgSubmitTaxUsageProposal)
+	doctx.Title = msg.Title
+	doctx.Description = msg.Description
+	doctx.ProposalType = msg.ProposalType.String()
+	doctx.Proposer = msg.Proposer.String()
+	doctx.Params = loadParams(msg.Params)
+	doctx.InitialDeposit = loadInitialDeposit(msg.InitialDeposit)
+	doctx.Usage = msg.Usage.String()
+	doctx.DestAddress = msg.DestAddress.String()
+	doctx.Percent = msg.Percent.String()
+}
+
 type DocTxMsgSubmitTokenAdditionProposal struct {
 	DocTxMsgSubmitProposal
 	Symbol          string `bson:"symbol"`
@@ -68,3 +132,22 @@ func loadInitialDeposit(coins imodel.SdkCoins) (result imodel.Coins) {
 	}
 	return
 }
+
+// MsgVote
+type DocTxMsgVote struct {
+	ProposalID uint64 `json:"proposal_id"` // ID of the proposal
+	Voter      string `json:"voter"`       //  address of the voter
+	Option     string `json:"option"`      //  option from OptionSet chosen by the voter
+}
+
+func (doctx *DocTxMsgVote) Type() string {
+	return constant.Iris_TxTypeVote
+}
+
+func (doctx *DocTxMsgVote) BuildMsg(txMsg interface{}) {
+	msg := txMsg.(imodel.MsgVote)
+	doctx.Voter = msg.Voter.String()
+	doctx.Option = msg.Option.String()
+	doctx.ProposalID = msg.ProposalID
+}
+

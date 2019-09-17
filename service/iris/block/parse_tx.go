@@ -242,6 +242,12 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Proposer.String()
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
 		docTx.Type = constant.Iris_TxTypeSubmitProposal
+		txMsg := imsg.DocTxMsgSubmitProposal{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
 
 	case imodel.MsgSubmitSoftwareUpgradeProposal:
 		msg := msg.(imodel.MsgSubmitSoftwareUpgradeProposal)
@@ -251,6 +257,12 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Proposer.String()
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
 		docTx.Type = constant.Iris_TxTypeSubmitProposal
+		txMsg := imsg.DocTxMsgSubmitSoftwareUpgradeProposal{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
 
 	case imodel.MsgSubmitTaxUsageProposal:
 		msg := msg.(imodel.MsgSubmitTaxUsageProposal)
@@ -260,6 +272,12 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Proposer.String()
 		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
 		docTx.Type = constant.Iris_TxTypeSubmitProposal
+		txMsg := imsg.DocTxMsgSubmitCommunityTaxUsageProposal{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
 
 	case imodel.MsgSubmitTokenAdditionProposal:
 		msg := msg.(imodel.MsgSubmitTokenAdditionProposal)
@@ -291,6 +309,12 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.Initiator = msg.Voter.String()
 		docTx.Amount = []*imodel.Coin{}
 		docTx.Type = constant.Iris_TxTypeVote
+		txMsg := imsg.DocTxMsgVote{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
 
 	case imodel.MsgRequestRand:
 		msg := msg.(imodel.MsgRequestRand)
