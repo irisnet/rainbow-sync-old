@@ -135,9 +135,9 @@ func loadInitialDeposit(coins imodel.SdkCoins) (result imodel.Coins) {
 
 // MsgVote
 type DocTxMsgVote struct {
-	ProposalID uint64 `json:"proposal_id"` // ID of the proposal
-	Voter      string `json:"voter"`       //  address of the voter
-	Option     string `json:"option"`      //  option from OptionSet chosen by the voter
+	ProposalID uint64 `bson:"proposal_id"` // ID of the proposal
+	Voter      string `bson:"voter"`       //  address of the voter
+	Option     string `bson:"option"`      //  option from OptionSet chosen by the voter
 }
 
 func (doctx *DocTxMsgVote) Type() string {
@@ -150,4 +150,3 @@ func (doctx *DocTxMsgVote) BuildMsg(txMsg interface{}) {
 	doctx.Option = msg.Option.String()
 	doctx.ProposalID = msg.ProposalID
 }
-
