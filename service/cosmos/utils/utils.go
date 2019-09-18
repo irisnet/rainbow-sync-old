@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"strings"
-	//"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
 	"strconv"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
@@ -18,7 +18,7 @@ var (
 
 // 初始化账户地址前缀
 func init() {
-	//cdc = app.MakeCodec()
+	cdc = app.MakeCodec()
 }
 
 func GetCodec() *codec.Codec {
