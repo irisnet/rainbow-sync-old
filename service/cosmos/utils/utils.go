@@ -1,10 +1,10 @@
 package cosmos
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"strings"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"

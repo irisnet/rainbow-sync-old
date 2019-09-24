@@ -29,6 +29,7 @@ type IrisTx struct {
 	Memo      string            `json:"memo" bson:"memo"`
 	Status    string            `json:"status" bson:"status"`
 	Code      uint32            `json:"code" bson:"code"`
+	Log       string            `json:"log" bson:"log"`
 	Tags      map[string]string `json:"tags" bson:"tags"`
 	Msgs      []DocTxMsg        `bson:"msgs"`
 }
