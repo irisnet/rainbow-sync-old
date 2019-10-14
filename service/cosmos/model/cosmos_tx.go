@@ -51,7 +51,7 @@ type Fee struct {
 type Tag map[string]string
 
 type RawLog struct {
-	MsgIndex int    `json:"msg_index,string"`
+	MsgIndex int    `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 }

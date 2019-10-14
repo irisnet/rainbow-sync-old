@@ -420,7 +420,6 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 	return events
 }
 
-
 func parseRawlog(rawlog string) (map[int]string, error) {
 
 	var Stats []cmodel.RawLog

@@ -26,7 +26,7 @@ func TestParseCosmosTxModel(t *testing.T) {
 		{
 			name: "test parse cosmos tx",
 			args: args{
-				b:      174871,
+				b:      1920,
 				client: client,
 			},
 		},

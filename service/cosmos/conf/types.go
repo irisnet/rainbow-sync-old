@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	BlockChainMonitorUrl = []string{"tcp://10.2.10.140:36657"}
+	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
 
 	WorkerNumCreateTask     = 2
 	WorkerNumExecuteTask    = 30

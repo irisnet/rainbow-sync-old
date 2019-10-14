@@ -12,7 +12,7 @@ const (
 	Cosmos_TxTypeUnjail                      = "Unjail"
 	Cosmos_TxTypeSetWithdrawAddress          = "SetWithdrawAddress"
 	Cosmos_TxTypeWithdrawDelegatorReward     = "WithdrawDelegatorReward"
-	Cosmos_TxTypeWithdrawDelegatorRewardsAll = "WithdrawDelegatorRewardsAll"
+	Cosmos_TxTypeWithdrawValidatorCommission = "WithdrawValidatorCommission"
 	Cosmos_TxTypeSubmitProposal              = "SubmitProposal"
 	Cosmos_TxTypeDeposit                     = "Deposit"
 	Cosmos_TxTypeVote                        = "Vote"
