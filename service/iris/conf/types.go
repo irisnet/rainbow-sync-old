@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:26657"}
+	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:46657"}
 
 	IrisNetwork             = "testnet"
 	WorkerNumCreateTask     = 2

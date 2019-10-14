@@ -3,15 +3,16 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
+GOMOD=$(GOCMD) mod
 BINARY_NAME=rainbow-sync
 BINARY_UNIX=$(BINARY_NAME)-unix
 
-all: get_tools get_deps build
+all: get_vendor build
 
-get_deps:
+get_vendor:
 	@rm -rf vendor/
-	@echo "--> Running dep ensure"
-	@dep ensure -v
+	@echo "--> Running go mod vendor"
+	$(GOMOD) vendor
 
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
@@ -31,13 +32,3 @@ build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v
 
 ######################################
-## Tools
-
-check_tools:
-	cd tools && $(MAKE) check_tools
-
-get_tools:
-	cd tools && $(MAKE) get_tools
-
-update_tools:
-	cd tools && $(MAKE) update_tools
