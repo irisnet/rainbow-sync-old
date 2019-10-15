@@ -170,7 +170,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		}
 
 		// parse data from block
-		blockDoc, assetDetailDocs, txDocs, err := s.blockType.ParseBlock(inProcessBlock, client)
+		blockDoc, txDocs, err := s.blockType.ParseBlock(inProcessBlock, client)
 		if err != nil {
 			logger.Error("Parse block fail", logger.String("Chain Block", s.blockType.Name()), logger.Int64("block", inProcessBlock),
 				logger.String("err", err.Error()))
@@ -191,7 +191,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 				taskDoc.Status = model.SyncTaskStatusCompleted
 			}
 
-			err := s.blockType.SaveDocsWithTxn(blockDoc, assetDetailDocs, txDocs, taskDoc)
+			err := s.blockType.SaveDocsWithTxn(blockDoc, txDocs, taskDoc)
 			if err != nil {
 				logger.Error("save docs fail", logger.String("Chain Block", s.blockType.Name()), logger.String("err", err.Error()))
 			} else {

@@ -4,31 +4,36 @@ import (
 	"strings"
 	"encoding/hex"
 	"strconv"
-	"github.com/irisnet/irishub/codec"
-	"github.com/irisnet/irishub/modules/auth"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
 	"github.com/irisnet/rainbow-sync/service/iris/helper"
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	"fmt"
-	"regexp"
-	"github.com/irisnet/irishub/app"
-	"github.com/irisnet/irishub/types"
-	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"time"
 )
 
 var (
-	cdc *codec.Codec
+	cdc          *codec.Codec
+	ModuleBasics = module.NewBasicManager(
+		bank.AppModuleBasic{},
+		auth.AppModuleBasic{},
+	)
 )
 
 // 初始化账户地址前缀
 func init() {
-	if conf.IrisNetwork == types.Mainnet {
-		types.SetNetworkType(types.Mainnet)
-	}
-	cdc = app.MakeLatestCodec()
+	cdc = codec.New()
+
+	ModuleBasics.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	codec.RegisterEvidences(cdc)
 }
 
 func GetCodec() *codec.Codec {
@@ -39,49 +44,28 @@ func BuildHex(bytes []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bytes))
 }
 
-func ParseCoins(coinsStr string) (coins imodel.Coins) {
-	coinsStr = strings.TrimSpace(coinsStr)
-	if len(coinsStr) == 0 {
-		return
-	}
+func ParseCoins(coinsStr sdk.Coins) (coins []*imodel.Coin) {
 
-	coinStrs := strings.Split(coinsStr, ",")
-	for _, coinStr := range coinStrs {
+	coins = make([]*imodel.Coin, 0, len(coinsStr))
+	for _, coinStr := range coinsStr {
 		coin := ParseCoin(coinStr)
-		coins = append(coins, coin)
+		coins = append(coins, &coin)
 	}
 	return coins
 }
 
-func ParseCoin(coinStr string) (coin *imodel.Coin) {
-	var (
-		reDnm  = `[A-Za-z0-9]{2,}\S*`
-		reAmt  = `[0-9]+[.]?[0-9]*`
-		reSpc  = `[[:space:]]*`
-		reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	)
-
-	coinStr = strings.TrimSpace(coinStr)
-
-	matches := reCoin.FindStringSubmatch(coinStr)
-	if matches == nil {
-		logger.Error("invalid coin expression", logger.Any("coin", coinStr))
-		return coin
-	}
-	denom, amount := matches[2], matches[1]
-
-	amount = getPrecision(amount)
-	amt, err := strconv.ParseFloat(amount, 64)
+func ParseCoin(sdkcoin sdk.Coin) (coin imodel.Coin) {
+	amount, err := strconv.ParseInt(sdkcoin.Amount.String(), 10, 64)
 	if err != nil {
-		logger.Error("Convert str to int failed", logger.Any("amount", amount))
-		return coin
+		logger.Error("ParseCoin have error", logger.String("error", err.Error()))
+	}
+	return imodel.Coin{
+		Denom:  sdkcoin.Denom,
+		Amount: amount,
 	}
 
-	return &imodel.Coin{
-		Denom:  denom,
-		Amount: amt,
-	}
 }
+
 
 func getPrecision(amount string) string {
 	length := len(amount)
@@ -108,9 +92,9 @@ func getPrecision(amount string) string {
 	return amount
 }
 
-func BuildFee(fee auth.StdFee) *imodel.Fee {
-	return &imodel.Fee{
-		Amount: ParseCoins(fee.Amount.String()),
+func BuildFee(fee auth.StdFee) imodel.Fee {
+	return imodel.Fee{
+		Amount: ParseCoins(fee.Amount),
 		Gas:    int64(fee.Gas),
 	}
 }

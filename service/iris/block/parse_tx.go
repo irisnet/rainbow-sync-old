@@ -3,14 +3,112 @@ package block
 import (
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
-	imsg "github.com/irisnet/rainbow-sync/service/iris/model/msg"
 	"github.com/irisnet/rainbow-sync/service/iris/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/irisnet/irishub/app/v1/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/types"
 	"github.com/irisnet/rainbow-sync/service/iris/helper"
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
+	model "github.com/irisnet/rainbow-sync/service/iris/db"
+	"fmt"
+	"time"
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/txn"
 )
+
+const (
+	IRIS = "Iris"
+)
+
+type Iris_Block struct{}
+
+func (iris *Iris_Block) Name() string {
+	return IRIS
+}
+
+func (iris *Iris_Block) SaveDocsWithTxn(blockDoc *imodel.Block, irisTxs []*imodel.IrisTx, taskDoc imodel.SyncTask) error {
+	var (
+		ops, irisTxsOps []txn.Op
+	)
+
+	if blockDoc.Height == 0 {
+		return fmt.Errorf("invalid block, height equal 0")
+	}
+
+	blockOp := txn.Op{
+		C:      imodel.CollectionNameBlock,
+		Id:     bson.NewObjectId(),
+		Insert: blockDoc,
+	}
+
+	length_txs := len(irisTxs)
+	if length_txs > 0 {
+		irisTxsOps = make([]txn.Op, 0, length_txs)
+		for _, v := range irisTxs {
+			op := txn.Op{
+				C:      imodel.CollectionNameIrisTx,
+				Id:     bson.NewObjectId(),
+				Insert: v,
+			}
+			irisTxsOps = append(irisTxsOps, op)
+		}
+	}
+
+	updateOp := txn.Op{
+		C:      imodel.CollectionNameSyncTask,
+		Id:     taskDoc.ID,
+		Assert: txn.DocExists,
+		Update: bson.M{
+			"$set": bson.M{
+				"current_height":   taskDoc.CurrentHeight,
+				"status":           taskDoc.Status,
+				"last_update_time": taskDoc.LastUpdateTime,
+			},
+		},
+	}
+
+	ops = make([]txn.Op, 0, length_txs+2)
+	ops = append(append(ops, blockOp, updateOp))
+	ops = append(ops, irisTxsOps...)
+
+	if len(ops) > 0 {
+		err := model.Txn(ops)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (iris *Iris_Block) ParseBlock(b int64, client *helper.Client) (resBlock *imodel.Block, resIrisTxs []*imodel.IrisTx, resErr error) {
+
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("parse iris block fail", logger.Int64("height", b),
+				logger.Any("err", err), logger.String("Chain Block", iris.Name()))
+
+			resBlock = &imodel.Block{}
+			resIrisTxs = nil
+			resErr = fmt.Errorf("%v", err)
+		}
+	}()
+	irisTxs, err := iris.ParseIrisTxs(b, client)
+	if err != nil {
+		logger.Error("parse iris txs", logger.String("error", err.Error()), logger.String("Chain Block", iris.Name()))
+	}
+
+	resBlock = &imodel.Block{
+		Height:     b,
+		CreateTime: time.Now().Unix(),
+	}
+	resIrisTxs = irisTxs
+	resErr = err
+
+	return
+}
+
+
 
 // parse iris txs  from block result txs
 func (iris *Iris_Block) ParseIrisTxs(b int64, client *helper.Client) ([]*imodel.IrisTx, error) {
@@ -44,8 +142,6 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		authTx     auth.StdTx
 		methodName = "ParseTx"
 		docTx      imodel.IrisTx
-		actualFee  *imodel.ActualFee
-		docTxMsgs  []imodel.DocTxMsg
 	)
 
 	cdc := utils.GetCodec()
@@ -67,16 +163,6 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 	if err != nil {
 		logger.Error("get txResult err", logger.String("method", methodName), logger.String("err", err.Error()))
 	}
-	gasUsed := Min(result.GasUsed, fee.Gas)
-	if len(fee.Amount) > 0 {
-		gasPrice := fee.Amount[0].Amount / float64(fee.Gas)
-		actualFee = &imodel.ActualFee{
-			Denom:  fee.Amount[0].Denom,
-			Amount: float64(gasUsed) * gasPrice,
-		}
-	} else {
-		actualFee = &imodel.ActualFee{}
-	}
 	msgs := authTx.GetMsgs()
 	if len(msgs) <= 0 {
 		logger.Error("can't get msgs", logger.String("method", methodName))
@@ -85,346 +171,25 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 	msg := msgs[0]
 
 	docTx = imodel.IrisTx{
-		Height:    height,
-		Time:      time,
-		TxHash:    txHash,
-		Fee:       fee,
-		ActualFee: actualFee,
-		Memo:      memo,
-		Status:    status,
-		Log:       result.Log,
-		Code:      result.Code,
-		Tags:      parseTags(result),
+		Height: height,
+		Time:   time,
+		TxHash: txHash,
+		Fee:    &fee,
+		Memo:   memo,
+		Status: status,
+		Log:    result.Log,
+		Code:   result.Code,
+		Events: parseEvents(&result),
 	}
 	switch msg.(type) {
 	case imodel.MsgTransfer:
 		msg := msg.(imodel.MsgTransfer)
-
-		docTx.From = msg.Inputs[0].Address.String()
-		docTx.To = msg.Outputs[0].Address.String()
-		docTx.Initiator = msg.Inputs[0].Address.String()
-		docTx.Amount = utils.ParseCoins(msg.Inputs[0].Coins.String())
+		docTx.Initiator = msg.FromAddress.String()
+		docTx.From = msg.FromAddress.String()
+		docTx.To = msg.ToAddress.String()
+		docTx.Amount = utils.ParseCoins(msg.Amount)
 		docTx.Type = constant.Iris_TxTypeTransfer
-	case imodel.MsgBurn:
-		msg := msg.(imodel.MsgBurn)
-		docTx.From = msg.Owner.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Owner.String()
-		docTx.Amount = utils.ParseCoins(msg.Coins.String())
-		docTx.Type = constant.Iris_TxTypeBurn
-	case imodel.MsgSetMemoRegexp:
-		msg := msg.(imodel.MsgSetMemoRegexp)
-		docTx.From = msg.Owner.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Owner.String()
-		docTx.Amount = []*imodel.Coin{}
-		docTx.Type = constant.Iris_TxTypeSetMemoRegexp
-		txMsg := imsg.DocTxMsgSetMemoRegexp{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-		return docTx
 
-	case imodel.MsgStakeCreate:
-		msg := msg.(imodel.MsgStakeCreate)
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.To = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		docTx.Amount = []*imodel.Coin{utils.ParseCoin(msg.Delegation.String())}
-		docTx.Type = constant.Iris_TxTypeStakeCreateValidator
-
-	case imodel.MsgStakeEdit:
-		msg := msg.(imodel.MsgStakeEdit)
-
-		docTx.From = msg.ValidatorAddr.String()
-		docTx.To = ""
-		docTx.Initiator = msg.ValidatorAddr.String()
-		docTx.Amount = []*imodel.Coin{}
-		docTx.Type = constant.Iris_TxTypeStakeEditValidator
-
-	case imodel.MsgStakeDelegate:
-		msg := msg.(imodel.MsgStakeDelegate)
-
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.To = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		docTx.Amount = []*imodel.Coin{utils.ParseCoin(msg.Delegation.String())}
-		docTx.Type = constant.Iris_TxTypeStakeDelegate
-
-	case imodel.MsgStakeBeginUnbonding:
-		msg := msg.(imodel.MsgStakeBeginUnbonding)
-
-		shares := utils.ParseFloat(msg.SharesAmount.String())
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.To = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		coin := imodel.Coin{
-			Amount: shares,
-		}
-		docTx.Amount = []*imodel.Coin{&coin}
-		docTx.Type = constant.Iris_TxTypeStakeBeginUnbonding
-	case imodel.MsgBeginRedelegate:
-		msg := msg.(imodel.MsgBeginRedelegate)
-
-		shares := utils.ParseFloat(msg.SharesAmount.String())
-		docTx.From = msg.ValidatorSrcAddr.String()
-		docTx.To = msg.ValidatorDstAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		coin := imodel.Coin{
-			Amount: shares,
-		}
-		docTx.Amount = []*imodel.Coin{&coin}
-		docTx.Type = constant.Iris_TxTypeBeginRedelegate
-	case imodel.MsgUnjail:
-		msg := msg.(imodel.MsgUnjail)
-
-		docTx.From = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.ValidatorAddr.String()
-		docTx.Type = constant.Iris_TxTypeUnjail
-	case imodel.MsgSetWithdrawAddress:
-		msg := msg.(imodel.MsgSetWithdrawAddress)
-
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.To = msg.WithdrawAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		docTx.Type = constant.Iris_TxTypeSetWithdrawAddress
-	case imodel.MsgWithdrawDelegatorReward:
-		msg := msg.(imodel.MsgWithdrawDelegatorReward)
-
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.To = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		docTx.Type = constant.Iris_TxTypeWithdrawDelegatorReward
-
-		for _, tag := range result.Tags {
-			key := string(tag.Key)
-			if key == imodel.TagDistributionReward {
-				reward := string(tag.Value)
-				docTx.Amount = utils.ParseCoins(reward)
-				break
-			}
-		}
-	case imodel.MsgWithdrawDelegatorRewardsAll:
-		msg := msg.(imodel.MsgWithdrawDelegatorRewardsAll)
-
-		docTx.From = msg.DelegatorAddr.String()
-		docTx.Initiator = msg.DelegatorAddr.String()
-		docTx.Type = constant.Iris_TxTypeWithdrawDelegatorRewardsAll
-		for _, tag := range result.Tags {
-			key := string(tag.Key)
-			if key == imodel.TagDistributionReward {
-				reward := string(tag.Value)
-				docTx.Amount = utils.ParseCoins(reward)
-				break
-			}
-		}
-	case imodel.MsgWithdrawValidatorRewardsAll:
-		msg := msg.(imodel.MsgWithdrawValidatorRewardsAll)
-
-		docTx.From = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.ValidatorAddr.String()
-		docTx.Type = constant.Iris_TxTypeWithdrawValidatorRewardsAll
-		for _, tag := range result.Tags {
-			key := string(tag.Key)
-			if key == imodel.TagDistributionReward {
-				reward := string(tag.Value)
-				docTx.Amount = utils.ParseCoins(reward)
-				break
-			}
-		}
-	case imodel.MsgSubmitProposal:
-		msg := msg.(imodel.MsgSubmitProposal)
-
-		docTx.From = msg.Proposer.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Proposer.String()
-		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
-		docTx.Type = constant.Iris_TxTypeSubmitProposal
-		txMsg := imsg.DocTxMsgSubmitProposal{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-	case imodel.MsgSubmitSoftwareUpgradeProposal:
-		msg := msg.(imodel.MsgSubmitSoftwareUpgradeProposal)
-
-		docTx.From = msg.Proposer.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Proposer.String()
-		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
-		docTx.Type = constant.Iris_TxTypeSubmitProposal
-		txMsg := imsg.DocTxMsgSubmitSoftwareUpgradeProposal{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-	case imodel.MsgSubmitTaxUsageProposal:
-		msg := msg.(imodel.MsgSubmitTaxUsageProposal)
-
-		docTx.From = msg.Proposer.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Proposer.String()
-		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
-		docTx.Type = constant.Iris_TxTypeSubmitProposal
-		txMsg := imsg.DocTxMsgSubmitCommunityTaxUsageProposal{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-	case imodel.MsgSubmitTokenAdditionProposal:
-		msg := msg.(imodel.MsgSubmitTokenAdditionProposal)
-
-		docTx.From = msg.Proposer.String()
-		docTx.To = ""
-		docTx.Initiator = msg.Proposer.String()
-		docTx.Amount = utils.ParseCoins(msg.InitialDeposit.String())
-		docTx.Type = constant.Iris_TxTypeSubmitProposal
-		txMsg := imsg.DocTxMsgSubmitTokenAdditionProposal{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-		return docTx
-
-	case imodel.MsgDeposit:
-		msg := msg.(imodel.MsgDeposit)
-
-		docTx.From = msg.Depositor.String()
-		docTx.Initiator = msg.Depositor.String()
-		docTx.Amount = utils.ParseCoins(msg.Amount.String())
-		docTx.Type = constant.Iris_TxTypeDeposit
-	case imodel.MsgVote:
-		msg := msg.(imodel.MsgVote)
-
-		docTx.From = msg.Voter.String()
-		docTx.Initiator = msg.Voter.String()
-		docTx.Amount = []*imodel.Coin{}
-		docTx.Type = constant.Iris_TxTypeVote
-		txMsg := imsg.DocTxMsgVote{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-	case imodel.MsgRequestRand:
-		msg := msg.(imodel.MsgRequestRand)
-
-		docTx.From = msg.Consumer.String()
-		docTx.Initiator = msg.Consumer.String()
-		docTx.Amount = []*imodel.Coin{}
-		docTx.Type = constant.Iris_TxTypeRequestRand
-		txMsg := imsg.DocTxMsgRequestRand{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-
-	case imodel.AssetIssueToken:
-		msg := msg.(imodel.AssetIssueToken)
-
-		docTx.From = msg.Owner.String()
-		docTx.Type = constant.TxTypeAssetIssueToken
-		txMsg := imsg.DocTxMsgIssueToken{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetEditToken:
-		msg := msg.(imodel.AssetEditToken)
-
-		docTx.From = msg.Owner.String()
-		docTx.Type = constant.TxTypeAssetEditToken
-		txMsg := imsg.DocTxMsgEditToken{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetMintToken:
-		msg := msg.(imodel.AssetMintToken)
-
-		docTx.From = msg.Owner.String()
-		docTx.To = msg.To.String()
-		docTx.Type = constant.TxTypeAssetMintToken
-		txMsg := imsg.DocTxMsgMintToken{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetTransferTokenOwner:
-		msg := msg.(imodel.AssetTransferTokenOwner)
-
-		docTx.From = msg.SrcOwner.String()
-		docTx.To = msg.DstOwner.String()
-		docTx.Type = constant.TxTypeAssetTransferTokenOwner
-		txMsg := imsg.DocTxMsgTransferTokenOwner{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetCreateGateway:
-		msg := msg.(imodel.AssetCreateGateway)
-
-		docTx.From = msg.Owner.String()
-		docTx.Type = constant.TxTypeAssetCreateGateway
-		txMsg := imsg.DocTxMsgCreateGateway{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetEditGateWay:
-		msg := msg.(imodel.AssetEditGateWay)
-
-		docTx.From = msg.Owner.String()
-		docTx.Type = constant.TxTypeAssetEditGateway
-		txMsg := imsg.DocTxMsgEditGateway{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-
-		return docTx
-	case imodel.AssetTransferGatewayOwner:
-		msg := msg.(imodel.AssetTransferGatewayOwner)
-
-		docTx.From = msg.Owner.String()
-		docTx.To = msg.To.String()
-		docTx.Type = constant.TxTypeAssetTransferGatewayOwner
-		txMsg := imsg.DocTxMsgTransferGatewayOwner{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docTxMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-		return docTx
 	default:
 		logger.Warn("unknown msg type")
 	}
@@ -433,19 +198,21 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 }
 
-func parseTags(result abci.ResponseDeliverTx) map[string]string {
-	tags := make(map[string]string, 0)
-	for _, tag := range result.Tags {
-		key := string(tag.Key)
-		value := string(tag.Value)
-		tags[key] = value
+func parseEvents(result *abci.ResponseDeliverTx) []imodel.Event {
+
+	var events []imodel.Event
+	for _, val := range result.GetEvents() {
+		one := imodel.Event{
+			Type: val.Type,
+		}
+		one.Attributes = make(map[string]string, len(val.Attributes))
+		for _, attr := range val.Attributes {
+			one.Attributes[string(attr.Key)] = string(attr.Value)
+		}
+		events = append(events, one)
 	}
-	return tags
+
+	return events
 }
 
-func Min(x, y int64) int64 {
-	if x < y {
-		return x
-	}
-	return y
-}
+
