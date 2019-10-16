@@ -7,19 +7,19 @@ import (
 
 type (
 	CosmosTx struct {
-		Time      time.Time         `bson:"time"`
-		Height    int64             `bson:"height"`
-		TxHash    string            `bson:"tx_hash"`
-		From      string            `bson:"from"`
-		To        string            `bson:"to"`
-		Initiator string            `bson:"initiator"`
-		Amount    []*Coin           `bson:"amount"`
-		Type      string            `bson:"type"`
-		Fee       *Fee              `bson:"fee"`
-		Memo      string            `bson:"memo"`
-		Status    string            `bson:"status"`
-		Code      uint32            `bson:"code"`
-		Tags      map[string]string `bson:"tags"`
+		Time      time.Time `bson:"time"`
+		Height    int64     `bson:"height"`
+		TxHash    string    `bson:"tx_hash"`
+		From      string    `bson:"from"`
+		To        string    `bson:"to"`
+		Initiator string    `bson:"initiator"`
+		Amount    []*Coin   `bson:"amount"`
+		Type      string    `bson:"type"`
+		Fee       *Fee      `bson:"fee"`
+		Memo      string    `bson:"memo"`
+		Status    string    `bson:"status"`
+		Code      uint32    `bson:"code"`
+		Events    []Event   `bson:"events"`
 		//Msg    Msg       `bson:"msg"`
 	}
 )
@@ -51,7 +51,12 @@ type Fee struct {
 type Tag map[string]string
 
 type RawLog struct {
-	MsgIndex int    `json:"msg_index,string"`
+	MsgIndex int    `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
+}
+
+type Event struct {
+	Type       string            `bson:"type" json:"type"`
+	Attributes map[string]string `bson:"attributes" json:"attributes"`
 }

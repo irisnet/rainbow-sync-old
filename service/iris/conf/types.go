@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:26657"}
+	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:46657"}
 
-	IrisNetwork             = "testnet"
 	WorkerNumCreateTask     = 2
 	WorkerNumExecuteTask    = 30
 	WorkerMaxSleepTime      = 2 * 60
@@ -79,11 +78,4 @@ func init() {
 		}
 	}
 	logger.Info("Env Value", logger.Int(EnvNameBlockNumPerWorkerHandle, BlockNumPerWorkerHandle))
-	network, found := os.LookupEnv(EnvNameIrisNetwork)
-	if found {
-		IrisNetwork = network
-	} else {
-		panic("not found " + EnvNameIrisNetwork)
-	}
-	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
 }
