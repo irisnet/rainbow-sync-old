@@ -22,18 +22,8 @@ type IrisTx struct {
 	Code      uint32     `json:"code" bson:"code"`
 	Log       string     `json:"log" bson:"log"`
 	Events    []Event    `bson:"events"`
-	Msgs      []DocTxMsg `bson:"msgs"`
 }
 
-type DocTxMsg struct {
-	Type string `bson:"type"`
-	Msg  Msg    `bson:"msg"`
-}
-
-type Msg interface {
-	Type() string
-	BuildMsg(msg interface{})
-}
 
 type Event struct {
 	Type       string            `bson:"type" json:"type"`
