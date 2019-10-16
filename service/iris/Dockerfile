@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:20190925
 
 # Set up dependencies
 ENV PACKAGES go make git libc-dev bash
