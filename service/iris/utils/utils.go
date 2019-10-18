@@ -13,9 +13,10 @@ import (
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
 	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	"fmt"
+	"time"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"time"
+	"github.com/irisnet/rainbow-sync/service/iris/conf"
 )
 
 var (
@@ -34,10 +35,18 @@ func init() {
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	codec.RegisterEvidences(cdc)
+	config := sdk.GetConfig()
+	conf.SetNetworkType(conf.IrisNetwork)
+	irisConfig := conf.GetConfig()
+	config.SetBech32PrefixForAccount(irisConfig.GetBech32AccountAddrPrefix(), irisConfig.GetBech32AccountPubPrefix())
+	config.SetBech32PrefixForValidator(irisConfig.GetBech32ValidatorAddrPrefix(), irisConfig.GetBech32ValidatorPubPrefix())
+	config.SetBech32PrefixForConsensusNode(irisConfig.GetBech32ConsensusAddrPrefix(), irisConfig.GetBech32ConsensusPubPrefix())
+	config.Seal()
+
 }
 
 func GetCodec() *codec.Codec {
-	return cdc
+	return cdc.Seal()
 }
 
 func BuildHex(bytes []byte) string {

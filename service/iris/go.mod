@@ -7,7 +7,6 @@ module github.com/irisnet/rainbow-sync/service/iris
 		github.com/cosmos/cosmos-sdk v0.34.4-0.20191011012532-e69029151525
 		github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d // indirect
 		github.com/golang/mock v1.3.1 // indirect
-		github.com/irisnet/cosmos-sdk v0.23.1 // indirect
 		github.com/jolestar/go-commons-pool v2.0.0+incompatible
 		github.com/onsi/ginkgo v1.10.2 // indirect
 		github.com/onsi/gomega v1.7.0 // indirect
