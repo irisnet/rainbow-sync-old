@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 var (
@@ -17,6 +18,8 @@ var (
 
 	InitConnectionNum = 50  // fast init num of tendermint client pool
 	MaxConnectionNum  = 100 // max size of tendermint client pool
+
+	IrisNetwork = "testnet"
 )
 
 const (
@@ -78,4 +81,11 @@ func init() {
 		}
 	}
 	logger.Info("Env Value", logger.Int(EnvNameBlockNumPerWorkerHandle, BlockNumPerWorkerHandle))
+
+	network, found := os.LookupEnv(EnvNameIrisNetwork)
+	if !found {
+		panic(fmt.Sprintf("no found %v", EnvNameIrisNetwork))
+	}
+	IrisNetwork = network
+	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
 }
