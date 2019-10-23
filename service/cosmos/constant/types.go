@@ -1,24 +1,27 @@
 package constant
 
 const (
-	Cosmos_TxTypeMultiSend                   = "MultiSend"
-	Cosmos_TxTypeVerifyInvariant             = "VerifyInvariant"
-	Cosmos_TxTypeTransfer                    = "Transfer"
-	Cosmos_TxTypeStakeCreateValidator        = "CreateValidator"
-	Cosmos_TxTypeStakeEditValidator          = "EditValidator"
-	Cosmos_TxTypeStakeDelegate               = "Delegate"
-	Cosmos_TxTypeStakeUnDelegate             = "UnDelegate"
-	Cosmos_TxTypeBeginRedelegate             = "BeginRedelegate"
-	Cosmos_TxTypeUnjail                      = "Unjail"
-	Cosmos_TxTypeSetWithdrawAddress          = "SetWithdrawAddress"
-	Cosmos_TxTypeWithdrawDelegatorReward     = "WithdrawDelegatorReward"
-	Cosmos_TxTypeWithdrawValidatorCommission = "WithdrawValidatorCommission"
-	Cosmos_TxTypeSubmitProposal              = "SubmitProposal"
-	Cosmos_TxTypeDeposit                     = "Deposit"
-	Cosmos_TxTypeVote                        = "Vote"
+	TxTypeTransfer                  = "Transfer"
+	TxTypeIBCBankTransfer           = "IBCBankTransfer"
+	TxTypeIBCBankRecvTransferPacket = "IBCRecvTransferPacket"
 
-	Cosmos_TxEventWithdrawRewards = "withdraw_rewards"
+	TxMsgTypeTransfer                  = "Transfer"
+	TxMsgTypeIBCBankTransfer           = "IBCBankTransfer"
+	TxMsgTypeIBCBankRecvTransferPacket = "IBCRecvTransferPacket"
 
-	TxStatusSuccess = "success"
-	TxStatusFail    = "fail"
+	TxStatusSuccess          = "success"
+	TxStatusFail             = "fail"
+	EventTypeSendPacket      = "send_packet"
+	EventAttributesKeyPacket = "Packet"
+
+	EnvNameSerNetworkFullNode_COSMOS      = "SER_BC_FULL_NODE_COSMOS"
+	EnvNameWorkerNumCreateTask_COSMOS     = "WORKER_NUM_CREATE_TASK_COSMOS"
+	EnvNameWorkerNumExecuteTask_COSMOS    = "WORKER_NUM_EXECUTE_TASK_COSMOS"
+	EnvNameWorkerMaxSleepTime_COSMOS      = "WORKER_MAX_SLEEP_TIME_COSMOS"
+	EnvNameBlockNumPerWorkerHandle_COSMOS = "BLOCK_NUM_PER_WORKER_HANDLE_COSMOS"
+
+	EnvNameDbAddr     = "DB_ADDR"
+	EnvNameDbUser     = "DB_USER"
+	EnvNameDbPassWd   = "DB_PASSWD"
+	EnvNameDbDataBase = "DB_DATABASE"
 )

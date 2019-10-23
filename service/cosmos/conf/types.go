@@ -1,16 +1,17 @@
 package conf
 
 import (
-	"os"
-	"strings"
-	"strconv"
+	"github.com/irisnet/rainbow-sync/service/cosmos/constant"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
+	"os"
+	"strconv"
+	"strings"
 )
 
 var (
 	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
 
-	WorkerNumCreateTask     = 2
+	WorkerNumCreateTask     = 1
 	WorkerNumExecuteTask    = 30
 	WorkerMaxSleepTime      = 2 * 60
 	BlockNumPerWorkerHandle = 50
@@ -20,62 +21,51 @@ var (
 
 )
 
-const (
-	EnvNameSerNetworkFullNode_COSMOS      = "SER_BC_FULL_NODE_COSMOS"
-	EnvNameWorkerNumCreateTask_COSMOS     = "WORKER_NUM_CREATE_TASK_COSMOS"
-	EnvNameWorkerNumExecuteTask_COSMOS    = "WORKER_NUM_EXECUTE_TASK_COSMOS"
-	EnvNameWorkerMaxSleepTime_COSMOS      = "WORKER_MAX_SLEEP_TIME_COSMOS"
-	EnvNameBlockNumPerWorkerHandle_COSMOS = "BLOCK_NUM_PER_WORKER_HANDLE_COSMOS"
-
-	EnvNameDbAddr     = "DB_ADDR"
-	EnvNameDbUser     = "DB_USER"
-	EnvNameDbPassWd   = "DB_PASSWD"
-	EnvNameDbDataBase = "DB_DATABASE"
-)
+const ()
 
 // get value of env var
 func init() {
 	var err error
 
-	nodeUrl, found := os.LookupEnv(EnvNameSerNetworkFullNode_COSMOS)
+	nodeUrl, found := os.LookupEnv(constant.EnvNameBlockNumPerWorkerHandle_COSMOS)
 	if found {
 		BlockChainMonitorUrl = strings.Split(nodeUrl, ",")
 	}
-	logger.Info("Env Value", logger.Any(EnvNameSerNetworkFullNode_COSMOS, BlockChainMonitorUrl))
+	logger.Info("Env Value", logger.Any(constant.EnvNameSerNetworkFullNode_COSMOS, BlockChainMonitorUrl))
 
-	workerNumCreateTask, found := os.LookupEnv(EnvNameWorkerNumCreateTask_COSMOS)
+	workerNumCreateTask, found := os.LookupEnv(constant.EnvNameWorkerNumCreateTask_COSMOS)
 	if found {
 		WorkerNumCreateTask, err = strconv.Atoi(workerNumCreateTask)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumCreateTask_COSMOS, workerNumCreateTask))
+			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumCreateTask_COSMOS, workerNumCreateTask))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerNumCreateTask_COSMOS, WorkerNumCreateTask))
+	logger.Info("Env Value", logger.Int(constant.EnvNameWorkerNumCreateTask_COSMOS, WorkerNumCreateTask))
 
-	workerNumExecuteTask, found := os.LookupEnv(EnvNameWorkerNumExecuteTask_COSMOS)
+	workerNumExecuteTask, found := os.LookupEnv(constant.EnvNameWorkerNumExecuteTask_COSMOS)
 	if found {
 		WorkerNumExecuteTask, err = strconv.Atoi(workerNumExecuteTask)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumExecuteTask_COSMOS, workerNumCreateTask))
+			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumExecuteTask_COSMOS, workerNumCreateTask))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerNumExecuteTask_COSMOS, WorkerNumExecuteTask))
+	logger.Info("Env Value", logger.Int(constant.EnvNameWorkerNumExecuteTask_COSMOS, WorkerNumExecuteTask))
 
-	workerMaxSleepTime, found := os.LookupEnv(EnvNameWorkerMaxSleepTime_COSMOS)
+	workerMaxSleepTime, found := os.LookupEnv(constant.EnvNameWorkerMaxSleepTime_COSMOS)
 	if found {
 		WorkerMaxSleepTime, err = strconv.Atoi(workerMaxSleepTime)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerMaxSleepTime_COSMOS, workerMaxSleepTime))
+			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerMaxSleepTime_COSMOS, workerMaxSleepTime))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerMaxSleepTime_COSMOS, WorkerMaxSleepTime))
+	logger.Info("Env Value", logger.Int(constant.EnvNameWorkerMaxSleepTime_COSMOS, WorkerMaxSleepTime))
 
-	blockNumPerWorkerHandle, found := os.LookupEnv(EnvNameBlockNumPerWorkerHandle_COSMOS)
+	blockNumPerWorkerHandle, found := os.LookupEnv(constant.EnvNameBlockNumPerWorkerHandle_COSMOS)
 	if found {
 		BlockNumPerWorkerHandle, err = strconv.Atoi(blockNumPerWorkerHandle)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameBlockNumPerWorkerHandle_COSMOS, blockNumPerWorkerHandle))
+			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameBlockNumPerWorkerHandle_COSMOS, blockNumPerWorkerHandle))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameBlockNumPerWorkerHandle_COSMOS, BlockNumPerWorkerHandle))
+	logger.Info("Env Value", logger.Int(constant.EnvNameBlockNumPerWorkerHandle_COSMOS, BlockNumPerWorkerHandle))
 }

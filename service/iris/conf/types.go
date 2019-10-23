@@ -5,13 +5,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 var (
 	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:46657"}
 
-	WorkerNumCreateTask     = 2
+	WorkerNumCreateTask     = 1
 	WorkerNumExecuteTask    = 30
 	WorkerMaxSleepTime      = 2 * 60
 	BlockNumPerWorkerHandle = 50
@@ -84,8 +83,9 @@ func init() {
 
 	network, found := os.LookupEnv(EnvNameIrisNetwork)
 	if !found {
-		panic(fmt.Sprintf("no found %v", EnvNameIrisNetwork))
+		//panic(fmt.Sprintf("no found %v", EnvNameIrisNetwork))
+	} else {
+		IrisNetwork = network
 	}
-	IrisNetwork = network
 	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
 }

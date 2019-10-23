@@ -1,9 +1,9 @@
 package cosmos
 
 import (
+	"github.com/irisnet/rainbow-sync/service/cosmos/db"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	model "github.com/irisnet/rainbow-sync/service/cosmos/db"
 	"time"
 )
 
@@ -56,7 +56,7 @@ func (d *SyncCosmosTask) GetMaxBlockHeight() (int64, error) {
 	getMaxBlockHeightFn := func(c *mgo.Collection) error {
 		return c.Pipe(q).All(&res)
 	}
-	err := model.ExecCollection(d.Name(), getMaxBlockHeightFn)
+	err := db.ExecCollection(d.Name(), getMaxBlockHeightFn)
 
 	if err != nil {
 		return 0, err
@@ -80,12 +80,12 @@ func (d *SyncCosmosTask) QueryAll(status []string, taskType string) ([]SyncCosmo
 	}
 
 	switch taskType {
-	case model.SyncTaskTypeCatchUp:
+	case db.SyncTaskTypeCatchUp:
 		q["end_height"] = bson.M{
 			"$ne": 0,
 		}
 		break
-	case model.SyncTaskTypeFollow:
+	case db.SyncTaskTypeFollow:
 		q["end_height"] = bson.M{
 			"$eq": 0,
 		}
@@ -96,7 +96,7 @@ func (d *SyncCosmosTask) QueryAll(status []string, taskType string) ([]SyncCosmo
 		return c.Find(q).All(&syncTasks)
 	}
 
-	err := model.ExecCollection(d.Name(), fn)
+	err := db.ExecCollection(d.Name(), fn)
 
 	if err != nil {
 		return syncTasks, err
@@ -111,7 +111,7 @@ func (d *SyncCosmosTask) GetExecutableTask(maxWorkerSleepTime int64) ([]SyncCosm
 	t := time.Now().Add(time.Duration(-maxWorkerSleepTime) * time.Second).Unix()
 	q := bson.M{
 		"status": bson.M{
-			"$in": []string{model.SyncTaskStatusUnHandled, model.SyncTaskStatusUnderway},
+			"$in": []string{db.SyncTaskStatusUnHandled, db.SyncTaskStatusUnderway},
 		},
 	}
 
@@ -119,7 +119,7 @@ func (d *SyncCosmosTask) GetExecutableTask(maxWorkerSleepTime int64) ([]SyncCosm
 		return c.Find(q).Sort("-status").Limit(1000).All(&tasks)
 	}
 
-	err := model.ExecCollection(d.Name(), fn)
+	err := db.ExecCollection(d.Name(), fn)
 
 	if err != nil {
 		return tasks, err
@@ -128,7 +128,7 @@ func (d *SyncCosmosTask) GetExecutableTask(maxWorkerSleepTime int64) ([]SyncCosm
 	ret := make([]SyncCosmosTask, 0, len(tasks))
 	//filter the task which last_update_time >= now
 	for _, task := range tasks {
-		if task.LastUpdateTime >= t && task.Status == model.SyncTaskStatusUnderway {
+		if task.LastUpdateTime >= t && task.Status == db.SyncTaskStatusUnderway {
 			continue
 		}
 		ret = append(ret, task)
@@ -146,7 +146,7 @@ func (d *SyncCosmosTask) GetTaskById(id bson.ObjectId) (SyncCosmosTask, error) {
 		return c.FindId(id).One(&task)
 	}
 
-	err := model.ExecCollection(d.Name(), fn)
+	err := db.ExecCollection(d.Name(), fn)
 	if err != nil {
 		return task, err
 	}
@@ -165,7 +165,7 @@ func (d *SyncCosmosTask) GetTaskByIdAndWorker(id bson.ObjectId, worker string) (
 		return c.Find(q).One(&task)
 	}
 
-	err := model.ExecCollection(d.Name(), fn)
+	err := db.ExecCollection(d.Name(), fn)
 	if err != nil {
 		return task, err
 	}
@@ -183,7 +183,7 @@ func (d *SyncCosmosTask) TakeOverTask(task SyncCosmosTask, workerId string) erro
 			"last_update_time": task.LastUpdateTime,
 		}
 
-		task.Status = model.SyncTaskStatusUnderway
+		task.Status = db.SyncTaskStatusUnderway
 		task.WorkerId = workerId
 		task.LastUpdateTime = time.Now().Unix()
 		task.WorkerLogs = append(task.WorkerLogs, WorkerLog{
@@ -194,7 +194,7 @@ func (d *SyncCosmosTask) TakeOverTask(task SyncCosmosTask, workerId string) erro
 		return c.Update(selector, task)
 	}
 
-	return model.ExecCollection(d.Name(), fn)
+	return db.ExecCollection(d.Name(), fn)
 }
 
 // update task last update time
@@ -210,5 +210,5 @@ func (d *SyncCosmosTask) UpdateLastUpdateTime(task SyncCosmosTask) error {
 		return c.Update(selector, task)
 	}
 
-	return model.ExecCollection(d.Name(), fn)
+	return db.ExecCollection(d.Name(), fn)
 }

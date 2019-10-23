@@ -2,8 +2,8 @@ package cosmoshelper
 
 import (
 	"context"
-	commonPool "github.com/jolestar/go-commons-pool"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
+	commonPool "github.com/jolestar/go-commons-pool"
 	"math/rand"
 	"sync"
 )

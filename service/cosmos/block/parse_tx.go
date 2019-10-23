@@ -1,63 +1,35 @@
 package block
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/irisnet/rainbow-sync/service/cosmos/constant"
 	model "github.com/irisnet/rainbow-sync/service/cosmos/db"
-	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
 	"github.com/irisnet/rainbow-sync/service/cosmos/helper"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
-	"github.com/irisnet/rainbow-sync/service/cosmos/constant"
-	"github.com/tendermint/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"fmt"
-	"time"
-	"gopkg.in/mgo.v2/txn"
-	"gopkg.in/mgo.v2/bson"
-	dtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	stypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
+	imsg "github.com/irisnet/rainbow-sync/service/cosmos/model/msg"
 	cutils "github.com/irisnet/rainbow-sync/service/cosmos/utils"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"encoding/json"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/types"
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/txn"
+	"strconv"
+	"time"
 )
 
 const (
 	COSMOS = "Cosmos"
 )
 
-type (
-	MsgTransfer = bank.MsgSend
-	MsgMultiSend = bank.MsgMultiSend
+type CosmosBlock struct{}
 
-	MsgUnjail = slashing.MsgUnjail
-	MsgSetWithdrawAddress = dtypes.MsgSetWithdrawAddress
-	MsgWithdrawDelegatorReward = dtypes.MsgWithdrawDelegatorReward
-	MsgWithdrawValidatorCommission = dtypes.MsgWithdrawValidatorCommission
-
-	MsgDeposit = gov.MsgDeposit
-	MsgSubmitProposal = gov.MsgSubmitProposal
-	MsgVote = gov.MsgVote
-	Proposal = gov.Proposal
-
-	MsgVerifyInvariant = crisis.MsgVerifyInvariant
-
-	MsgDelegate = stypes.MsgDelegate
-	MsgUndelegate = stypes.MsgUndelegate
-	MsgBeginRedelegate = stypes.MsgBeginRedelegate
-	MsgCreateValidator = stypes.MsgCreateValidator
-	MsgEditValidator = stypes.MsgEditValidator
-)
-
-type Cosmos_Block struct{}
-
-func (cosmos *Cosmos_Block) Name() string {
+func (cosmos *CosmosBlock) Name() string {
 	return COSMOS
 }
 
-func (cosmos *Cosmos_Block) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmodel.CosmosTx, taskDoc cmodel.SyncCosmosTask) error {
+func (cosmos *CosmosBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmodel.CosmosTx, taskDoc cmodel.SyncCosmosTask) error {
 	var (
 		ops, cosmosTxsOps []txn.Op
 	)
@@ -111,7 +83,7 @@ func (cosmos *Cosmos_Block) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []
 	return nil
 }
 
-func (cosmos *Cosmos_Block) ParseBlock(b int64, client *cosmoshelper.CosmosClient) (resBlock *cmodel.Block, cosmosTxs []cmodel.CosmosTx, resErr error) {
+func (cosmos *CosmosBlock) ParseBlock(b int64, client *cosmoshelper.CosmosClient) (resBlock *cmodel.Block, cosmosTxs []cmodel.CosmosTx, resErr error) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -140,7 +112,7 @@ func (cosmos *Cosmos_Block) ParseBlock(b int64, client *cosmoshelper.CosmosClien
 }
 
 // parse cosmos txs  from block result txs
-func (cosmos *Cosmos_Block) ParseCosmosTxs(b int64, client *cosmoshelper.CosmosClient) ([]cmodel.CosmosTx, error) {
+func (cosmos *CosmosBlock) ParseCosmosTxs(b int64, client *cosmoshelper.CosmosClient) ([]cmodel.CosmosTx, error) {
 	resblock, err := client.Block(&b)
 	if err != nil {
 		logger.Warn("get block result err, now try again", logger.String("err", err.Error()),
@@ -168,11 +140,12 @@ func (cosmos *Cosmos_Block) ParseCosmosTxs(b int64, client *cosmoshelper.CosmosC
 	return cosmosTxs, nil
 }
 
-func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Block) []cmodel.CosmosTx {
+func (cosmos *CosmosBlock) ParseCosmosTxModel(txBytes types.Tx, block *types.Block) []cmodel.CosmosTx {
 	var (
 		authTx     auth.StdTx
 		methodName = "parseCosmosTxModel"
 		txdetail   cmodel.CosmosTx
+		docTxMsgs  []cmodel.DocTxMsg
 	)
 
 	cdc := cutils.GetCodec()
@@ -187,12 +160,12 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			logger.String("err", err.Error()),
 			logger.String("Chain Block", cosmos.Name()))
 	}
-	msgStat, err := parseRawlog(result.Log)
-	if err != nil {
-		logger.Error("get parseRawlog err", logger.String("method", methodName),
-			logger.String("err", err.Error()),
-			logger.String("Chain Block", cosmos.Name()))
-	}
+	//msgStat, err := parseRawlog(result.Log)
+	//if err != nil {
+	//	logger.Error("get parseRawlog err", logger.String("method", methodName),
+	//		logger.String("err", err.Error()),
+	//		logger.String("Chain Block", cosmos.Name()))
+	//}
 
 	fee := cutils.BuildFee(authTx.Fee)
 	txdetail.TxHash = cutils.BuildHex(txBytes.Hash())
@@ -202,162 +175,92 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 	txdetail.Time = block.Time
 	txdetail.Status = status
 	txdetail.Code = result.Code
+	txdetail.Events = parseEvents(result)
 
-	length_msgStat := len(msgStat)
+	//length_msgStat := len(msgStat)
 
 	msgs := authTx.GetMsgs()
-	len_msgs := len(msgs)
-	if len_msgs <= 0 {
+	lenMsgs := len(msgs)
+	if lenMsgs <= 0 {
 		logger.Error("can't get msgs", logger.String("method", methodName),
 			logger.String("Chain Block", cosmos.Name()))
 		return nil
 	}
-	txs := make([]cmodel.CosmosTx, 0, len_msgs)
-	for i, msg := range msgs {
+	txs := make([]cmodel.CosmosTx, 0, lenMsgs)
+	for _, msg := range msgs {
 		txdetail.Initiator = ""
 		txdetail.From = ""
 		txdetail.To = ""
 		txdetail.Amount = nil
 		txdetail.Type = ""
-		txdetail.Events = parseEvents(result)
-		if length_msgStat > i {
-			txdetail.Status = msgStat[i]
-		}
+		//if length_msgStat > i {
+		//	txdetail.Status = msgStat[i]
+		//}
 		switch msg.(type) {
-		case MsgDelegate:
-			msg := msg.(MsgDelegate)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.DelegatorAddress.String()
-			txdetail.To = msg.ValidatorAddress.String()
-			txdetail.Amount = cutils.ParseCoins(sdk.Coins{msg.Amount})
-			txdetail.Type = constant.Cosmos_TxTypeStakeDelegate
-			txs = append(txs, txdetail)
 
-		case MsgUndelegate:
-			msg := msg.(MsgUndelegate)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.DelegatorAddress.String()
-			txdetail.To = msg.ValidatorAddress.String()
-			txdetail.Amount = cutils.ParseCoins(sdk.Coins{msg.Amount})
-			txdetail.Type = constant.Cosmos_TxTypeStakeUnDelegate
-			txs = append(txs, txdetail)
-
-		case MsgEditValidator:
-			msg := msg.(MsgEditValidator)
-			txdetail.Initiator = msg.ValidatorAddress.String()
-			txdetail.From = msg.ValidatorAddress.String()
-			txdetail.To = ""
-			txdetail.Amount = []*cmodel.Coin{}
-			txdetail.Type = constant.Cosmos_TxTypeStakeEditValidator
-			txs = append(txs, txdetail)
-
-		case MsgCreateValidator:
-			msg := msg.(MsgCreateValidator)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.DelegatorAddress.String()
-			txdetail.To = msg.ValidatorAddress.String()
-			txdetail.Amount = cutils.ParseCoins(sdk.Coins{msg.Value})
-			txdetail.Type = constant.Cosmos_TxTypeStakeCreateValidator
-			txs = append(txs, txdetail)
-
-		case MsgBeginRedelegate:
-			msg := msg.(MsgBeginRedelegate)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.ValidatorSrcAddress.String()
-			txdetail.To = msg.ValidatorDstAddress.String()
-			txdetail.Amount = cutils.ParseCoins(sdk.Coins{msg.Amount})
-			txdetail.Type = constant.Cosmos_TxTypeBeginRedelegate
-			txs = append(txs, txdetail)
-
-		case MsgTransfer:
-			msg := msg.(MsgTransfer)
+		case cmodel.MsgTransfer:
+			msg := msg.(cmodel.MsgTransfer)
 			txdetail.Initiator = msg.FromAddress.String()
 			txdetail.From = msg.FromAddress.String()
 			txdetail.To = msg.ToAddress.String()
 			txdetail.Amount = cutils.ParseCoins(msg.Amount)
-			txdetail.Type = constant.Cosmos_TxTypeTransfer
-			txs = append(txs, txdetail)
+			txdetail.Type = constant.TxTypeTransfer
 
-		case MsgMultiSend:
-			msg := msg.(MsgMultiSend)
-			txdetail.Initiator = msg.Inputs[0].Address.String()
-			txdetail.From = msg.Inputs[0].Address.String()
-			txdetail.To = msg.Outputs[0].Address.String()
-			txdetail.Amount = cutils.ParseCoins(msg.Inputs[0].Coins)
-			txdetail.Type = constant.Cosmos_TxTypeMultiSend
-			txs = append(txs, txdetail)
+			docTxMsg := imsg.DocTxMsgTransfer{}
+			docTxMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: docTxMsg.Type(),
+				Msg:  &docTxMsg,
+			})
+			break
 
-		case MsgVerifyInvariant:
-			msg := msg.(MsgVerifyInvariant)
-			txdetail.Initiator = msg.Sender.String()
-			txdetail.From = msg.Sender.String()
-			txdetail.To = ""
-			txdetail.Amount = []*cmodel.Coin{}
-			txdetail.Type = constant.Cosmos_TxTypeVerifyInvariant
-			txs = append(txs, txdetail)
+		case cmodel.IBCBankMsgTransfer:
+			msg := msg.(cmodel.IBCBankMsgTransfer)
+			txdetail.Initiator = msg.Sender
+			txdetail.From = txdetail.Initiator
+			txdetail.To = msg.Receiver
+			txdetail.Amount = buildCoins(msg.Denomination, msg.Amount.String())
+			txdetail.Type = constant.TxTypeIBCBankTransfer
+			txdetail.IBCPacketHash = buildIBCPacketHashByEvents(txdetail.Events)
+			txMsg := imsg.DocTxMsgIBCBankTransfer{}
+			txMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
+		case cmodel.IBCBankMsgReceivePacket:
+			msg := msg.(cmodel.IBCBankMsgReceivePacket)
+			txdetail.Initiator = msg.Signer.String()
+			txdetail.Type = constant.TxTypeIBCBankRecvTransferPacket
 
-		case MsgUnjail:
-			msg := msg.(MsgUnjail)
-			txdetail.Initiator = msg.ValidatorAddr.String()
-			txdetail.From = msg.ValidatorAddr.String()
-			txdetail.Type = constant.Cosmos_TxTypeUnjail
-			txs = append(txs, txdetail)
-		case MsgSetWithdrawAddress:
-			msg := msg.(MsgSetWithdrawAddress)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.DelegatorAddress.String()
-			txdetail.To = msg.WithdrawAddress.String()
-			txdetail.Type = constant.Cosmos_TxTypeSetWithdrawAddress
-			txs = append(txs, txdetail)
-
-		case MsgWithdrawDelegatorReward:
-			msg := msg.(MsgWithdrawDelegatorReward)
-			txdetail.Initiator = msg.DelegatorAddress.String()
-			txdetail.From = msg.DelegatorAddress.String()
-			txdetail.To = msg.ValidatorAddress.String()
-			txdetail.Amount = []*cmodel.Coin{}
-			coin := parseRewards(txdetail.Events)
-			if coin != nil {
-				txdetail.Amount = []*cmodel.Coin{coin}
+			if transPacketData, err := buildIBCPacketData(msg.Packet.Data()); err != nil {
+				logger.Error("build ibc packet data fail", logger.String("packetData", string(msg.Packet.Data())),
+					logger.String("err", err.Error()))
+			} else {
+				txdetail.From = transPacketData.Sender
+				txdetail.To = transPacketData.Receiver
+				txdetail.Amount = buildCoins(transPacketData.Denomination, transPacketData.Amount)
 			}
-			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorReward
-			txs = append(txs, txdetail)
 
-		case MsgWithdrawValidatorCommission:
-			msg := msg.(MsgWithdrawValidatorCommission)
-			txdetail.Initiator = msg.ValidatorAddress.String()
-			txdetail.From = msg.ValidatorAddress.String()
-			txdetail.Type = constant.Cosmos_TxTypeWithdrawValidatorCommission
-			txs = append(txs, txdetail)
+			if hash, err := buildIBCPacketHashByPacket(msg.Packet.(cmodel.IBCPacket)); err != nil {
+				logger.Error("build ibc packet hash fail", logger.String("err", err.Error()))
+			} else {
+				txdetail.IBCPacketHash = hash
+			}
 
-		case MsgSubmitProposal:
-			msg := msg.(MsgSubmitProposal)
-			txdetail.Initiator = msg.Proposer.String()
-			txdetail.From = msg.Proposer.String()
-			txdetail.To = ""
-			txdetail.Amount = cutils.ParseCoins(msg.InitialDeposit)
-			txdetail.Type = constant.Cosmos_TxTypeSubmitProposal
-			txs = append(txs, txdetail)
-
-		case MsgDeposit:
-			msg := msg.(MsgDeposit)
-			txdetail.Initiator = msg.Depositor.String()
-			txdetail.From = msg.Depositor.String()
-			txdetail.Amount = cutils.ParseCoins(msg.Amount)
-			txdetail.Type = constant.Cosmos_TxTypeDeposit
-			txs = append(txs, txdetail)
-		case MsgVote:
-			msg := msg.(MsgVote)
-			txdetail.Initiator = msg.Voter.String()
-			txdetail.From = msg.Voter.String()
-			txdetail.Amount = []*cmodel.Coin{}
-			txdetail.Type = constant.Cosmos_TxTypeVote
-			txs = append(txs, txdetail)
-
+			txMsg := imsg.DocTxMsgIBCBankReceivePacket{}
+			txMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
 		default:
 			logger.Warn("unknown msg type")
 		}
 	}
+	txs = append(txs, txdetail)
 
 	return txs
 }
@@ -381,28 +284,6 @@ func QueryTxResult(txHash []byte) (string, *abci.ResponseDeliverTx, error) {
 	return status, &result, nil
 }
 
-func parseRewards(events []cmodel.Event) (rewards *cmodel.Coin) {
-
-	var totalrewards cmodel.Coin
-	for _, val := range events {
-
-		if val.Type == constant.Cosmos_TxEventWithdrawRewards {
-			amount := cutils.ParseRewards(val.Attributes["amount"])
-			if amount != nil {
-				if totalrewards.Denom == "" {
-					totalrewards.Denom = amount.Denom
-				}
-				totalrewards.Amount += amount.Amount
-			}
-		}
-	}
-
-	if totalrewards.Amount > 0 {
-		rewards = &totalrewards
-	}
-	return
-}
-
 func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 
 	var events []cmodel.Event
@@ -418,6 +299,59 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 	}
 
 	return events
+}
+
+func buildCoins(denom string, amountStr string) []*cmodel.Coin {
+	var coins []*cmodel.Coin
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		logger.Error("convert str to float64 fail", logger.String("amountStr", amountStr),
+			logger.String("err", err.Error()))
+		amount = 0
+	}
+	coin := cmodel.Coin{
+		Denom:  denom,
+		Amount: amount,
+	}
+	return append(coins, &coin)
+}
+
+func buildIBCPacketHashByEvents(events []cmodel.Event) string {
+	var packetStr string
+	if len(events) == 0 {
+		return ""
+	}
+
+	for _, e := range events {
+		if e.Type == constant.EventTypeSendPacket {
+			for k, v := range e.Attributes {
+				if k == constant.EventAttributesKeyPacket {
+					packetStr = v
+					break
+				}
+			}
+		}
+	}
+
+	return cutils.Md5Encrypt([]byte(packetStr))
+}
+
+func buildIBCPacketHashByPacket(packet cmodel.IBCPacket) (string, error) {
+	data, err := packet.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+	return cutils.Md5Encrypt(data), nil
+}
+
+func buildIBCPacketData(packetData []byte) (cmodel.IBCTransferPacketDataValue, error) {
+	var transferPacketData cmodel.IBCTransferPacketData
+	err := json.Unmarshal(packetData, &transferPacketData)
+	if err != nil {
+		return transferPacketData.Value, err
+	}
+
+	return transferPacketData.Value, nil
 }
 
 func parseRawlog(rawlog string) (map[int]string, error) {

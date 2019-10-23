@@ -1,16 +1,16 @@
 package task
 
 import (
+	"fmt"
+	"github.com/irisnet/rainbow-sync/service/cosmos/conf"
+	"github.com/irisnet/rainbow-sync/service/cosmos/db"
 	"github.com/irisnet/rainbow-sync/service/cosmos/helper"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
-	model "github.com/irisnet/rainbow-sync/service/cosmos/db"
 	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
-	"github.com/irisnet/rainbow-sync/service/cosmos/conf"
-	"time"
-	"os"
-	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"os"
+	"time"
 )
 
 func (s *TaskCosmosService) StartExecuteTask() {
@@ -95,9 +95,9 @@ func (s *TaskCosmosService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepT
 	}
 
 	if task.EndHeight != 0 {
-		taskType = model.SyncTaskTypeCatchUp
+		taskType = db.SyncTaskTypeCatchUp
 	} else {
-		taskType = model.SyncTaskTypeFollow
+		taskType = db.SyncTaskTypeFollow
 	}
 	logger.Info("worker begin execute Cosmos task", logger.String("Chain Block", s.blockType.Name()),
 		logger.String("curWorker", workerId), logger.Any("taskId", task.ID),
@@ -162,7 +162,7 @@ func (s *TaskCosmosService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepT
 		}
 
 		// if inProcessBlock > blockChainLatestHeight, should wait blockChainLatestHeight update
-		if taskType == model.SyncTaskTypeFollow && inProcessBlock > blockChainLatestHeight {
+		if taskType == db.SyncTaskTypeFollow && inProcessBlock > blockChainLatestHeight {
 			logger.Info("wait Cosmos blockChain latest height update",
 				logger.Int64("curSyncedHeight", inProcessBlock-1),
 				logger.Int64("blockChainLatestHeight", blockChainLatestHeight),
@@ -192,9 +192,9 @@ func (s *TaskCosmosService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepT
 			taskDoc := task
 			taskDoc.CurrentHeight = inProcessBlock
 			taskDoc.LastUpdateTime = time.Now().Unix()
-			taskDoc.Status = model.SyncTaskStatusUnderway
+			taskDoc.Status = db.SyncTaskStatusUnderway
 			if inProcessBlock == task.EndHeight {
-				taskDoc.Status = model.SyncTaskStatusCompleted
+				taskDoc.Status = db.SyncTaskStatusCompleted
 			}
 
 			err := s.blockType.SaveDocsWithTxn(blockDoc, BlockTypeChainDocs, taskDoc)
@@ -228,9 +228,9 @@ func (s *TaskCosmosService) assertCosmosTaskValid(task cmodel.SyncCosmosTask, bl
 		err                    error
 	)
 	if task.EndHeight != 0 {
-		taskType = model.SyncTaskTypeCatchUp
+		taskType = db.SyncTaskTypeCatchUp
 	} else {
-		taskType = model.SyncTaskTypeFollow
+		taskType = db.SyncTaskTypeFollow
 	}
 	currentHeight := task.CurrentHeight
 	if currentHeight == 0 {
@@ -238,12 +238,12 @@ func (s *TaskCosmosService) assertCosmosTaskValid(task cmodel.SyncCosmosTask, bl
 	}
 
 	switch taskType {
-	case model.SyncTaskTypeCatchUp:
+	case db.SyncTaskTypeCatchUp:
 		if currentHeight < task.EndHeight {
 			flag = true
 		}
 		break
-	case model.SyncTaskTypeFollow:
+	case db.SyncTaskTypeFollow:
 		blockChainLatestHeight, err = getCosmosBlockChainLatestHeight()
 		if err != nil {
 			logger.Error("getCosmos blockChain latest height err", logger.String("err", err.Error()))

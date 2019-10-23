@@ -1,19 +1,19 @@
 package task
 
 import (
-	"gopkg.in/mgo.v2/txn"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
-	"time"
+	"github.com/irisnet/rainbow-sync/service/cosmos/block"
+	"github.com/irisnet/rainbow-sync/service/cosmos/conf"
 	model "github.com/irisnet/rainbow-sync/service/cosmos/db"
 	"github.com/irisnet/rainbow-sync/service/cosmos/logger"
 	cmodel "github.com/irisnet/rainbow-sync/service/cosmos/model"
-	"github.com/irisnet/rainbow-sync/service/cosmos/conf"
-	"github.com/irisnet/rainbow-sync/service/cosmos/block"
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/txn"
+	"time"
 )
 
 type TaskCosmosService struct {
-	blockType       block.Cosmos_Block
+	blockType       block.CosmosBlock
 	syncCosmosModel cmodel.SyncCosmosTask
 }
 

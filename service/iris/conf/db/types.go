@@ -1,16 +1,16 @@
 package db
 
 import (
-	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	constant "github.com/irisnet/rainbow-sync/service/iris/conf"
+	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	"os"
 )
 
 var (
-	Addrs    = "localhost:27019"
+	Addrs    = "localhost:27217"
 	User     = "iris"
 	Passwd   = "irispassword"
-	Database = "rainbow-server"
+	Database = "sync-iris"
 )
 
 // get value of env var

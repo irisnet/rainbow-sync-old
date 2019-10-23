@@ -304,7 +304,6 @@ func buildIBCPacketHashByPacket(packet imodel.IBCPacket) (string, error) {
 
 func buildIBCPacketData(packetData []byte) (imodel.IBCTransferPacketDataValue, error) {
 	var transferPacketData imodel.IBCTransferPacketData
-	logger.Info("packet", logger.String("packetStr", string(packetData)))
 	err := json.Unmarshal(packetData, &transferPacketData)
 	if err != nil {
 		return transferPacketData.Value, err
