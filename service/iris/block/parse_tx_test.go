@@ -1,10 +1,10 @@
 package block
 
 import (
-	"testing"
-	"github.com/irisnet/rainbow-sync/service/iris/helper"
-	irisConf "github.com/irisnet/rainbow-sync/service/iris/conf"
 	"encoding/json"
+	irisConf "github.com/irisnet/rainbow-sync/service/iris/conf"
+	"github.com/irisnet/rainbow-sync/service/iris/helper"
+	"testing"
 )
 
 func TestIris_Block_ParseIrisTx(t *testing.T) {
@@ -24,7 +24,7 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 		{
 			name: "test parse iris tx",
 			args: args{
-				b:      11366,
+				b:      17438,
 				client: client,
 			},
 		},
@@ -36,7 +36,7 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			resBytes, _ := json.MarshalIndent(res, "", "\t")
+			resBytes, _ := json.Marshal(res)
 			t.Log(string(resBytes))
 		})
 	}

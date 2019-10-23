@@ -1,19 +1,22 @@
 package block
 
 import (
-	"github.com/irisnet/rainbow-sync/service/iris/logger"
-	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
-	"github.com/irisnet/rainbow-sync/service/iris/utils"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"encoding/json"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/tendermint/tendermint/types"
-	"github.com/irisnet/rainbow-sync/service/iris/helper"
 	"github.com/irisnet/rainbow-sync/service/iris/constant"
 	model "github.com/irisnet/rainbow-sync/service/iris/db"
-	"fmt"
-	"time"
+	"github.com/irisnet/rainbow-sync/service/iris/helper"
+	"github.com/irisnet/rainbow-sync/service/iris/logger"
+	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
+	docTxMsg "github.com/irisnet/rainbow-sync/service/iris/model/msg"
+	"github.com/irisnet/rainbow-sync/service/iris/utils"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/types"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
+	"strconv"
+	"time"
 )
 
 const (
@@ -108,8 +111,6 @@ func (iris *Iris_Block) ParseBlock(b int64, client *helper.Client) (resBlock *im
 	return
 }
 
-
-
 // parse iris txs  from block result txs
 func (iris *Iris_Block) ParseIrisTxs(b int64, client *helper.Client) ([]*imodel.IrisTx, error) {
 	resblock, err := client.Block(&b)
@@ -142,6 +143,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		authTx     auth.StdTx
 		methodName = "ParseTx"
 		docTx      imodel.IrisTx
+		docMsgs    []imodel.DocTxMsg
 	)
 
 	cdc := utils.GetCodec()
@@ -153,7 +155,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 	}
 
 	height := block.Height
-	time := block.Time
+	txTime := block.Time
 	txHash := utils.BuildHex(txBytes.Hash())
 	fee := utils.BuildFee(authTx.Fee)
 	memo := authTx.Memo
@@ -172,7 +174,7 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 
 	docTx = imodel.IrisTx{
 		Height: height,
-		Time:   time,
+		Time:   txTime,
 		TxHash: txHash,
 		Fee:    &fee,
 		Memo:   memo,
@@ -188,8 +190,50 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		docTx.From = msg.FromAddress.String()
 		docTx.To = msg.ToAddress.String()
 		docTx.Amount = utils.ParseCoins(msg.Amount)
-		docTx.Type = constant.Iris_TxTypeTransfer
+		docTx.Type = constant.TxTypeTransfer
+		break
+	case imodel.IBCBankMsgTransfer:
+		msg := msg.(imodel.IBCBankMsgTransfer)
+		docTx.Initiator = msg.Sender
+		docTx.From = docTx.Initiator
+		docTx.To = msg.Receiver
+		docTx.Amount = buildCoins(msg.Denomination, msg.Amount.String())
+		docTx.Type = constant.TxTypeIBCBankTransfer
+		docTx.IBCPacketHash = buildIBCPacketHashByEvents(docTx.Events)
+		txMsg := docTxMsg.DocTxMsgIBCBankTransfer{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+		break
+	case imodel.IBCBankMsgReceivePacket:
+		msg := msg.(imodel.IBCBankMsgReceivePacket)
+		docTx.Initiator = msg.Signer.String()
+		docTx.Type = constant.TxTypeIBCBankRecvTransferPacket
 
+		if transPacketData, err := buildIBCPacketData(msg.Packet.Data()); err != nil {
+			logger.Error("build ibc packet data fail", logger.String("packetData", string(msg.Packet.Data())),
+				logger.String("err", err.Error()))
+		} else {
+			docTx.From = transPacketData.Sender
+			docTx.To = transPacketData.Receiver
+			docTx.Amount = buildCoins(transPacketData.Denomination, transPacketData.Amount)
+		}
+
+		if hash, err := buildIBCPacketHashByPacket(msg.Packet.(imodel.IBCPacket)); err != nil {
+			logger.Error("build ibc packet hash fail", logger.String("err", err.Error()))
+		} else {
+			docTx.IBCPacketHash = hash
+		}
+
+		txMsg := docTxMsg.DocTxMsgIBCBankReceivePacket{}
+		txMsg.BuildMsg(msg)
+		docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
+			Type: txMsg.Type(),
+			Msg:  &txMsg,
+		})
+		break
 	default:
 		logger.Warn("unknown msg type")
 	}
@@ -215,4 +259,56 @@ func parseEvents(result *abci.ResponseDeliverTx) []imodel.Event {
 	return events
 }
 
+func buildCoins(denom string, amountStr string) []*imodel.Coin {
+	var coins []*imodel.Coin
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		logger.Error("convert str to float64 fail", logger.String("amountStr", amountStr),
+			logger.String("err", err.Error()))
+		amount = 0
+	}
+	coin := imodel.Coin{
+		Denom:  denom,
+		Amount: amount,
+	}
+	return append(coins, &coin)
+}
 
+func buildIBCPacketHashByEvents(events []imodel.Event) string {
+	var packetStr string
+	if len(events) == 0 {
+		return ""
+	}
+
+	for _, e := range events {
+		if e.Type == constant.EventTypeSendPacket {
+			for k, v := range e.Attributes {
+				if k == constant.EventAttributesKeyPacket {
+					packetStr = v
+					break
+				}
+			}
+		}
+	}
+
+	return utils.Md5Encrypt([]byte(packetStr))
+}
+
+func buildIBCPacketHashByPacket(packet imodel.IBCPacket) (string, error) {
+	data, err := packet.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+	return utils.Md5Encrypt(data), nil
+}
+
+func buildIBCPacketData(packetData []byte) (imodel.IBCTransferPacketDataValue, error) {
+	var transferPacketData imodel.IBCTransferPacketData
+	logger.Info("packet", logger.String("packetStr", string(packetData)))
+	err := json.Unmarshal(packetData, &transferPacketData)
+	if err != nil {
+		return transferPacketData.Value, err
+	}
+
+	return transferPacketData.Value, nil
+}

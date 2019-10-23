@@ -18,13 +18,10 @@ module github.com/irisnet/rainbow-sync/service/iris
 		golang.org/x/crypto v0.0.0-20190909091759-094676da4a83 // indirect
 		golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
 		golang.org/x/text v0.3.2 // indirect
-		google.golang.org/genproto v0.0.0-20190801165951-fa694d86fc64 // indirect
+		google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03 // indirect
 		gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 		gopkg.in/natefinch/lumberjack.v2 v2.0.0
 		gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 		)
 
-		replace (
-		github.com/cosmos/cosmos-sdk => github.com/irisnet/cosmos-sdk v0.23.2-0.20191015002325-ee5d7f3d62d9
-		github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.32.4
-		)
+		replace github.com/cosmos/cosmos-sdk => github.com/irisnet/cosmos-sdk v0.23.2-0.20191022102555-c1d4d1c8fb5c

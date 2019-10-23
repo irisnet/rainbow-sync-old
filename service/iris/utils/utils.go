@@ -1,22 +1,26 @@
 package utils
 
 import (
-	"strings"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
-	"strconv"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
-	"github.com/irisnet/rainbow-sync/service/iris/helper"
-	"github.com/irisnet/rainbow-sync/service/iris/constant"
-	"github.com/irisnet/rainbow-sync/service/iris/logger"
 	"fmt"
-	"time"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcBank "github.com/cosmos/cosmos-sdk/x/ibc/mock/bank"
 	"github.com/irisnet/rainbow-sync/service/iris/conf"
+	"github.com/irisnet/rainbow-sync/service/iris/constant"
+	"github.com/irisnet/rainbow-sync/service/iris/helper"
+	"github.com/irisnet/rainbow-sync/service/iris/logger"
+	imodel "github.com/irisnet/rainbow-sync/service/iris/model"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (
@@ -24,6 +28,8 @@ var (
 	ModuleBasics = module.NewBasicManager(
 		bank.AppModuleBasic{},
 		auth.AppModuleBasic{},
+		ibc.AppModule{},
+		ibcBank.AppModule{},
 	)
 )
 
@@ -64,7 +70,7 @@ func ParseCoins(coinsStr sdk.Coins) (coins []*imodel.Coin) {
 }
 
 func ParseCoin(sdkcoin sdk.Coin) (coin imodel.Coin) {
-	amount, err := strconv.ParseInt(sdkcoin.Amount.String(), 10, 64)
+	amount, err := strconv.ParseFloat(sdkcoin.Amount.String(), 64)
 	if err != nil {
 		logger.Error("ParseCoin have error", logger.String("error", err.Error()))
 	}
@@ -74,7 +80,6 @@ func ParseCoin(sdkcoin sdk.Coin) (coin imodel.Coin) {
 	}
 
 }
-
 
 func getPrecision(amount string) string {
 	length := len(amount)
@@ -165,4 +170,20 @@ func RoundFloat(num float64, bit int) (i float64) {
 		return 0
 	}
 	return i
+}
+
+func Md5Encrypt(data []byte) string {
+	md5Ctx := md5.New()
+	md5Ctx.Write(data)
+	cipherStr := md5Ctx.Sum(nil)
+	return hex.EncodeToString(cipherStr)
+}
+
+func Base64Decode(str string) ([]byte, error) {
+	enc := base64.Encoding{}
+	data, err := enc.DecodeString(str)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
