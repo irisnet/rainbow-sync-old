@@ -7,9 +7,9 @@ import (
 
 type (
 	DocTxMsgTransfer struct {
-		FromAddress string    `json:"from_address"`
-		ToAddress   string    `json:"to_address" `
-		Amount      []CoinStr `json:"amount"`
+		FromAddress string    `bson:"from_address"`
+		ToAddress   string    `bson:"to_address" `
+		Amount      []CoinStr `bson:"amount"`
 	}
 )
 

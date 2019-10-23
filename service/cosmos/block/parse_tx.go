@@ -333,6 +333,10 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) string {
 		}
 	}
 
+	if packetStr == "" {
+		return ""
+	}
+
 	return cutils.Md5Encrypt([]byte(packetStr))
 }
 

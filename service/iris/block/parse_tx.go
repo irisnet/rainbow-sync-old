@@ -291,6 +291,10 @@ func buildIBCPacketHashByEvents(events []imodel.Event) string {
 		}
 	}
 
+	if packetStr == "" {
+		return ""
+	}
+
 	return utils.Md5Encrypt([]byte(packetStr))
 }
 

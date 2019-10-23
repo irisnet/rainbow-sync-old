@@ -19,6 +19,7 @@ db.sync_iris_asset_detail.createIndex({"to": -1, "height": -1});
 db.sync_iris_asset_detail.createIndex({"to": -1, "subject": -1});
 
 db.sync_iris_tx.createIndex({"tx_hash": -1}, {"unique": true, "background": true});
+db.sync_iris_tx.createIndex({"ibc_packet_hash": -1}, {"background": true});
 db.sync_iris_tx.createIndex({"to": -1, "height": -1}, {"background": true});
 db.sync_iris_tx.createIndex({'from': 1}, {'background': true});
 db.sync_iris_tx.createIndex({'initiator': 1}, {'background': true});
@@ -30,6 +31,7 @@ db.sync_cosmos_task.createIndex({"start_height": 1, "end_height": 1}, {"unique":
 db.sync_cosmos_block.createIndex({"height": -1}, {"unique": true, "background": true});
 
 db.sync_cosmos_tx.createIndex({"tx_hash": -1}, {"unique": true, "background": true});
+db.sync_cosmos_tx.createIndex({"ibc_packet_hash": -1}, {"background": true});
 db.sync_cosmos_tx.createIndex({"to": -1, "height": -1}, {"background": true});
 db.sync_cosmos_tx.createIndex({"status": 1}, {"background": true});
 db.sync_cosmos_tx.createIndex({"type": 1}, {"background": true});
