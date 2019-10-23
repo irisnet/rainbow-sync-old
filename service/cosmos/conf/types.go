@@ -21,13 +21,11 @@ var (
 
 )
 
-const ()
-
 // get value of env var
 func init() {
 	var err error
 
-	nodeUrl, found := os.LookupEnv(constant.EnvNameBlockNumPerWorkerHandle_COSMOS)
+	nodeUrl, found := os.LookupEnv(constant.EnvNameSerNetworkFullNode_COSMOS)
 	if found {
 		BlockChainMonitorUrl = strings.Split(nodeUrl, ",")
 	}
