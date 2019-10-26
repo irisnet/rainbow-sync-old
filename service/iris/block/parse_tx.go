@@ -170,7 +170,6 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		logger.Error("can't get msgs", logger.String("method", methodName))
 		return docTx
 	}
-	msg := msgs[0]
 
 	docTx = imodel.IrisTx{
 		Height: height,
@@ -183,59 +182,61 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		Code:   result.Code,
 		Events: parseEvents(&result),
 	}
-	switch msg.(type) {
-	case imodel.MsgTransfer:
-		msg := msg.(imodel.MsgTransfer)
-		docTx.Initiator = msg.FromAddress.String()
-		docTx.From = msg.FromAddress.String()
-		docTx.To = msg.ToAddress.String()
-		docTx.Amount = utils.ParseCoins(msg.Amount)
-		docTx.Type = constant.TxTypeTransfer
-		break
-	case imodel.IBCBankMsgTransfer:
-		msg := msg.(imodel.IBCBankMsgTransfer)
-		docTx.Initiator = msg.Sender
-		docTx.From = docTx.Initiator
-		docTx.To = msg.Receiver
-		docTx.Amount = buildCoins(msg.Denomination, msg.Amount.String())
-		docTx.Type = constant.TxTypeIBCBankTransfer
-		docTx.IBCPacketHash = buildIBCPacketHashByEvents(docTx.Events)
-		txMsg := docTxMsg.DocTxMsgIBCBankTransfer{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-		break
-	case imodel.IBCBankMsgReceivePacket:
-		msg := msg.(imodel.IBCBankMsgReceivePacket)
-		docTx.Initiator = msg.Signer.String()
-		docTx.Type = constant.TxTypeIBCBankRecvTransferPacket
+	for _, msg := range msgs {
+		switch msg.(type) {
+		case imodel.MsgTransfer:
+			msg := msg.(imodel.MsgTransfer)
+			docTx.Initiator = msg.FromAddress.String()
+			docTx.From = msg.FromAddress.String()
+			docTx.To = msg.ToAddress.String()
+			docTx.Amount = utils.ParseCoins(msg.Amount)
+			docTx.Type = constant.TxTypeTransfer
+			break
+		case imodel.IBCBankMsgTransfer:
+			msg := msg.(imodel.IBCBankMsgTransfer)
+			docTx.Initiator = msg.Sender
+			docTx.From = docTx.Initiator
+			docTx.To = msg.Receiver
+			docTx.Amount = buildCoins(msg.Denomination, msg.Amount.String())
+			docTx.Type = constant.TxTypeIBCBankTransfer
+			docTx.IBCPacketHash = buildIBCPacketHashByEvents(docTx.Events)
+			txMsg := docTxMsg.DocTxMsgIBCBankTransfer{}
+			txMsg.BuildMsg(msg)
+			docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
+		case imodel.IBCBankMsgReceivePacket:
+			msg := msg.(imodel.IBCBankMsgReceivePacket)
+			docTx.Initiator = msg.Signer.String()
+			docTx.Type = constant.TxTypeIBCBankRecvTransferPacket
 
-		if transPacketData, err := buildIBCPacketData(msg.Packet.Data()); err != nil {
-			logger.Error("build ibc packet data fail", logger.String("packetData", string(msg.Packet.Data())),
-				logger.String("err", err.Error()))
-		} else {
-			docTx.From = transPacketData.Sender
-			docTx.To = transPacketData.Receiver
-			docTx.Amount = buildCoins(transPacketData.Denomination, transPacketData.Amount)
+			if transPacketData, err := buildIBCPacketData(msg.Packet.Data()); err != nil {
+				logger.Error("build ibc packet data fail", logger.String("packetData", string(msg.Packet.Data())),
+					logger.String("err", err.Error()))
+			} else {
+				docTx.From = transPacketData.Sender
+				docTx.To = transPacketData.Receiver
+				docTx.Amount = buildCoins(transPacketData.Denomination, transPacketData.Amount)
+			}
+
+			if hash, err := buildIBCPacketHashByPacket(msg.Packet.(imodel.IBCPacket)); err != nil {
+				logger.Error("build ibc packet hash fail", logger.String("err", err.Error()))
+			} else {
+				docTx.IBCPacketHash = hash
+			}
+
+			txMsg := docTxMsg.DocTxMsgIBCBankReceivePacket{}
+			txMsg.BuildMsg(msg)
+			docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
+		default:
+			logger.Warn("unknown msg type")
 		}
-
-		if hash, err := buildIBCPacketHashByPacket(msg.Packet.(imodel.IBCPacket)); err != nil {
-			logger.Error("build ibc packet hash fail", logger.String("err", err.Error()))
-		} else {
-			docTx.IBCPacketHash = hash
-		}
-
-		txMsg := docTxMsg.DocTxMsgIBCBankReceivePacket{}
-		txMsg.BuildMsg(msg)
-		docTx.Msgs = append(docMsgs, imodel.DocTxMsg{
-			Type: txMsg.Type(),
-			Msg:  &txMsg,
-		})
-		break
-	default:
-		logger.Warn("unknown msg type")
 	}
 
 	return docTx
