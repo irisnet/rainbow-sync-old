@@ -327,7 +327,7 @@ func (cosmos *Cosmos_Block) ParseCosmosTxModel(txBytes types.Tx, block *types.Bl
 			msg := msg.(MsgWithdrawValidatorCommission)
 			txdetail.Initiator = msg.ValidatorAddress.String()
 			txdetail.From = msg.ValidatorAddress.String()
-			txdetail.Type = constant.Cosmos_TxTypeWithdrawValidatorCommission
+			txdetail.Type = constant.Cosmos_TxTypeWithdrawDelegatorRewardsAll
 			txs = append(txs, txdetail)
 
 		case MsgSubmitProposal:
