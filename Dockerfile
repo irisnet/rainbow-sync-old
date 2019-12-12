@@ -4,7 +4,7 @@ FROM golang:1.13.1-alpine3.10 as builder
 ENV PACKAGES go make git libc-dev bash
 
 # Set up path
-ENV REPO_PATH    $GOPATH/src/github.com/irisnet/rainbow-sync
+ENV REPO_PATH	$GOPATH/src
 ENV GO111MODULE on
 
 # RUN mkdir -p $REPO_PATH
