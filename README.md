@@ -1,6 +1,19 @@
 # rainbow-sync
 A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 
+## Database
+Use Mongodb Database to store IRIS hub data
+- init database and user
+```
+use rainbow-server
+db.createUser(
+    {
+        user:"iris",
+        pwd:"irispassword",
+        roles:[{role:"root",db:"admin"}]
+    }
+)
+```
 
 ## Run
 ```bash make all
@@ -26,7 +39,7 @@ docker run --name rainbow-sync \&
 ```
 
 
-## environment params
+## Environment Params
 
 | param | type | default |description | example |
 | :--- | :--- | :--- | :---: | :---: |
@@ -40,4 +53,5 @@ docker run --name rainbow-sync \&
 | WORKER_MAX_SLEEP_TIME | string | 120 | the maximum time (in seconds) that synchronization TX threads are allowed to be out of work | 120 |
 | BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | number of blocks per sync TX task | 50 |
 
+- Remarks
 
