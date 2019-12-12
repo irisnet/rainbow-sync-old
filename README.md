@@ -3,14 +3,13 @@ A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 
 
 ## Run
-- Iris
 ```bash make all
 nohup ./rainbow-sync > debug.log 2>&1 &
 ```
 
 ## Run with docker
 You can run application with docker.
-### Iris
+### Image
 - Build Rainbow-sync Image
 ```$xslt
 docker build -t rainbow-sync .
@@ -36,10 +35,9 @@ docker run --name rainbow-sync \&
 | DB_PASSWD | string | "" |db passwd  | password |
 | DB_DATABASE | string | "" |database name  | db_name |
 | IRIS_NETWORK | string | "testnet" |irishub name  | testnet or mainnet |
-| SER_BC_FULL_NODE | string | tcp://localhost:26657 | iris full node rpc url | tcp://localhost:26657, tcp://127.0.0.2:26657 |
-| WORKER_NUM_CREATE_TASK | string | 2 | 创建同步Iris的Tag任务的线程数 | 2 |
-| WORKER_NUM_EXECUTE_TASK | string | 30 | 执行同步Iris的Tag任务的线程数 | 30 |
-| WORKER_MAX_SLEEP_TIME | string | 120 | 允许同步Iris的Tag线程处于不工作状态的最大时长（单位为：秒） | 120 |
-| BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | 每个同步Iris的Tag任务所包含的Iris区块数 | 50 |
+| SER_BC_FULL_NODES | string | tcp://localhost:26657 | iris full node rpc url | tcp://localhost:26657, tcp://127.0.0.2:26657 |
+| WORKER_NUM_EXECUTE_TASK | string | 30 | number of threads executing synchronization TX task | 30 |
+| WORKER_MAX_SLEEP_TIME | string | 120 | the maximum time (in seconds) that synchronization TX threads are allowed to be out of work | 120 |
+| BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | number of blocks per sync TX task | 50 |
 
 

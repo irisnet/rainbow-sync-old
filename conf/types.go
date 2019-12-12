@@ -11,7 +11,7 @@ var (
 	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:26657"}
 
 	IrisNetwork             = "testnet"
-	WorkerNumCreateTask     = 2
+	WorkerNumCreateTask     = 1
 	WorkerNumExecuteTask    = 30
 	WorkerMaxSleepTime      = 2 * 60
 	BlockNumPerWorkerHandle = 50
@@ -26,8 +26,7 @@ const (
 	EnvNameDbPassWd   = "DB_PASSWD"
 	EnvNameDbDataBase = "DB_DATABASE"
 
-	EnvNameSerNetworkFullNode      = "SER_BC_FULL_NODE"
-	EnvNameWorkerNumCreateTask     = "WORKER_NUM_CREATE_TASK"
+	EnvNameSerNetworkFullNodes     = "SER_BC_FULL_NODES"
 	EnvNameWorkerNumExecuteTask    = "WORKER_NUM_EXECUTE_TASK"
 	EnvNameWorkerMaxSleepTime      = "WORKER_MAX_SLEEP_TIME"
 	EnvNameBlockNumPerWorkerHandle = "BLOCK_NUM_PER_WORKER_HANDLE"
@@ -38,26 +37,18 @@ const (
 func init() {
 	var err error
 
-	nodeUrl, found := os.LookupEnv(EnvNameSerNetworkFullNode)
+	nodeUrl, found := os.LookupEnv(EnvNameSerNetworkFullNodes)
 	if found {
 		BlockChainMonitorUrl = strings.Split(nodeUrl, ",")
 	}
-	logger.Info("Env Value", logger.Any(EnvNameSerNetworkFullNode, BlockChainMonitorUrl))
+	logger.Info("Env Value", logger.Any(EnvNameSerNetworkFullNodes, BlockChainMonitorUrl))
 
-	workerNumCreateTask, found := os.LookupEnv(EnvNameWorkerNumCreateTask)
-	if found {
-		WorkerNumCreateTask, err = strconv.Atoi(workerNumCreateTask)
-		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumCreateTask, workerNumCreateTask))
-		}
-	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerNumCreateTask, WorkerNumCreateTask))
 
 	workerNumExecuteTask, found := os.LookupEnv(EnvNameWorkerNumExecuteTask)
 	if found {
 		WorkerNumExecuteTask, err = strconv.Atoi(workerNumExecuteTask)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumExecuteTask, workerNumCreateTask))
+			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumExecuteTask, workerNumExecuteTask))
 		}
 	}
 	logger.Info("Env Value", logger.Int(EnvNameWorkerNumExecuteTask, WorkerNumExecuteTask))
