@@ -2,9 +2,9 @@
 A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 
 ## Database
-Use Mongodb Database to store IRIS hub data
+Use Mongodb  to store IRIS hub data
 - init database and user
-```
+```bash
 use rainbow-server
 db.createUser(
     {
@@ -16,7 +16,8 @@ db.createUser(
 ```
 
 ## Run
-```bash make all
+```bash
+make all
 nohup ./rainbow-sync > debug.log 2>&1 &
 ```
 
@@ -54,4 +55,13 @@ docker run --name rainbow-sync \&
 | BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | number of blocks per sync TX task | 50 |
 
 - Remarks
-
+  - synchronizes  irishub data from  specify block height(such as:17908 current time:1576208532)
+  
+     At first,stop the rainbow-sync and create the task. Run:
+  ```bash
+     ﻿﻿db.sync_iris_task.insert({'start_height':NumberLong(17908),'end_height':NumberLong(0),'current_height':NumberLong(0),'status':'unhandled','last_update_time':NumberLong(1576208532)})
+  ```
+  Then,start the rainbow-sync.
+  - synchronizes  irishub data from  0 block height  
+  Please pay attention to setting the appropriate value about BLOCK_NUM_PER_WORKER_HANDLE for mongodb batch limit(Maximum batch size is 1000.) when blockchain height reachs tens of millions.
+  
