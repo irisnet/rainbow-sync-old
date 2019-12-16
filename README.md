@@ -1,25 +1,29 @@
 # rainbow-sync
 A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 
+# Structure
+
+- `conf`: config of project
+- `block`: parse asset detail and tx function module
+- `model`: mongodb script to create database
+- `task`: main logic of sync-server, sync data from blockChain and write to database
+- `db`: database model
+- `helper`: helper functions
+- `utils`: common functions
+- `main.go`: bootstrap project
+
+# SetUp
 ## Database
 Use Mongodb  to store IRIS hub data
-- init database and user
-```bash
-use rainbow-server
-db.createUser(
-    {
-        user:"iris",
-        pwd:"irispassword",
-        roles:[{role:"root",db:"admin"}]
-    }
-)
-```
+-init mongodb database
 
-## Run
-```bash
-make all
-nohup ./rainbow-sync > debug.log 2>&1 &
-```
+run script `mongodb.js` in `mongodb` folder to create database before run project
+
+# Build And Run
+
+- Build: `make all`
+- Run: `make run`
+- Cross compilation: `make build-linux`
 
 ## Run with docker
 You can run application with docker.
