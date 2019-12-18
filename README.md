@@ -15,9 +15,6 @@ A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 # SetUp
 ## Database
 Use Mongodb  to store IRIS hub data
--init mongodb database
-
-run script `mongodb.js` in `mongodb` folder to create database before run project
 
 # Build And Run
 
