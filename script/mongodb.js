@@ -8,10 +8,10 @@
 //     }
 // )
 // create table
-db.createCollection("sync_iris_asset_detail");
-db.createCollection("sync_iris_block");
-db.createCollection("sync_iris_task");
-db.createCollection("sync_iris_tx");
+// db.createCollection("sync_iris_asset_detail");
+// db.createCollection("sync_iris_block");
+// db.createCollection("sync_iris_task");
+// db.createCollection("sync_iris_tx");
 
 
 // create index
