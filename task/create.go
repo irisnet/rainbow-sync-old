@@ -2,20 +2,22 @@ package task
 
 import (
 	"fmt"
-	"github.com/irisnet/rainbow-sync/logger"
-	imodel "github.com/irisnet/rainbow-sync/model"
+	"github.com/irisnet/rainbow-sync/block"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
+	"github.com/irisnet/rainbow-sync/logger"
+	imodel "github.com/irisnet/rainbow-sync/model"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
 	"time"
-	"github.com/irisnet/rainbow-sync/block"
 )
 
 type TaskIrisService struct {
 	blockType     block.Iris_Block
 	syncIrisModel imodel.SyncTask
 }
+
+const maxRecordNumForBatchInsert = 1000
 
 func (s *TaskIrisService) StartCreateTask() {
 	blockNumPerWorkerHandle := int64(conf.BlockNumPerWorkerHandle)
@@ -174,6 +176,9 @@ func createCatchUpTask(maxEndHeight, blockNumPerWorker, currentBlockHeight int64
 	}
 
 	for maxEndHeight+blockNumPerWorker <= currentBlockHeight {
+		if len(syncTasks) >= maxRecordNumForBatchInsert {
+			break
+		}
 		syncTask := imodel.SyncTask{
 			StartHeight:    maxEndHeight + 1,
 			EndHeight:      maxEndHeight + blockNumPerWorker,

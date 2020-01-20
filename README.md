@@ -63,6 +63,3 @@ docker run --name rainbow-sync \&
      ﻿﻿db.sync_iris_task.insert({'start_height':NumberLong(17908),'end_height':NumberLong(0),'current_height':NumberLong(0),'status':'unhandled','last_update_time':NumberLong(1576208532)})
   ```
   Then,start the rainbow-sync.
-  - synchronizes  irishub data from  0 block height  
-  Please pay attention to setting the appropriate value about BLOCK_NUM_PER_WORKER_HANDLE for mongodb batch limit(Maximum batch size is 1000.) when blockchain height reachs tens of millions.
-  
