@@ -37,7 +37,7 @@ docker run --name rainbow-sync \&
 -e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
 -e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
 -e "IRIS_NETWORK=testnet" \&
--e "SER_BC_FULL_NODE=tcp://localhost:26657,..." rainbow-sync
+-e "SER_BC_FULL_NODES=tcp://localhost:26657,..." rainbow-sync
 ```
 
 
