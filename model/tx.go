@@ -1,20 +1,20 @@
 package model
 
 import (
+	"github.com/irisnet/irishub/app/v1/asset"
+	"github.com/irisnet/irishub/app/v1/bank"
+	"github.com/irisnet/irishub/app/v1/distribution"
+	dtags "github.com/irisnet/irishub/app/v1/distribution/tags"
+	dtypes "github.com/irisnet/irishub/app/v1/distribution/types"
+	"github.com/irisnet/irishub/app/v1/gov"
+	"github.com/irisnet/irishub/app/v1/rand"
+	"github.com/irisnet/irishub/app/v1/slashing"
+	"github.com/irisnet/irishub/app/v1/stake"
+	"github.com/irisnet/irishub/types"
+	"github.com/irisnet/rainbow-sync/db"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"github.com/irisnet/irishub/app/v1/stake"
-	"github.com/irisnet/irishub/app/v1/distribution"
-	"github.com/irisnet/irishub/app/v1/gov"
-	"github.com/irisnet/irishub/app/v1/bank"
-	"github.com/irisnet/irishub/app/v1/slashing"
-	dtypes "github.com/irisnet/irishub/app/v1/distribution/types"
-	dtags "github.com/irisnet/irishub/app/v1/distribution/tags"
-	"github.com/irisnet/irishub/types"
-	"github.com/irisnet/irishub/app/v1/asset"
-	"github.com/irisnet/irishub/app/v1/rand"
-	"gopkg.in/mgo.v2"
-	"github.com/irisnet/rainbow-sync/db"
 )
 
 type IrisTx struct {
@@ -64,63 +64,64 @@ func (d IrisTx) EnsureIndexes() {
 		mgo.Index{
 			Key:        []string{"-tx_hash"},
 			Unique:     true,
-			Background: true,},
+			Background: true},
 		mgo.Index{
 			Key:        []string{"-type"},
-			Background: true,},
+			Background: true},
 		mgo.Index{
 			Key:        []string{"-from"},
-			Background: true,},
+			Background: true},
 		mgo.Index{
 			Key:        []string{"-to", "-height"},
-			Background: true,},
+			Background: true},
 		mgo.Index{
 			Key:        []string{"-initiator"},
-			Background: true,},
+			Background: true},
 	)
 
 	db.EnsureIndexes(d.Name(), indexes)
 }
 
 type (
-	MsgTransfer = bank.MsgSend
-	MsgBurn = bank.MsgBurn
+	MsgTransfer      = bank.MsgSend
+	MsgBurn          = bank.MsgBurn
 	MsgSetMemoRegexp = bank.MsgSetMemoRegexp
 
-	MsgStakeCreate = stake.MsgCreateValidator
-	MsgStakeEdit = stake.MsgEditValidator
-	MsgStakeDelegate = stake.MsgDelegate
-	MsgStakeBeginUnbonding = stake.MsgBeginUnbonding
-	MsgBeginRedelegate = stake.MsgBeginRedelegate
-	MsgUnjail = slashing.MsgUnjail
-	MsgSetWithdrawAddress = dtypes.MsgSetWithdrawAddress
-	MsgWithdrawDelegatorReward = distribution.MsgWithdrawDelegatorReward
+	MsgStakeCreate                 = stake.MsgCreateValidator
+	MsgStakeEdit                   = stake.MsgEditValidator
+	MsgStakeDelegate               = stake.MsgDelegate
+	MsgStakeBeginUnbonding         = stake.MsgBeginUnbonding
+	MsgBeginRedelegate             = stake.MsgBeginRedelegate
+	MsgUnjail                      = slashing.MsgUnjail
+	MsgSetWithdrawAddress          = dtypes.MsgSetWithdrawAddress
+	MsgWithdrawDelegatorReward     = distribution.MsgWithdrawDelegatorReward
 	MsgWithdrawDelegatorRewardsAll = distribution.MsgWithdrawDelegatorRewardsAll
 	MsgWithdrawValidatorRewardsAll = distribution.MsgWithdrawValidatorRewardsAll
 
-	MsgDeposit = gov.MsgDeposit
-	MsgSubmitProposal = gov.MsgSubmitProposal
+	MsgDeposit                       = gov.MsgDeposit
+	MsgSubmitProposal                = gov.MsgSubmitProposal
 	MsgSubmitSoftwareUpgradeProposal = gov.MsgSubmitSoftwareUpgradeProposal
-	MsgSubmitTaxUsageProposal = gov.MsgSubmitCommunityTaxUsageProposal
-	MsgSubmitTokenAdditionProposal = gov.MsgSubmitTokenAdditionProposal
-	MsgVote = gov.MsgVote
+	MsgSubmitTaxUsageProposal        = gov.MsgSubmitCommunityTaxUsageProposal
+	MsgSubmitTokenAdditionProposal   = gov.MsgSubmitTokenAdditionProposal
+	MsgVote                          = gov.MsgVote
 
 	MsgRequestRand = rand.MsgRequestRand
 
-	AssetIssueToken = asset.MsgIssueToken
-	AssetEditToken = asset.MsgEditToken
-	AssetMintToken = asset.MsgMintToken
-	AssetTransferTokenOwner = asset.MsgTransferTokenOwner
-	AssetCreateGateway = asset.MsgCreateGateway
-	AssetEditGateWay = asset.MsgEditGateway
+	AssetIssueToken           = asset.MsgIssueToken
+	AssetEditToken            = asset.MsgEditToken
+	AssetMintToken            = asset.MsgMintToken
+	AssetTransferTokenOwner   = asset.MsgTransferTokenOwner
+	AssetCreateGateway        = asset.MsgCreateGateway
+	AssetEditGateWay          = asset.MsgEditGateway
 	AssetTransferGatewayOwner = asset.MsgTransferGatewayOwner
 
 	SdkCoins = types.Coins
-	KVPair = types.KVPair
+	KVPair   = types.KVPair
 )
 
 var (
-	TagDistributionReward = dtags.Reward
+	TagDistributionReward       = dtags.Reward
+	TagDistributionWithdrawAddr = dtags.WithdrawAddr
 )
 
 type Coin struct {

@@ -1,15 +1,15 @@
 package block
 
 import (
+	"github.com/irisnet/irishub/app/v1/auth"
+	"github.com/irisnet/rainbow-sync/constant"
+	"github.com/irisnet/rainbow-sync/helper"
 	"github.com/irisnet/rainbow-sync/logger"
 	imodel "github.com/irisnet/rainbow-sync/model"
 	imsg "github.com/irisnet/rainbow-sync/model/msg"
 	"github.com/irisnet/rainbow-sync/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/irisnet/irishub/app/v1/auth"
 	"github.com/tendermint/tendermint/types"
-	"github.com/irisnet/rainbow-sync/helper"
-	"github.com/irisnet/rainbow-sync/constant"
 )
 
 // parse iris txs  from block result txs
@@ -224,16 +224,29 @@ func (iris *Iris_Block) ParseIrisTxModel(txBytes types.Tx, block *types.Block) i
 		msg := msg.(imodel.MsgWithdrawValidatorRewardsAll)
 
 		docTx.From = msg.ValidatorAddr.String()
-		docTx.Initiator = msg.ValidatorAddr.String()
+		if v := msg.GetSigners(); len(v) > 0 {
+			docTx.Initiator = v[0].String()
+		}
 		docTx.Type = constant.Iris_TxTypeWithdrawValidatorRewardsAll
+
+		var totalReward string
+		var withdrawAddr string
 		for _, tag := range result.Tags {
 			key := string(tag.Key)
-			if key == imodel.TagDistributionReward {
-				reward := string(tag.Value)
-				docTx.Amount = utils.ParseCoins(reward)
-				break
+			switch key {
+			case imodel.TagDistributionReward:
+				if totalReward == "" {
+					totalReward = string(tag.Value)
+				}
+			case imodel.TagDistributionWithdrawAddr:
+				if withdrawAddr == "" {
+					withdrawAddr = string(tag.Value)
+				}
 			}
 		}
+
+		docTx.To = withdrawAddr
+		docTx.Amount = utils.ParseCoins(totalReward)
 	case imodel.MsgSubmitProposal:
 		msg := msg.(imodel.MsgSubmitProposal)
 
