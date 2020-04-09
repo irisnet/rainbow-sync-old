@@ -6,6 +6,9 @@ import (
 	"github.com/irisnet/rainbow-sync/helper"
 	"github.com/irisnet/rainbow-sync/logger"
 	"testing"
+	"github.com/irisnet/rainbow-sync/model"
+	"github.com/irisnet/rainbow-sync/db"
+	"fmt"
 )
 
 func TestParseCosmosTxModel(t *testing.T) {
@@ -26,7 +29,7 @@ func TestParseCosmosTxModel(t *testing.T) {
 		{
 			name: "test parse cosmos tx",
 			args: args{
-				b:      17174,
+				b:      266,
 				client: client,
 			},
 		},
@@ -53,4 +56,43 @@ func Test_parseRawlog(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(ret)
+}
+
+func TestZoneBlock_ParseBlock(t *testing.T) {
+	helper.Init(conf.BlockChainMonitorUrl, conf.MaxConnectionNum, conf.InitConnectionNum)
+	client := helper.GetTendermintClient()
+	db.Start()
+	defer func() {
+		client.Release()
+		logger.Info("Release tm client")
+	}()
+	type args struct {
+		b      int64
+		client *helper.ZoneClient
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "test parse cosmos tx",
+			args: args{
+				b:      267,
+				client: client,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cosmos := ZoneBlock{}
+			block, res, err := cosmos.ParseBlock(tt.args.b, tt.args.client)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fmt.Println("length txs:", len(res))
+			if err := cosmos.SaveDocsWithTxn(block, res, model.SyncZoneTask{}); err != nil {
+				t.Fatal(err.Error())
+			}
+		})
+	}
 }

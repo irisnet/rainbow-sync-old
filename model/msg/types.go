@@ -2,7 +2,7 @@ package msg
 
 type (
 	CoinStr struct {
-		Denom  string `bson:"denom" `
-		Amount string `bson:"amount"`
+		Amount string `bson:"amount" json:"amount"`
+		Denom  string `bson:"denom" json:"denom"`
 	}
 )

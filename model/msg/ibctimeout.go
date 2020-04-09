@@ -22,6 +22,9 @@ func (m *DocTxMsgIBCTimeout) Type() string {
 func (m *DocTxMsgIBCTimeout) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(model.IBCTimeout)
 
+	var sendpacket SendPacket
+	json.Unmarshal(msg.GetData().GetBytes(), &sendpacket)
+
 	packet := Packet{
 		Sequence:           msg.Packet.GetSequence(),
 		TimeoutHeight:      msg.Packet.GetTimeoutHeight(),
@@ -29,7 +32,7 @@ func (m *DocTxMsgIBCTimeout) BuildMsg(txMsg interface{}) {
 		SourceChannel:      msg.Packet.GetSourceChannel(),
 		DestinationPort:    msg.Packet.GetDestPort(),
 		DestinationChannel: msg.Packet.GetDestChannel(),
-		Data:               msg.Packet.GetData(),
+		Data:               sendpacket,
 	}
 	m.Packet = packet
 	proofdata, _ := json.Marshal(msg.Proof)

@@ -11,21 +11,22 @@ import (
 
 type (
 	ZoneTx struct {
-		Time          time.Time  `bson:"time"`
-		Height        int64      `bson:"height"`
-		TxHash        string     `bson:"tx_hash"`
-		From          string     `bson:"from"`
-		To            string     `bson:"to"`
-		Initiator     string     `bson:"initiator"`
-		Amount        []*Coin    `bson:"amount"`
-		Type          string     `bson:"type"`
-		Fee           *Fee       `bson:"fee"`
-		Memo          string     `bson:"memo"`
-		Status        string     `bson:"status"`
-		Code          uint32     `bson:"code"`
-		Events        []Event    `bson:"events"`
-		Msgs          []DocTxMsg `bson:"msgs"`
-		IBCPacketHash string     `bson:"ibc_packet_hash"`
+		Id            bson.ObjectId `bson:"_id"`
+		Time          time.Time     `bson:"time"`
+		Height        int64         `bson:"height"`
+		TxHash        string        `bson:"tx_hash"`
+		From          string        `bson:"from"`
+		To            string        `bson:"to"`
+		Initiator     string        `bson:"initiator"`
+		Amount        []*Coin       `bson:"amount"`
+		Type          string        `bson:"type"`
+		Fee           *Fee          `bson:"fee"`
+		Memo          string        `bson:"memo"`
+		Status        string        `bson:"status"`
+		Code          uint32        `bson:"code"`
+		Events        []Event       `bson:"events"`
+		Msgs          []DocTxMsg    `bson:"msgs"`
+		IBCPacketHash string        `bson:"ibc_packet_hash"`
 	}
 
 	DocTxMsg struct {

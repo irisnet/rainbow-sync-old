@@ -12,7 +12,7 @@ const (
 	TxStatusSuccess          = "success"
 	TxStatusFail             = "fail"
 	EventTypeSendPacket      = "send_packet"
-	EventAttributesKeyPacket = "Packet"
+	EventAttributesKeyPacket = "packet_data"
 
 	EnvNameZoneName                     = "ZONE_NAME"
 	EnvNameSerNetworkFullNode_ZONE      = "SER_BC_FULL_NODE_ZONE"

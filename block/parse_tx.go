@@ -34,6 +34,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 	if blockDoc.Height == 0 {
 		return fmt.Errorf("invalid block, height equal 0")
 	}
+	blockDoc.Id = bson.NewObjectId()
 
 	blockOp := txn.Op{
 		C:      blockModel.Name(),
@@ -45,6 +46,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 
 		cosmosTxsOps = make([]txn.Op, 0, length)
 		for _, v := range cosmosTxs {
+			v.Id = bson.NewObjectId()
 			op := txn.Op{
 				C:      txModel.Name(),
 				Id:     bson.NewObjectId(),
@@ -68,7 +70,10 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 	}
 
 	ops = make([]txn.Op, 0, len(cosmosTxsOps)+2)
-	ops = append(append(ops, blockOp, updateOp), cosmosTxsOps...)
+	ops = append(append(ops, blockOp), cosmosTxsOps...)
+	if taskDoc.ID != "" {
+		ops = append(ops, updateOp)
+	}
 
 	if len(ops) > 0 {
 		err := model.Txn(ops)
@@ -140,7 +145,7 @@ func (zone *ZoneBlock) ParseZoneTxs(b int64, client *helper.ZoneClient) ([]cmode
 func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []cmodel.ZoneTx {
 	var (
 		authTx     auth.StdTx
-		methodName = "parseCosmosTxModel"
+		methodName = "parseZoneTxModel"
 		txdetail   cmodel.ZoneTx
 		docTxMsgs  []cmodel.DocTxMsg
 	)
@@ -172,7 +177,6 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 	txdetail.Time = block.Time
 	txdetail.Status = status
 	txdetail.Code = result.Code
-	txdetail.Events = parseEvents(result)
 
 	//length_msgStat := len(msgStat)
 
@@ -196,6 +200,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 		switch msg.(type) {
 
 		case cmodel.MsgTransfer:
+			txdetail.Events = parseEvents(result)
 			msg := msg.(cmodel.MsgTransfer)
 			txdetail.Initiator = msg.FromAddress.String()
 			txdetail.From = msg.FromAddress.String()
@@ -212,6 +217,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			break
 
 		case cmodel.IBCBankMsgTransfer:
+			txdetail.Events = parseEvents(result)
 			msg := msg.(cmodel.IBCBankMsgTransfer)
 			txdetail.Initiator = msg.Sender.String()
 			txdetail.From = txdetail.Initiator
@@ -232,13 +238,15 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			txdetail.From = txdetail.Initiator
 			txdetail.To = ""
 			txdetail.Type = constant.TxMsgTypeIBCBankMsgPacket
-			txdetail.IBCPacketHash = buildIBCPacketHashByEvents(txdetail.Events)
 			txMsg := imsg.DocTxMsgIBCMsgPacket{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
 				Type: msg.Type(),
 				Msg:  &txMsg,
 			})
+			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
+			txdetail.IBCPacketHash = cutils.Md5Encrypt(packetBytes)
+			fmt.Println("==============")
 			break
 		case cmodel.IBCTimeout:
 			msg := msg.(cmodel.IBCTimeout)
@@ -246,7 +254,6 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			txdetail.From = txdetail.Initiator
 			txdetail.To = ""
 			txdetail.Type = constant.TxMsgTypeIBCBankMsgTimeout
-			txdetail.IBCPacketHash = buildIBCPacketHashByEvents(txdetail.Events)
 			txMsg := imsg.DocTxMsgIBCTimeout{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
@@ -256,7 +263,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			break
 
 		default:
-			logger.Warn("unknown msg type")
+			logger.Warn("unknown msg type", logger.String("msgtype", msg.Type()))
 		}
 	}
 	txs = append(txs, txdetail)
@@ -287,6 +294,9 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 
 	var events []cmodel.Event
 	for _, val := range result.GetEvents() {
+		if val.Type != constant.EventTypeSendPacket {
+			continue
+		}
 		one := cmodel.Event{
 			Type: val.Type,
 		}
