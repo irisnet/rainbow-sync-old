@@ -2,7 +2,6 @@ package task
 
 import (
 	"fmt"
-	"github.com/irisnet/rainbow-sync/block"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/logger"
@@ -10,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
 	"time"
+	"github.com/irisnet/rainbow-sync/block"
 )
 
 type TaskZoneService struct {
@@ -20,7 +20,7 @@ type TaskZoneService struct {
 func (s *TaskZoneService) StartCreateTask() {
 	blockNumPerWorkerHandle := int64(conf.BlockNumPerWorkerHandle)
 
-	logger.Info("Start create task", logger.String("Chain Block", s.blockType.Name()))
+	logger.Info("Start create task", logger.String("Chain Block", conf.ZoneName))
 
 	// buffer channel to limit goroutine num
 	chanLimit := make(chan bool, conf.WorkerNumCreateTask)
@@ -43,7 +43,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("Create  task failed", logger.Any("err", err),
-				logger.String("Chain Block", s.blockType.Name()))
+				logger.String("Chain Block", conf.ZoneName))
 		}
 		<-chanLimit
 	}()
@@ -57,7 +57,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		}, model.SyncTaskTypeFollow)
 	if err != nil {
 		logger.Error("Query sync  task failed", logger.String("err", err.Error()),
-			logger.String("Chain Block", s.blockType.Name()))
+			logger.String("Chain Block", conf.ZoneName))
 		return
 	}
 	if len(validFollowTasks) == 0 {
@@ -65,7 +65,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		maxEndHeight, err := s.syncModel.GetMaxBlockHeight()
 		if err != nil {
 			logger.Error("Get  max endBlock failed", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+				logger.String("Chain Block", conf.ZoneName))
 			return
 		}
 
@@ -78,7 +78,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		if maxEndHeight+blockNumPerWorkerHandle <= blockChainLatestHeight {
 			syncZoneTasks = createCatchUpTask(maxEndHeight, blockNumPerWorkerHandle, blockChainLatestHeight)
 			logMsg = fmt.Sprintf("Create  catch up task during follow task not exist,from-to:%v-%v,Chain Block:%v",
-				maxEndHeight+1, blockChainLatestHeight, s.blockType.Name())
+				maxEndHeight+1, blockChainLatestHeight, conf.ZoneName)
 		} else {
 			finished, err := s.assertAllCatchUpTaskFinished()
 			if err != nil {
@@ -88,7 +88,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 			if finished {
 				syncZoneTasks = createFollowTask(maxEndHeight, blockNumPerWorkerHandle, blockChainLatestHeight)
 				logMsg = fmt.Sprintf("Create follow  task during follow task not exist,from-to:%v-%v,Chain Block:%v",
-					maxEndHeight+1, blockChainLatestHeight, s.blockType.Name())
+					maxEndHeight+1, blockChainLatestHeight, conf.ZoneName)
 			}
 		}
 	} else {
@@ -101,7 +101,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		blockChainLatestHeight, err := getBlockChainLatestHeight()
 		if err != nil {
 			logger.Error("Get  blockChain latest height failed", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+				logger.String("Chain Block", conf.ZoneName))
 			return
 		}
 
@@ -110,7 +110,7 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 
 			invalidFollowTask = followTask
 			logMsg = fmt.Sprintf("Create  catch up task during follow task exist,from-to:%v-%v,invalidFollowTaskId:%v,invalidFollowTaskCurHeight:%v,Chain Block:%v",
-				followedHeight+1, blockChainLatestHeight, invalidFollowTask.ID.Hex(), invalidFollowTask.CurrentHeight, s.blockType.Name())
+				followedHeight+1, blockChainLatestHeight, invalidFollowTask.ID.Hex(), invalidFollowTask.CurrentHeight, conf.ZoneName)
 		}
 	}
 
@@ -153,9 +153,9 @@ func (s *TaskZoneService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		err := model.Txn(ops)
 		if err != nil {
 			logger.Warn("Create  sync task fail", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+				logger.String("Chain Block", conf.ZoneName))
 		} else {
-			logger.Info(fmt.Sprintf("Create sync  task success,%v", logMsg), logger.String("Chain Block", s.blockType.Name()))
+			logger.Info(fmt.Sprintf("Create sync  task success,%v", logMsg), logger.String("Chain Block", conf.ZoneName))
 		}
 	}
 

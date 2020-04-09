@@ -82,6 +82,20 @@ func Delete(h Docs) error {
 	return ExecCollection(h.Name(), remove)
 }
 
+func EnsureIndexes(collectionName string, indexes []mgo.Index) {
+	session := getSession()
+	defer session.Close()
+	c := session.DB(conf.Database).C(collectionName)
+	if len(indexes) > 0 {
+		for _, v := range indexes {
+			if err := c.EnsureIndex(v); err != nil {
+				logger.Warn("ensure index fail", logger.String("collectionName", collectionName),
+					logger.String("err", err.Error()))
+			}
+		}
+	}
+}
+
 //mgo transaction method
 //detail to see: https://godoc.org/gopkg.in/mgo.v2/txn
 func Txn(ops []txn.Op) error {

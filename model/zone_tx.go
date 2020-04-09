@@ -5,6 +5,8 @@ import (
 	"time"
 	"fmt"
 	"github.com/irisnet/rainbow-sync/conf"
+	"gopkg.in/mgo.v2"
+	"github.com/irisnet/rainbow-sync/db"
 )
 
 type (
@@ -39,6 +41,14 @@ type (
 
 const (
 	CollectionNameZoneTx = "sync_%v_tx"
+	ZoneTxHashTag        = "tx_hash"
+	ZoneIbcPacketHashTag = "ibc_packet_hash"
+	ZoneTypeTag          = "type"
+	ZoneFromTag          = "from"
+	ZoneToTag            = "to"
+	ZoneHeightTag        = "height"
+	ZoneStatusTag        = "status"
+	ZoneTnitiatorTag     = "initiator"
 )
 
 func (d ZoneTx) Name() string {
@@ -46,7 +56,36 @@ func (d ZoneTx) Name() string {
 }
 
 func (d ZoneTx) PkKvPair() map[string]interface{} {
-	return bson.M{}
+	return bson.M{ZoneTxHashTag: d.TxHash}
+}
+
+func (d ZoneTx) EnsureIndexes() {
+	var indexes []mgo.Index
+	indexes = append(indexes,
+		mgo.Index{
+			Key:        []string{ZoneTxHashTag},
+			Unique:     true,
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneTypeTag},
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneTnitiatorTag},
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneIbcPacketHashTag},
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneStatusTag},
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneFromTag},
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{ZoneToTag, ZoneHeightTag},
+			Background: true,
+		})
+	db.EnsureIndexes(d.Name(), indexes)
 }
 
 type Coin struct {

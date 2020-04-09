@@ -20,16 +20,10 @@ import (
 )
 
 type ZoneBlock struct {
-	txModel   cmodel.ZoneTx
-	taskModel cmodel.SyncZoneTask
 }
 
 func (zone *ZoneBlock) Name() string {
 	return conf.ZoneName
-}
-
-func (zone *ZoneBlock) CollectionName() string {
-	return fmt.Sprintf(cmodel.CollectionNameBlock, zone.Name())
 }
 
 func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmodel.ZoneTx, taskDoc cmodel.SyncZoneTask) error {
@@ -42,7 +36,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 	}
 
 	blockOp := txn.Op{
-		C:      zone.CollectionName(),
+		C:      blockModel.Name(),
 		Id:     bson.NewObjectId(),
 		Insert: blockDoc,
 	}
@@ -52,7 +46,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 		cosmosTxsOps = make([]txn.Op, 0, length)
 		for _, v := range cosmosTxs {
 			op := txn.Op{
-				C:      zone.txModel.Name(),
+				C:      txModel.Name(),
 				Id:     bson.NewObjectId(),
 				Insert: v,
 			}
@@ -61,7 +55,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 	}
 
 	updateOp := txn.Op{
-		C:      zone.taskModel.Name(),
+		C:      taskModel.Name(),
 		Id:     taskDoc.ID,
 		Assert: txn.DocExists,
 		Update: bson.M{

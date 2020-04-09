@@ -11,6 +11,10 @@ import (
 
 const (
 	CollectionNameSyncZoneTask = "sync_%v_task"
+
+	SyncZoneTaskStartHeightTag = "start_height"
+	SyncZoneTaskEndHeightTag   = "end_height"
+	SyncZoneTaskStatusTag      = "status"
 )
 
 type (
@@ -36,7 +40,21 @@ func (d *SyncZoneTask) Name() string {
 }
 
 func (d *SyncZoneTask) PkKvPair() map[string]interface{} {
-	return bson.M{"start_height": d.CurrentHeight, "end_height": d.EndHeight}
+	return bson.M{SyncZoneTaskStartHeightTag: d.StartHeight, SyncZoneTaskEndHeightTag: d.EndHeight}
+}
+
+func (d *SyncZoneTask) EnsureIndexes() {
+	var indexes []mgo.Index
+	indexes = append(indexes,
+		mgo.Index{
+			Key:        []string{SyncZoneTaskStartHeightTag, SyncZoneTaskEndHeightTag},
+			Unique:     true,
+			Background: true,
+		}, mgo.Index{
+			Key:        []string{SyncZoneTaskStatusTag},
+			Background: true,
+		})
+	db.EnsureIndexes(d.Name(), indexes)
 }
 
 // get max block height in sync task

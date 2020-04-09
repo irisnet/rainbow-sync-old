@@ -6,9 +6,10 @@ import (
 	"syscall"
 
 	"github.com/irisnet/rainbow-sync/logger"
-	model "github.com/irisnet/rainbow-sync/db"
+	"github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/task"
 	"runtime"
+	"github.com/irisnet/rainbow-sync/model"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	defer func() {
 		logger.Info("System Exit")
 
-		model.Stop()
+		db.Stop()
 
 		if err := recover(); err != nil {
 			logger.Error("", logger.Any("err", err))
@@ -30,7 +31,8 @@ func main() {
 
 	logger.Info("Start sync Program")
 
-	model.Start()
+	db.Start()
+	model.CheckIndex()
 	task.Start()
 
 	<-c

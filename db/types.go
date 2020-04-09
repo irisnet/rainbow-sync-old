@@ -12,5 +12,8 @@ type (
 		Name() string
 		// primary key pair(used to find a unique record)
 		PkKvPair() map[string]interface{}
+
+		//index
+		EnsureIndexes()
 	}
 )
