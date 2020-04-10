@@ -1,5 +1,5 @@
 # rainbow-sync
-A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
+A daemon that synchronizes Game of Zone hub data for the Rainbow wallet backend
 
 
 ## Run
@@ -8,41 +8,34 @@ A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 make all
 nohup ./rainbow-sync > debug.log 2>&1 &
 ```
-- Iris
-```bash
-cd service/iris && make all
-nohup ./rainbow-sync > debug.log 2>&1 &
-```
 
 ## Run with docker
 You can run application with docker.
-### Iris
-- Build Rainbow-sync Image
-```$xslt
-cd service/iris && docker build -t rainbow-sync:dev01 .
-```
-
-- Run Application
-```$xslt
-docker run --name rainbow-sync \&
--v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
--e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
--e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
--e "IRIS_NETWORK=testnet" \&
--e "SER_BC_FULL_NODE=tcp://localhost:26657,..." rainbow-sync:dev01
-```
 ### Zone
 - Build Rainbow-sync Image
 ```$xslt
-docker build -t rainbow-sync:dev01 .
+docker build -t rainbow-sync .
 ```
-- Run Application
+
+- Run CosmosHub Application
+   
 ```$xslt
-docker run --name rainbow-sync \&
+docker run --name rainbow-sync-cosmos \&
 -v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
 -e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
 -e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
--e "SER_BC_FULL_NODE_COSMOS=tcp://localhost:36657,..."  rainbow-sync:dev01
+-e "ZONE_NAME=cosmos" \&
+-e "SER_BC_FULL_NODE_ZONE=tcp://localhost:26657,..." rainbow-sync:latest
+```
+- Run IrisHub Application
+  
+```$xslt
+docker run --name rainbow-sync-iris \&
+-v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
+-e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
+-e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
+-e "ZONE_NAME=iris" \&
+-e "SER_BC_FULL_NODE_ZONE=tcp://localhost:26657,..." rainbow-sync:latest
 ```
 
 
