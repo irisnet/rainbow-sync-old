@@ -3,7 +3,6 @@ A daemon that synchronizes Game of Zone hub data for the Rainbow wallet backend
 
 
 ## Run
-- Zone
 ```bash
 make all
 nohup ./rainbow-sync > debug.log 2>&1 &
