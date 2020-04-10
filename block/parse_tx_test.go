@@ -20,7 +20,7 @@ func TestParseCosmosTxModel(t *testing.T) {
 	}()
 	type args struct {
 		b      int64
-		client *helper.ZoneClient
+		client *helper.RpcClient
 	}
 	tests := []struct {
 		name string
@@ -68,7 +68,7 @@ func TestZoneBlock_ParseBlock(t *testing.T) {
 	}()
 	type args struct {
 		b      int64
-		client *helper.ZoneClient
+		client *helper.RpcClient
 	}
 	tests := []struct {
 		name string
@@ -77,7 +77,7 @@ func TestZoneBlock_ParseBlock(t *testing.T) {
 		{
 			name: "test parse cosmos tx",
 			args: args{
-				b:      267,
+				b:      13173,
 				client: client,
 			},
 		},

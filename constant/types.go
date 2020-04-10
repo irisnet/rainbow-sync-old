@@ -16,7 +16,6 @@ const (
 
 	EnvNameZoneName                     = "ZONE_NAME"
 	EnvNameSerNetworkFullNode_ZONE      = "SER_BC_FULL_NODE_ZONE"
-	EnvNameWorkerNumCreateTask_ZONE     = "WORKER_NUM_CREATE_TASK_ZONE"
 	EnvNameWorkerNumExecuteTask_ZONE    = "WORKER_NUM_EXECUTE_TASK_ZONE"
 	EnvNameWorkerMaxSleepTime_ZONE      = "WORKER_MAX_SLEEP_TIME_ZONE"
 	EnvNameBlockNumPerWorkerHandle_ZONE = "BLOCK_NUM_PER_WORKER_HANDLE_ZONE"
@@ -25,4 +24,6 @@ const (
 	EnvNameDbUser     = "DB_USER"
 	EnvNameDbPassWd   = "DB_PASSWD"
 	EnvNameDbDataBase = "DB_DATABASE"
+
+	BatchLimit = 1000
 )

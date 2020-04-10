@@ -85,7 +85,7 @@ func (zone *ZoneBlock) SaveDocsWithTxn(blockDoc *cmodel.Block, cosmosTxs []cmode
 	return nil
 }
 
-func (zone *ZoneBlock) ParseBlock(b int64, client *helper.ZoneClient) (resBlock *cmodel.Block, cosmosTxs []cmodel.ZoneTx, resErr error) {
+func (zone *ZoneBlock) ParseBlock(b int64, client *helper.RpcClient) (resBlock *cmodel.Block, cosmosTxs []cmodel.ZoneTx, resErr error) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -114,7 +114,7 @@ func (zone *ZoneBlock) ParseBlock(b int64, client *helper.ZoneClient) (resBlock 
 }
 
 // parse zone txs  from block result txs
-func (zone *ZoneBlock) ParseZoneTxs(b int64, client *helper.ZoneClient) ([]cmodel.ZoneTx, error) {
+func (zone *ZoneBlock) ParseZoneTxs(b int64, client *helper.RpcClient) ([]cmodel.ZoneTx, error) {
 	resblock, err := client.Block(&b)
 	if err != nil {
 		logger.Warn("get block result err, now try again", logger.String("err", err.Error()),

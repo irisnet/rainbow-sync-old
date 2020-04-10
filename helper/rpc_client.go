@@ -7,44 +7,44 @@ import (
 	"time"
 )
 
-type ZoneClient struct {
+type RpcClient struct {
 	Id string
 	rpcClient.Client
 }
 
-func newClient(addr string) *ZoneClient {
+func newClient(addr string) *RpcClient {
 	rpc, err := rpcClient.NewHTTP(addr, "/websocket")
 	if err != nil {
 		logger.Error("failted to get client", logger.String("err", err.Error()))
 		panic(err.Error())
 	}
-	return &ZoneClient{
+	return &RpcClient{
 		Id:     generateId(addr),
 		Client: rpc,
 	}
 }
 
 // get client from pool
-func GetTendermintClient() *ZoneClient {
-	c, err := zoneclient_pool.BorrowObject(ctx)
+func GetTendermintClient() *RpcClient {
+	c, err := rpcClientPool.BorrowObject(ctx)
 	for err != nil {
 		logger.Error("GetClient failed,will try again after 3 seconds", logger.String("err", err.Error()))
 		time.Sleep(3 * time.Second)
-		c, err = zoneclient_pool.BorrowObject(ctx)
+		c, err = rpcClientPool.BorrowObject(ctx)
 	}
 
-	return c.(*ZoneClient)
+	return c.(*RpcClient)
 }
 
 // release client
-func (c *ZoneClient) Release() {
-	err := zoneclient_pool.ReturnObject(ctx, c)
+func (c *RpcClient) Release() {
+	err := rpcClientPool.ReturnObject(ctx, c)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 }
 
-func (c *ZoneClient) HeartBeat() error {
+func (c *RpcClient) HeartBeat() error {
 	http := c.Client.(*rpcClient.HTTP)
 	_, err := http.Health()
 	return err

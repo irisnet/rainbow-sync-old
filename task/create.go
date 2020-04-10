@@ -10,6 +10,7 @@ import (
 	"gopkg.in/mgo.v2/txn"
 	"time"
 	"github.com/irisnet/rainbow-sync/block"
+	"github.com/irisnet/rainbow-sync/constant"
 )
 
 type TaskZoneService struct {
@@ -174,6 +175,9 @@ func createCatchUpTask(maxEndHeight, blockNumPerWorker, currentBlockHeight int64
 	}
 
 	for maxEndHeight+blockNumPerWorker <= currentBlockHeight {
+		if len(syncTasks) > constant.BatchLimit {
+			break
+		}
 		syncTask := cmodel.SyncZoneTask{
 			StartHeight:    maxEndHeight + 1,
 			EndHeight:      maxEndHeight + blockNumPerWorker,

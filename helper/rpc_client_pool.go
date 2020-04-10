@@ -19,9 +19,9 @@ type (
 )
 
 var (
-	zoneclient_poolFactory PoolFactory
-	zoneclient_pool        *commonPool.ObjectPool
-	ctx                    = context.Background()
+	rpcClientPoolFactory PoolFactory
+	rpcClientPool        *commonPool.ObjectPool
+	ctx                  = context.Background()
 )
 
 func Init(BlockChainMonitorUrl []string, MaxConnectionNum, InitConnectionNum int) {
@@ -35,7 +35,7 @@ func Init(BlockChainMonitorUrl []string, MaxConnectionNum, InitConnectionNum int
 
 		syncMap.Store(key, endPoint)
 	}
-	zoneclient_poolFactory = PoolFactory{
+	rpcClientPoolFactory = PoolFactory{
 		peersMap: syncMap,
 	}
 
@@ -49,12 +49,12 @@ func Init(BlockChainMonitorUrl []string, MaxConnectionNum, InitConnectionNum int
 
 	logger.Info("PoolConfig", logger.Int("config.MaxTotal", config.MaxTotal),
 		logger.Int("config.MaxIdle", config.MaxIdle))
-	zoneclient_pool = commonPool.NewObjectPool(ctx, &zoneclient_poolFactory, config)
-	zoneclient_pool.PreparePool(ctx)
+	rpcClientPool = commonPool.NewObjectPool(ctx, &rpcClientPoolFactory, config)
+	rpcClientPool.PreparePool(ctx)
 }
 
 func ClosePool() {
-	zoneclient_pool.Close(ctx)
+	rpcClientPool.Close(ctx)
 }
 
 func (f *PoolFactory) MakeObject(ctx context.Context) (*commonPool.PooledObject, error) {
@@ -63,7 +63,7 @@ func (f *PoolFactory) MakeObject(ctx context.Context) (*commonPool.PooledObject,
 }
 
 func (f *PoolFactory) DestroyObject(ctx context.Context, object *commonPool.PooledObject) error {
-	c := object.Object.(*ZoneClient)
+	c := object.Object.(*RpcClient)
 	if c.IsRunning() {
 		c.Stop()
 	}
@@ -72,7 +72,7 @@ func (f *PoolFactory) DestroyObject(ctx context.Context, object *commonPool.Pool
 
 func (f *PoolFactory) ValidateObject(ctx context.Context, object *commonPool.PooledObject) bool {
 	// do validate
-	c := object.Object.(*ZoneClient)
+	c := object.Object.(*RpcClient)
 	if c.HeartBeat() != nil {
 		value, ok := f.peersMap.Load(c.Id)
 		if ok {

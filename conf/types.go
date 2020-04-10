@@ -32,20 +32,20 @@ func init() {
 	}
 	logger.Info("Env Value", logger.Any(constant.EnvNameSerNetworkFullNode_ZONE, BlockChainMonitorUrl))
 
-	workerNumCreateTask, found := os.LookupEnv(constant.EnvNameWorkerNumCreateTask_ZONE)
-	if found {
-		WorkerNumCreateTask, err = strconv.Atoi(workerNumCreateTask)
-		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumCreateTask_ZONE, workerNumCreateTask))
-		}
-	}
-	logger.Info("Env Value", logger.Int(constant.EnvNameWorkerNumCreateTask_ZONE, WorkerNumCreateTask))
+	//workerNumCreateTask, found := os.LookupEnv(constant.EnvNameWorkerNumCreateTask_ZONE)
+	//if found {
+	//	WorkerNumCreateTask, err = strconv.Atoi(workerNumCreateTask)
+	//	if err != nil {
+	//		logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumCreateTask_ZONE, workerNumCreateTask))
+	//	}
+	//}
+	//logger.Info("Env Value", logger.Int(constant.EnvNameWorkerNumCreateTask_ZONE, WorkerNumCreateTask))
 
 	workerNumExecuteTask, found := os.LookupEnv(constant.EnvNameWorkerNumExecuteTask_ZONE)
 	if found {
 		WorkerNumExecuteTask, err = strconv.Atoi(workerNumExecuteTask)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumExecuteTask_ZONE, workerNumCreateTask))
+			logger.Fatal("Can't convert str to int", logger.String(constant.EnvNameWorkerNumExecuteTask_ZONE, workerNumExecuteTask))
 		}
 	}
 	logger.Info("Env Value", logger.Int(constant.EnvNameWorkerNumExecuteTask_ZONE, WorkerNumExecuteTask))

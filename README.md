@@ -56,7 +56,6 @@ docker run --name rainbow-sync \&
 | DB_DATABASE | string | "" |database name  | db_name |
 | ZONE_NAME | string | cosmos |zone name  | cosmos |
 | SER_BC_FULL_NODE_ZONE | string | tcp://localhost:36657 |Zone full node rpc url  | tcp://localhost:36657, tcp://127.0.0.2:36657 |
-| WORKER_NUM_CREATE_TASK_ZONE | string | 2 | 创建同步Zone的Tx任务的线程数 | 2 |
 | WORKER_NUM_EXECUTE_TASK_ZONE | string | 30 | 执行同步Zone的Tx任务的线程数 | 30 |
 | WORKER_MAX_SLEEP_TIME_ZONE | string | 120 | 允许同步Zone的Tx线程处于不工作状态的最大时长（单位为：秒） | 120 |
 | BLOCK_NUM_PER_WORKER_HANDLE_ZONE | string | 50 | 每个同步Zone的Tx任务所包含的Zone区块数 | 50 |
