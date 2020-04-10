@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:3.11.5  as builder
 
 # Set up dependencies
 ENV PACKAGES go make git libc-dev bash
@@ -10,19 +10,15 @@ ENV REPO_PATH    $GOPATH/src/github.com/irisnet/rainbow-sync
 ENV PATH         $GOPATH/bin:$PATH
 ENV GO111MODULE  on
 
-RUN mkdir -p $GOPATH/bin $REPO_PATH
+RUN mkdir -p $REPO_PATH
 
 COPY . $REPO_PATH
 WORKDIR $REPO_PATH
 
-VOLUME $GOPATH/src/github.com/irisnet/rainbow-sync/logs
-
 # Install minimum necessary dependencies, build binary
-RUN apk add --no-cache $PACKAGES && \
-    cd $REPO_PATH && make all && \
-    mv $REPO_PATH/$BINARY_NAME $GOPATH/bin && \
-    rm -rf $REPO_PATH/vendor && \
-    rm -rf $GOPATH/pkg/* && \
-    apk del $PACKAGES
+RUN apk add --no-cache $PACKAGES && make all
 
-CMD $BINARY_NAME
+FROM alpine:3.11.5
+WORKDIR /root/
+COPY --from=builder /root/go/src/github.com/irisnet/rainbow-sync/rainbow-sync /root/
+CMD ./rainbow-sync
