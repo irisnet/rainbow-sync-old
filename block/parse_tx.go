@@ -235,8 +235,6 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 		case cmodel.IBCPacket:
 			msg := msg.(cmodel.IBCPacket)
 			txdetail.Initiator = msg.Signer.String()
-			txdetail.From = txdetail.Initiator
-			txdetail.To = ""
 			txdetail.Type = constant.TxMsgTypeIBCBankMsgPacket
 			txMsg := imsg.DocTxMsgIBCMsgPacket{}
 			txMsg.BuildMsg(msg)
@@ -244,9 +242,10 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: msg.Type(),
 				Msg:  &txMsg,
 			})
+			txdetail.From = txMsg.Packet.Data.Value.Sender
+			txdetail.To = txMsg.Packet.Data.Value.Receiver
 			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
 			txdetail.IBCPacketHash = cutils.Md5Encrypt(packetBytes)
-			fmt.Println("==============")
 			break
 		case cmodel.IBCTimeout:
 			msg := msg.(cmodel.IBCTimeout)
