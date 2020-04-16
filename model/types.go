@@ -5,6 +5,7 @@ import (
 	ibcBank "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibcChannel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/irisnet/rainbow-sync/db"
+	"github.com/irismod/coinswap"
 )
 
 var (
@@ -28,4 +29,7 @@ type (
 	IBCBankMsgTransfer = ibcBank.MsgTransfer
 	IBCPacket = ibcChannel.MsgPacket
 	IBCTimeout = ibcChannel.MsgTimeout
+	MsgAddLiquidity = coinswap.MsgAddLiquidity
+	MsgRemoveLiquidity = coinswap.MsgRemoveLiquidity
+	MsgSwapOrder = coinswap.MsgSwapOrder
 )

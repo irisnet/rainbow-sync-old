@@ -9,6 +9,10 @@ const (
 	TxMsgTypeIBCBankMsgPacket  = "IBCMsgPacket"
 	TxMsgTypeIBCBankMsgTimeout = "IBCMsgTimeout"
 
+	TxTypeAddLiquidity    = "AddLiquidity"
+	TxTypeRemoveLiquidity = "RemoveLiquidity"
+	TxTypeSwapOrder       = "SwapOrder"
+
 	TxStatusSuccess          = "success"
 	TxStatusFail             = "fail"
 	EventTypeSendPacket      = "send_packet"

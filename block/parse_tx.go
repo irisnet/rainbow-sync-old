@@ -260,6 +260,51 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Msg:  &txMsg,
 			})
 			break
+		case cmodel.MsgAddLiquidity:
+			msg := msg.(cmodel.MsgAddLiquidity)
+			coin := cutils.ParseCoin(msg.MaxToken)
+
+			txdetail.From = msg.Sender.String()
+			txdetail.To = ""
+			txdetail.Amount = []*cmodel.Coin{{Denom: coin.Denom, Amount: coin.Amount}}
+			txdetail.Type = constant.TxTypeAddLiquidity
+			txMsg := imsg.DocTxMsgAddLiquidity{}
+			txMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
+		case cmodel.MsgRemoveLiquidity:
+			msg := msg.(cmodel.MsgRemoveLiquidity)
+			coin := cutils.ParseCoin(msg.WithdrawLiquidity)
+
+			txdetail.From = msg.Sender.String()
+			txdetail.To = ""
+			txdetail.Amount = []*cmodel.Coin{{Denom: coin.Denom, Amount: coin.Amount}}
+			txdetail.Type = constant.TxTypeRemoveLiquidity
+			txMsg := imsg.DocTxMsgRemoveLiquidity{}
+			txMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
+		case cmodel.MsgSwapOrder:
+			msg := msg.(cmodel.MsgSwapOrder)
+			coin := cutils.ParseCoin(msg.Input.Coin)
+
+			txdetail.From = msg.Input.Address.String()
+			txdetail.To = msg.Output.Address.String()
+			txdetail.Amount = []*cmodel.Coin{{Denom: coin.Denom, Amount: coin.Amount}}
+			txdetail.Type = constant.TxTypeSwapOrder
+			txMsg := imsg.DocTxMsgSwapOrder{}
+			txMsg.BuildMsg(msg)
+			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
+				Type: txMsg.Type(),
+				Msg:  &txMsg,
+			})
+			break
 
 		default:
 			logger.Warn("unknown msg type", logger.String("msgtype", msg.Type()))
