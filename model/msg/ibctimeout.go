@@ -23,7 +23,7 @@ func (m *DocTxMsgIBCTimeout) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(model.IBCTimeout)
 
 	var sendpacket SendPacket
-	json.Unmarshal(msg.GetData().GetBytes(), &sendpacket)
+	json.Unmarshal(msg.GetData(), &sendpacket)
 
 	packet := Packet{
 		Sequence:           msg.Packet.GetSequence(),

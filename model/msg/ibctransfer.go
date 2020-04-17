@@ -13,7 +13,7 @@ type DocTxMsgIBCBankTransfer struct {
 	Amount        model.Coins `bson:"amount"`         // the tokens to be transferred
 	Sender        string      `bson:"sender"`         // the sender address
 	Receiver      string      `bson:"receiver"`       // the recipient address on the destination chain
-	Source        bool        `bson:"source"`         // indicates if the sending chain is the source chain of the tokens to be transferred
+	//Source        bool        `bson:"source"`         // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
 func (m *DocTxMsgIBCBankTransfer) Type() string {
@@ -29,5 +29,5 @@ func (m *DocTxMsgIBCBankTransfer) BuildMsg(txMsg interface{}) {
 	m.Amount = utils.ParseCoins(msg.Amount)
 	m.Sender = msg.Sender.String()
 	m.Receiver = msg.Receiver.String()
-	m.Source = msg.Source
+	//m.Source = msg.Source
 }

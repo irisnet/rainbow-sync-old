@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	ibcBank "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"regexp"
+	"github.com/irismod/coinswap"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 		auth.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibcBank.AppModuleBasic{},
+		coinswap.AppModuleBasic{},
 	)
 )
 
