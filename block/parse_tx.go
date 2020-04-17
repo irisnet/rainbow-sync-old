@@ -151,7 +151,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 	)
 
 	cdc := cutils.GetCodec()
-	err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &authTx)
+	err := cdc.UnmarshalBinaryBare(txBytes, &authTx)
 	if err != nil {
 		logger.Error(err.Error())
 		return nil
