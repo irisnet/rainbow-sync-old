@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
+	BlockChainMonitorUrl = []string{"http://192.168.150.31:46658"}
 
 	WorkerNumCreateTask     = 1
 	WorkerNumExecuteTask    = 30
@@ -68,10 +68,10 @@ func init() {
 	}
 	logger.Info("Env Value", logger.Int(constant.EnvNameBlockNumPerWorkerHandle_ZONE, BlockNumPerWorkerHandle))
 
-	zoneName, found := os.LookupEnv(constant.EnvNameZoneName)
+	zoneName, found := os.LookupEnv(constant.EnvNameZoneChainId)
 	if found {
 		ZoneName = zoneName
 	}
-	logger.Info("Env Value", logger.String(constant.EnvNameZoneName, ZoneName))
+	logger.Info("Env Value", logger.String(constant.EnvNameZoneChainId, ZoneName))
 
 }

@@ -228,35 +228,35 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			txMsg := imsg.DocTxMsgIBCBankTransfer{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
-				Type: msg.Type(),
+				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
 			break
 		case cmodel.IBCPacket:
 			msg := msg.(cmodel.IBCPacket)
 			txdetail.Initiator = msg.Signer.String()
-			txdetail.Type = constant.TxMsgTypeIBCBankMsgPacket
+			txdetail.Type = constant.TxTypeIBCBankMsgPacket
 			txMsg := imsg.DocTxMsgIBCMsgPacket{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
-				Type: msg.Type(),
+				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
 			txdetail.From = txMsg.Packet.Data.Value.Sender
 			txdetail.To = txMsg.Packet.Data.Value.Receiver
 			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
-			txdetail.IBCPacketHash = cutils.Md5Encrypt(packetBytes)
+			txdetail.IBCPacketHash = cutils.Md5Encrypt([]byte(string(packetBytes) + fmt.Sprint(txMsg.Packet.Sequence)))
 			break
 		case cmodel.IBCTimeout:
 			msg := msg.(cmodel.IBCTimeout)
 			txdetail.Initiator = msg.Signer.String()
 			txdetail.From = txdetail.Initiator
 			txdetail.To = ""
-			txdetail.Type = constant.TxMsgTypeIBCBankMsgTimeout
+			txdetail.Type = constant.TxTypeIBCBankMsgTimeout
 			txMsg := imsg.DocTxMsgIBCTimeout{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
-				Type: msg.Type(),
+				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
 			break
@@ -370,7 +370,7 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 //}
 
 func buildIBCPacketHashByEvents(events []cmodel.Event) string {
-	var packetStr string
+	var packetStr, packetSequence string
 	if len(events) == 0 {
 		return ""
 	}
@@ -380,6 +380,11 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) string {
 			for k, v := range e.Attributes {
 				if k == constant.EventAttributesKeyPacket {
 					packetStr = v
+				}
+				if k == constant.EventAttributesKeySequence {
+					packetSequence = v
+				}
+				if packetStr != "" && packetSequence != "" {
 					break
 				}
 			}
@@ -390,7 +395,7 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) string {
 		return ""
 	}
 
-	return cutils.Md5Encrypt([]byte(packetStr))
+	return cutils.Md5Encrypt([]byte(packetStr + packetSequence))
 }
 
 //

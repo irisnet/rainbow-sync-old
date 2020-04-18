@@ -1,8 +1,10 @@
 package constant
 
 const (
-	TxTypeTransfer        = "Transfer"
-	TxTypeIBCBankTransfer = "IBCBankTransfer"
+	TxTypeTransfer          = "Transfer"
+	TxTypeIBCBankTransfer   = "IBCBankTransfer"
+	TxTypeIBCBankMsgPacket  = "IBCMsgPacket"
+	TxTypeIBCBankMsgTimeout = "IBCMsgTimeout"
 
 	TxMsgTypeTransfer          = "Transfer"
 	TxMsgTypeIBCBankTransfer   = "IBCBankTransfer"
@@ -13,12 +15,13 @@ const (
 	TxTypeRemoveLiquidity = "RemoveLiquidity"
 	TxTypeSwapOrder       = "SwapOrder"
 
-	TxStatusSuccess          = "success"
-	TxStatusFail             = "fail"
-	EventTypeSendPacket      = "send_packet"
-	EventAttributesKeyPacket = "packet_data"
+	TxStatusSuccess            = "success"
+	TxStatusFail               = "fail"
+	EventTypeSendPacket        = "send_packet"
+	EventAttributesKeyPacket   = "packet_data"
+	EventAttributesKeySequence = "packet_sequence"
 
-	EnvNameZoneName                     = "ZONE_NAME"
+	EnvNameZoneChainId                  = "ZONE_CHAIN_ID"
 	EnvNameSerNetworkFullNode_ZONE      = "SER_BC_FULL_NODE_ZONE"
 	EnvNameWorkerNumExecuteTask_ZONE    = "WORKER_NUM_EXECUTE_TASK_ZONE"
 	EnvNameWorkerMaxSleepTime_ZONE      = "WORKER_MAX_SLEEP_TIME_ZONE"
