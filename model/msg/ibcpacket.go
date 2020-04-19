@@ -1,9 +1,9 @@
 package msg
 
 import (
-	"github.com/irisnet/rainbow-sync/constant"
 	"github.com/irisnet/rainbow-sync/model"
 	"encoding/json"
+	"github.com/irisnet/rainbow-sync/constant"
 )
 
 // Packet defines a type that carries data across different chains through IBC
@@ -26,8 +26,8 @@ type Data struct {
 	Amount   []CoinStr `bson:"amount" json:"amount"`
 	Receiver string    `bson:"receiver" json:"receiver"`
 	Sender   string    `bson:"sender" json:"sender"`
-	Source   bool      `bson:"source" json:"source"`
-	Timeout  string    `bson:"timeout" json:"timeout"`
+	//Source   bool      `bson:"source" json:"source"`
+	//Timeout  string    `bson:"timeout" json:"timeout"`
 }
 
 // MsgPacket receives incoming IBC packet
