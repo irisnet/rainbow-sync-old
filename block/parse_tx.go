@@ -244,6 +244,13 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			})
 			txdetail.From = txMsg.Packet.Data.Value.Sender
 			txdetail.To = txMsg.Packet.Data.Value.Receiver
+			txdetail.Amount = []*cmodel.Coin{}
+
+			if len(txMsg.Packet.Data.Value.Amount) > 0 {
+				amount := txMsg.Packet.Data.Value.Amount[0]
+				coinval := cutils.ParseRewards(amount.Amount + amount.Denom)
+				txdetail.Amount = append(txdetail.Amount, coinval)
+			}
 			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
 			txdetail.IBCPacketHash = cutils.Md5Encrypt([]byte(string(packetBytes) + fmt.Sprint(txMsg.Packet.Sequence)))
 			break
