@@ -17,6 +17,7 @@ import (
 	"gopkg.in/mgo.v2/txn"
 	"time"
 	"github.com/irisnet/rainbow-sync/conf"
+	"strings"
 )
 
 type ZoneBlock struct {
@@ -218,19 +219,24 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 
 		case cmodel.IBCBankMsgTransfer:
 			txdetail.Events = parseEvents(result)
+			packethash, dstport, dstchannel := buildIBCPacketHashByEvents(txdetail.Events)
 			msg := msg.(cmodel.IBCBankMsgTransfer)
 			txdetail.Initiator = msg.Sender.String()
 			txdetail.From = txdetail.Initiator
 			txdetail.To = msg.Receiver.String()
 			txdetail.Amount = cutils.ParseCoins(msg.Amount)
 			txdetail.Type = constant.TxTypeIBCBankTransfer
-			txdetail.IBCPacketHash = buildIBCPacketHashByEvents(txdetail.Events)
+			txdetail.IBCPacketHash = packethash
 			txMsg := imsg.DocTxMsgIBCBankTransfer{}
 			txMsg.BuildMsg(msg)
 			txdetail.Msgs = append(docTxMsgs, cmodel.DocTxMsg{
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
+			denom, ok := denomPrefixHandle(txdetail.Type, txdetail.Amount[0].Denom, dstport, dstchannel)
+			if ok {
+				txdetail.Amount[0].Denom = denom
+			}
 			break
 		case cmodel.IBCPacket:
 			msg := msg.(cmodel.IBCPacket)
@@ -249,6 +255,10 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			if len(txMsg.Packet.Data.Value.Amount) > 0 {
 				amount := txMsg.Packet.Data.Value.Amount[0]
 				coinval := cutils.ParseRewards(amount.Amount + amount.Denom)
+				denom, ok := denomPrefixHandle(txdetail.Type, coinval.Denom, txMsg.Packet.DestinationPort, txMsg.Packet.DestinationChannel)
+				if ok {
+					coinval.Denom = denom
+				}
 				txdetail.Amount = append(txdetail.Amount, coinval)
 			}
 			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
@@ -322,6 +332,26 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 	return txs
 }
 
+func denomPrefixHandle(txType, denom, port, channel string) (string, bool) {
+	dstPrefix := port + "/" + channel
+	segments := strings.Split(denom, "/")
+	if len(segments) < 2 {
+		return "", false
+	}
+	amountFPrefix := segments[0] + "/" + segments[1]
+	switch txType {
+	case constant.TxTypeIBCBankTransfer:
+		if amountFPrefix == dstPrefix {
+			return string([]byte(denom)[len(amountFPrefix)+1:]), true
+		}
+	case constant.TxTypeIBCBankMsgPacket:
+		if amountFPrefix != dstPrefix {
+			return string([]byte(denom)[len(amountFPrefix)+1:]), true
+		}
+	}
+	return "", false
+}
+
 // get tx status and log by query txHash
 func QueryTxResult(txHash []byte) (string, *abci.ResponseDeliverTx, error) {
 	status := constant.TxStatusSuccess
@@ -376,10 +406,10 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 //	return append(coins, &coin)
 //}
 
-func buildIBCPacketHashByEvents(events []cmodel.Event) string {
-	var packetStr, packetSequence string
+func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) {
+	var packetStr, packetSequence, dstPort, dstChannel string
 	if len(events) == 0 {
-		return ""
+		return "", dstPort, dstChannel
 	}
 
 	for _, e := range events {
@@ -391,7 +421,13 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) string {
 				if k == constant.EventAttributesKeySequence {
 					packetSequence = v
 				}
-				if packetStr != "" && packetSequence != "" {
+				if k == constant.EventAttributesKeyDstPort {
+					dstPort = v
+				}
+				if k == constant.EventAttributesKeyDstChannel {
+					dstChannel = v
+				}
+				if packetStr != "" && packetSequence != "" && dstPort != "" && dstChannel != "" {
 					break
 				}
 			}
@@ -399,10 +435,10 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) string {
 	}
 
 	if packetStr == "" {
-		return ""
+		return "", dstPort, dstChannel
 	}
 
-	return cutils.Md5Encrypt([]byte(packetStr + packetSequence))
+	return cutils.Md5Encrypt([]byte(packetStr + packetSequence)), dstPort, dstChannel
 }
 
 //
