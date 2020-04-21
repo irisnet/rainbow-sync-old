@@ -15,11 +15,13 @@ const (
 	TxTypeRemoveLiquidity = "RemoveLiquidity"
 	TxTypeSwapOrder       = "SwapOrder"
 
-	TxStatusSuccess            = "success"
-	TxStatusFail               = "fail"
-	EventTypeSendPacket        = "send_packet"
-	EventAttributesKeyPacket   = "packet_data"
-	EventAttributesKeySequence = "packet_sequence"
+	TxStatusSuccess              = "success"
+	TxStatusFail                 = "fail"
+	EventTypeSendPacket          = "send_packet"
+	EventAttributesKeyPacket     = "packet_data"
+	EventAttributesKeySequence   = "packet_sequence"
+	EventAttributesKeyDstPort    = "packet_dst_port"
+	EventAttributesKeyDstChannel = "packet_dst_channel"
 
 	EnvNameZoneChainId                  = "ZONE_CHAIN_ID"
 	EnvNameSerNetworkFullNode_ZONE      = "SER_BC_FULL_NODE_ZONE"
