@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cosmos/cosmos-sdk v0.34.4-0.20200410083150-b7397d6df548
-	github.com/irismod/coinswap v0.0.0-20200415060832-697780d7dfdc
+	github.com/irismod/coinswap v0.0.0-20200423092419-25458949f746
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
 	github.com/tendermint/tendermint v0.33.3
 	go.uber.org/zap v1.14.1
