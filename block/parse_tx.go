@@ -18,6 +18,7 @@ import (
 	"time"
 	"github.com/irisnet/rainbow-sync/conf"
 	"strings"
+	"strconv"
 )
 
 type ZoneBlock struct {
@@ -309,11 +310,9 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			break
 		case cmodel.MsgSwapOrder:
 			msg := msg.(cmodel.MsgSwapOrder)
-			coin := cutils.ParseCoin(msg.Input.Coin)
 
 			txdetail.From = msg.Input.Address.String()
 			txdetail.To = msg.Output.Address.String()
-			txdetail.Amount = []*cmodel.Coin{{Denom: coin.Denom, Amount: coin.Amount}}
 			txdetail.Type = constant.TxTypeSwapOrder
 			txMsg := imsg.DocTxMsgSwapOrder{}
 			txMsg.BuildMsg(msg)
@@ -321,6 +320,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
+			txdetail.Amount = swapOrderAmountHandle(txMsg, result, txdetail.Status)
 			break
 
 		default:
@@ -330,6 +330,40 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 	txs = append(txs, txdetail)
 
 	return txs
+}
+
+func swapOrderAmountHandle(ordermsg imsg.DocTxMsgSwapOrder, result *abci.ResponseDeliverTx, status string) cmodel.Coins {
+	var ret cmodel.Coins
+	ret = append(ret, &cmodel.Coin{Denom: ordermsg.Input.Coin.Denom, Amount: ordermsg.Input.Coin.Amount})
+	if status == constant.TxStatusSuccess {
+		for _, e := range result.GetEvents() {
+			if e.Type == constant.EventTypeCoinSwapTransfer {
+				coin := &cmodel.Coin{}
+				for _, attr := range e.Attributes {
+					if string(attr.Key) != "amount" {
+						continue
+					}
+					data := string(attr.Value)
+					if index := strings.Index(data, ordermsg.Output.Coin.Denom); index > 0 {
+						amountstr := string(attr.Value[:index])
+						amount, _ := strconv.ParseFloat(amountstr, 64)
+						coin.Denom = ordermsg.Output.Coin.Denom
+						coin.Amount = amount
+						break
+					}
+				}
+				if coin.Denom == "" {
+					continue
+				}
+				ret = append(ret, coin)
+				break
+			}
+		}
+
+	} else {
+		ret = append(ret, &cmodel.Coin{Denom: ordermsg.Output.Coin.Denom, Amount: ordermsg.Output.Coin.Amount})
+	}
+	return ret
 }
 
 func denomPrefixHandle(txType, denom, port, channel string) (string, bool) {
