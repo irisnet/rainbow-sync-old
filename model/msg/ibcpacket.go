@@ -8,13 +8,13 @@ import (
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	Sequence           uint64     `bson:"sequence" `            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	SourcePort         string     `bson:"source_port" `         // identifies the port on the sending chain.
-	SourceChannel      string     `bson:"source_channel" `      // identifies the channel end on the sending chain.
-	DestinationPort    string     `bson:"destination_port" `    // identifies the port on the receiving chain.
-	DestinationChannel string     `bson:"destination_channel" ` // identifies the channel end on the receiving chain.
-	TimeoutHeight      uint64     `bson:"timeout_height" `      // block height after which the packet times out
-	Data               SendPacket `bson:"data"`                 // opaque value which can be defined by the application logic of the associated modules.
+	Sequence           uint64     `bson:"sequence" json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+	SourcePort         string     `bson:"source_port" json:"source_port"`         // identifies the port on the sending chain.
+	SourceChannel      string     `bson:"source_channel" json:"source_channel"`      // identifies the channel end on the sending chain.
+	DestinationPort    string     `bson:"destination_port" json:"destination_port"`    // identifies the port on the receiving chain.
+	DestinationChannel string     `bson:"destination_channel" json:"destination_channel"` // identifies the channel end on the receiving chain.
+	TimeoutHeight      uint64     `bson:"timeout_height" json:"timeout_height"`      // block height after which the packet times out
+	Data               SendPacket `bson:"data" json:"data"`                 // opaque value which can be defined by the application logic of the associated modules.
 }
 
 type SendPacket struct {
