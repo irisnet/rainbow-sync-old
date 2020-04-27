@@ -235,9 +235,10 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
-			denom, ok := denomPrefixHandle(txdetail.Type, txdetail.Amount[0].Denom, dstport, dstchannel)
-			if ok {
-				txdetail.Amount[0].Denom = denom
+			if len(txdetail.Amount) > 0 {
+				if denom, ok := denomPrefixHandle(txdetail.Type, txdetail.Amount[0].Denom, dstport, dstchannel); ok {
+					txdetail.Amount[0].Denom = denom
+				}
 			}
 			txs = append(txs, txdetail)
 			break
