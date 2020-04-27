@@ -465,31 +465,25 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 	for _, e := range events {
 		if e.Type == constant.EventTypeSendPacket {
 			for k, v := range e.Attributes {
-				if k == constant.EventAttributesKeyPacket {
+				switch k {
+				case constant.EventAttributesKeyPacket:
 					packetStr = v
-				}
-				if k == constant.EventAttributesKeySequence {
+				case constant.EventAttributesKeySequence:
 					packetSequence, err = strconv.ParseUint(v, 10, 64)
 					if err != nil {
 						logger.Warn("ParseUint have error",
 							logger.String("sequence", v),
 							logger.String("err", err.Error()))
 					}
-					//packetSequence = v
-				}
-				if k == constant.EventAttributesKeyDstPort {
+				case constant.EventAttributesKeyDstPort:
 					dstPort = v
-				}
-				if k == constant.EventAttributesKeyDstChannel {
+				case constant.EventAttributesKeyDstChannel:
 					dstChannel = v
-				}
-				if k == constant.EventAttributesKeySrcPort {
+				case constant.EventAttributesKeySrcPort:
 					srcPort = v
-				}
-				if k == constant.EventAttributesKeySrcChannel {
+				case constant.EventAttributesKeySrcChannel:
 					srcChannel = v
-				}
-				if k == constant.EventAttributesKeyTimeout {
+				case constant.EventAttributesKeyTimeout:
 					packetTimeout, err = strconv.ParseUint(v, 10, 64)
 					if err != nil {
 						logger.Warn("ParseUint have error",
@@ -497,11 +491,6 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 							logger.String("err", err.Error()))
 					}
 				}
-				//if packetStr != "" && packetSequence > 0 && packetTimeout > 0 &&
-				//	dstPort != "" && dstChannel != "" &&
-				//	srcPort != "" && srcChannel != "" {
-				//	break
-				//}
 			}
 			break
 		}
