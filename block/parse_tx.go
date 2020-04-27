@@ -492,6 +492,7 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 				//	break
 				//}
 			}
+			break
 		}
 	}
 
