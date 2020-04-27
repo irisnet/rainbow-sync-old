@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	BlockChainMonitorUrl = []string{"http://192.168.150.31:46658"}
+	BlockChainMonitorUrl = []string{"https://irishub.dev.bianjie.ai:443"}
 
 	WorkerNumCreateTask     = 1
 	WorkerNumExecuteTask    = 30

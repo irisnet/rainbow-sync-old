@@ -216,6 +216,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: docTxMsg.Type(),
 				Msg:  &docTxMsg,
 			})
+			txs = append(txs, txdetail)
 			break
 
 		case cmodel.IBCBankMsgTransfer:
@@ -238,6 +239,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			if ok {
 				txdetail.Amount[0].Denom = denom
 			}
+			txs = append(txs, txdetail)
 			break
 		case cmodel.IBCPacket:
 			msg := msg.(cmodel.IBCPacket)
@@ -262,8 +264,9 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				}
 				txdetail.Amount = append(txdetail.Amount, coinval)
 			}
-			packetBytes, _ := json.Marshal(txMsg.Packet.Data)
-			txdetail.IBCPacketHash = cutils.Md5Encrypt([]byte(string(packetBytes) + fmt.Sprint(txMsg.Packet.Sequence)))
+			packetBytes, _ := json.Marshal(txMsg.Packet)
+			txdetail.IBCPacketHash = cutils.Md5Encrypt([]byte(string(packetBytes)))
+			txs = append(txs, txdetail)
 			break
 		case cmodel.IBCTimeout:
 			msg := msg.(cmodel.IBCTimeout)
@@ -277,6 +280,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
+			txs = append(txs, txdetail)
 			break
 		case cmodel.MsgAddLiquidity:
 			msg := msg.(cmodel.MsgAddLiquidity)
@@ -292,6 +296,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
+			txs = append(txs, txdetail)
 			break
 		case cmodel.MsgRemoveLiquidity:
 			msg := msg.(cmodel.MsgRemoveLiquidity)
@@ -307,6 +312,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Type: txMsg.Type(),
 				Msg:  &txMsg,
 			})
+			txs = append(txs, txdetail)
 			break
 		case cmodel.MsgSwapOrder:
 			msg := msg.(cmodel.MsgSwapOrder)
@@ -321,13 +327,13 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 				Msg:  &txMsg,
 			})
 			txdetail.Amount = swapOrderAmountHandle(txMsg, result, txdetail.Status)
+			txs = append(txs, txdetail)
 			break
 
 		default:
 			logger.Warn("unknown msg type", logger.String("msgtype", msg.Type()))
 		}
 	}
-	txs = append(txs, txdetail)
 
 	return txs
 }
@@ -441,7 +447,15 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 //}
 
 func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) {
-	var packetStr, packetSequence, dstPort, dstChannel string
+	var (
+		packetStr      string
+		packetSequence uint64
+		dstPort        string
+		dstChannel     string
+		srcPort        string
+		srcChannel     string
+		packetTimeout  uint64
+	)
 	if len(events) == 0 {
 		return "", dstPort, dstChannel
 	}
@@ -453,7 +467,8 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 					packetStr = v
 				}
 				if k == constant.EventAttributesKeySequence {
-					packetSequence = v
+					packetSequence, _ = strconv.ParseUint(v, 10, 64)
+					//packetSequence = v
 				}
 				if k == constant.EventAttributesKeyDstPort {
 					dstPort = v
@@ -461,9 +476,20 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 				if k == constant.EventAttributesKeyDstChannel {
 					dstChannel = v
 				}
-				if packetStr != "" && packetSequence != "" && dstPort != "" && dstChannel != "" {
-					break
+				if k == constant.EventAttributesKeySrcPort {
+					srcPort = v
 				}
+				if k == constant.EventAttributesKeySrcChannel {
+					srcChannel = v
+				}
+				if k == constant.EventAttributesKeyTimeout {
+					packetTimeout, _ = strconv.ParseUint(v, 10, 64)
+				}
+				//if packetStr != "" && packetSequence > 0 && packetTimeout > 0 &&
+				//	dstPort != "" && dstChannel != "" &&
+				//	srcPort != "" && srcChannel != "" {
+				//	break
+				//}
 			}
 		}
 	}
@@ -472,7 +498,22 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 		return "", dstPort, dstChannel
 	}
 
-	return cutils.Md5Encrypt([]byte(packetStr + packetSequence)), dstPort, dstChannel
+	var sendpacket imsg.SendPacket
+	json.Unmarshal([]byte(packetStr), &sendpacket)
+
+	packet := imsg.Packet{
+		Sequence:           uint64(packetSequence),
+		TimeoutHeight:      uint64(packetTimeout),
+		SourcePort:         srcPort,
+		SourceChannel:      srcChannel,
+		DestinationPort:    dstPort,
+		DestinationChannel: dstChannel,
+		Data:               sendpacket,
+	}
+
+	packetBytes, _ := json.Marshal(packet)
+
+	return cutils.Md5Encrypt(packetBytes), dstPort, dstChannel
 }
 
 //
