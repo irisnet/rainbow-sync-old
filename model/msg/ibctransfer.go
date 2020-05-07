@@ -28,6 +28,6 @@ func (m *DocTxMsgIBCBankTransfer) BuildMsg(txMsg interface{}) {
 	m.DestHeight = msg.DestHeight
 	m.Amount = utils.ParseCoins(msg.Amount)
 	m.Sender = msg.Sender.String()
-	m.Receiver = msg.Receiver.String()
+	m.Receiver = msg.Receiver
 	//m.Source = msg.Source
 }

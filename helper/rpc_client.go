@@ -3,6 +3,7 @@ package helper
 import (
 	"fmt"
 	rpcClient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/irisnet/rainbow-sync/logger"
 	"time"
 )
@@ -13,7 +14,7 @@ type RpcClient struct {
 }
 
 func newClient(addr string) *RpcClient {
-	rpc, err := rpcClient.NewHTTP(addr, "/websocket")
+	rpc, err := http.New(addr, "/websocket")
 	if err != nil {
 		logger.Error("failted to get client", logger.String("err", err.Error()))
 		panic(err.Error())
@@ -45,7 +46,7 @@ func (c *RpcClient) Release() {
 }
 
 func (c *RpcClient) HeartBeat() error {
-	http := c.Client.(*rpcClient.HTTP)
+	http := c.Client.(*http.HTTP)
 	_, err := http.Health()
 	return err
 }
