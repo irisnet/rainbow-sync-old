@@ -29,7 +29,7 @@ func TestParseCosmosTxModel(t *testing.T) {
 		{
 			name: "test parse cosmos tx",
 			args: args{
-				b:      1503,
+				b:      613,
 				client: client,
 			},
 		},
@@ -77,7 +77,7 @@ func TestZoneBlock_ParseBlock(t *testing.T) {
 		{
 			name: "test parse cosmos tx",
 			args: args{
-				b:      325227,
+				b:      613,
 				client: client,
 			},
 		},

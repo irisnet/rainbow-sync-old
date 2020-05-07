@@ -225,7 +225,7 @@ func (zone *ZoneBlock) ParseZoneTxModel(txBytes types.Tx, block *types.Block) []
 			msg := msg.(cmodel.IBCBankMsgTransfer)
 			txdetail.Initiator = msg.Sender.String()
 			txdetail.From = txdetail.Initiator
-			txdetail.To = msg.Receiver.String()
+			txdetail.To = msg.Receiver
 			txdetail.Amount = cutils.ParseCoins(msg.Amount)
 			txdetail.Type = constant.TxTypeIBCBankTransfer
 			txdetail.IBCPacketHash = packethash
