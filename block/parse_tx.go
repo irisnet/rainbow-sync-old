@@ -449,14 +449,15 @@ func parseEvents(result *abci.ResponseDeliverTx) []cmodel.Event {
 
 func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) {
 	var (
-		packetStr      string
-		packetSequence uint64
-		dstPort        string
-		dstChannel     string
-		srcPort        string
-		srcChannel     string
-		packetTimeout  uint64
-		err            error
+		packetStr              string
+		packetSequence         uint64
+		dstPort                string
+		dstChannel             string
+		srcPort                string
+		srcChannel             string
+		packetTimeoutHeight    uint64
+		packetTimeoutTimestamp uint64
+		err                    error
 	)
 	if len(events) == 0 {
 		return "", dstPort, dstChannel
@@ -483,11 +484,18 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 					srcPort = v
 				case constant.EventAttributesKeySrcChannel:
 					srcChannel = v
-				case constant.EventAttributesKeyTimeout:
-					packetTimeout, err = strconv.ParseUint(v, 10, 64)
+				case constant.EventAttributesKeyTimeoutHeight:
+					packetTimeoutHeight, err = strconv.ParseUint(v, 10, 64)
 					if err != nil {
 						logger.Warn("ParseUint have error",
 							logger.String("timeout_height", v),
+							logger.String("err", err.Error()))
+					}
+				case constant.EventAttributesKeyTimeoutTimestamp:
+					packetTimeoutTimestamp, err = strconv.ParseUint(v, 10, 64)
+					if err != nil {
+						logger.Warn("ParseUint have error",
+							logger.String("timeout_height_timestamp", v),
 							logger.String("err", err.Error()))
 					}
 				}
@@ -505,7 +513,8 @@ func buildIBCPacketHashByEvents(events []cmodel.Event) (string, string, string) 
 
 	packet := imsg.Packet{
 		Sequence:           uint64(packetSequence),
-		TimeoutHeight:      uint64(packetTimeout),
+		TimeoutHeight:      uint64(packetTimeoutHeight),
+		TimeoutTimestamp:   uint64(packetTimeoutTimestamp),
 		SourcePort:         srcPort,
 		SourceChannel:      srcChannel,
 		DestinationPort:    dstPort,
