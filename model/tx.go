@@ -71,7 +71,13 @@ func (d Tx) EnsureIndexes() {
 			Unique:     true,
 			Background: true},
 		mgo.Index{
-			Key:        []string{"-type"},
+			Key:        []string{"-types"},
+			Background: true},
+		mgo.Index{
+			Key:        []string{"-signers"},
+			Background: true},
+		mgo.Index{
+			Key:        []string{"-addrs"},
 			Background: true},
 	)
 
