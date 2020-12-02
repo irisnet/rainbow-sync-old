@@ -82,15 +82,15 @@ const (
 	MsgTypeRecvPacket  = "recv_packet"
 	MsgTypeIbcTransfer = "transfer"
 
-	MsgTypeUpdateIdentity = "update_identity"
-	MsgTypeCreateIdentity = "create_identity"
-
-	TxTypeRequestRand = "request_rand"
-
-	TxTypeCreateFeed = "create_feed"
-	TxTypeEditFeed   = "edit_feed"
-	TxTypePauseFeed  = "pause_feed"
-	TxTypeStartFeed  = "start_feed"
+	//MsgTypeUpdateIdentity = "update_identity"
+	//MsgTypeCreateIdentity = "create_identity"
+	//
+	//TxTypeRequestRand = "request_rand"
+	//
+	//TxTypeCreateFeed = "create_feed"
+	//TxTypeEditFeed   = "edit_feed"
+	//TxTypePauseFeed  = "pause_feed"
+	//TxTypeStartFeed  = "start_feed"
 )
 
 type (
@@ -138,10 +138,10 @@ type (
 	MsgMintToken          = token.MsgMintToken
 	MsgTransferTokenOwner = token.MsgTransferTokenOwner
 
-	MsgStakeCreate                 = stake.MsgCreateValidator
-	MsgStakeEdit                   = stake.MsgEditValidator
-	MsgStakeDelegate               = stake.MsgDelegate
-	MsgStakeBeginUnbonding         = stake.MsgUndelegate
+	MsgCreateValidator             = stake.MsgCreateValidator
+	MsgEditValidator               = stake.MsgEditValidator
+	MsgDelegate                    = stake.MsgDelegate
+	MsgUndelegate                  = stake.MsgUndelegate
 	MsgBeginRedelegate             = stake.MsgBeginRedelegate
 	MsgUnjail                      = slashing.MsgUnjail
 	MsgStakeSetWithdrawAddress     = distribution.MsgSetWithdrawAddress

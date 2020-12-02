@@ -11,16 +11,16 @@ func HandleTxMsg(msg sdk.Msg) (MsgDocInfo, bool) {
 	case new(MsgBeginRedelegate).Type():
 		docMsg := DocTxMsgBeginRedelegate{}
 		return docMsg.HandleTxMsg(msg), ok
-	case new(MsgStakeBeginUnbonding).Type():
+	case new(MsgUndelegate).Type():
 		docMsg := DocTxMsgBeginUnbonding{}
 		return docMsg.HandleTxMsg(msg), ok
-	case new(MsgStakeDelegate).Type():
+	case new(MsgDelegate).Type():
 		docMsg := DocTxMsgDelegate{}
 		return docMsg.HandleTxMsg(msg), ok
-	case new(MsgStakeEdit).Type():
+	case new(MsgEditValidator).Type():
 		docMsg := DocMsgEditValidator{}
 		return docMsg.HandleTxMsg(msg), ok
-	case new(MsgStakeCreate).Type():
+	case new(MsgCreateValidator).Type():
 		docMsg := DocTxMsgCreateValidator{}
 		return docMsg.HandleTxMsg(msg), ok
 	default:

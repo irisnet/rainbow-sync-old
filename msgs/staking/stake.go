@@ -67,7 +67,7 @@ func (doctx *DocTxMsgBeginUnbonding) GetType() string {
 }
 
 func (doctx *DocTxMsgBeginUnbonding) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(*MsgStakeBeginUnbonding)
+	msg := txMsg.(*MsgUndelegate)
 	doctx.ValidatorAddress = msg.ValidatorAddress
 	doctx.DelegatorAddress = msg.DelegatorAddress
 	doctx.Amount = msg.Amount.String()
@@ -76,7 +76,7 @@ func (m *DocTxMsgBeginUnbonding) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		msg   MsgStakeBeginUnbonding
+		msg   MsgUndelegate
 	)
 
 	ConvertMsg(v, &msg)
@@ -92,7 +92,7 @@ func (m *DocTxMsgBeginUnbonding) HandleTxMsg(v SdkMsg) MsgDocInfo {
 type DocTxMsgDelegate struct {
 	DelegatorAddress string `bson:"delegator_address"`
 	ValidatorAddress string `bson:"validator_address"`
-	Delegation       Coin   `bson:"delegation"`
+	Amount           Coin   `bson:"amount"`
 }
 
 func (doctx *DocTxMsgDelegate) GetType() string {
@@ -100,16 +100,16 @@ func (doctx *DocTxMsgDelegate) GetType() string {
 }
 
 func (doctx *DocTxMsgDelegate) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(*MsgStakeDelegate)
+	msg := txMsg.(*MsgDelegate)
 	doctx.ValidatorAddress = msg.ValidatorAddress
 	doctx.DelegatorAddress = msg.DelegatorAddress
-	doctx.Delegation = Coin(model.BuildDocCoin(msg.Amount))
+	doctx.Amount = Coin(model.BuildDocCoin(msg.Amount))
 }
 func (m *DocTxMsgDelegate) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		msg   MsgStakeDelegate
+		msg   MsgDelegate
 	)
 
 	ConvertMsg(v, &msg)
@@ -134,7 +134,7 @@ func (doctx *DocMsgEditValidator) GetType() string {
 }
 
 func (doctx *DocMsgEditValidator) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(*MsgStakeEdit)
+	msg := txMsg.(*MsgEditValidator)
 	doctx.ValidatorAddress = msg.ValidatorAddress
 	commissionRate := msg.CommissionRate
 	if commissionRate == nil {
@@ -148,7 +148,7 @@ func (m *DocMsgEditValidator) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		msg   MsgStakeEdit
+		msg   MsgEditValidator
 	)
 
 	ConvertMsg(v, &msg)
@@ -176,11 +176,7 @@ func (doctx *DocTxMsgCreateValidator) GetType() string {
 }
 
 func (doctx *DocTxMsgCreateValidator) BuildMsg(txMsg interface{}) {
-	msg := txMsg.(*MsgStakeCreate)
-	//pubKey, err := itypes.Bech32ifyValPub(msg.Pubkey)
-	//if err != nil {
-	//	pubKey = ""
-	//}
+	msg := txMsg.(*MsgCreateValidator)
 	doctx.ValidatorAddress = msg.ValidatorAddress
 	doctx.Pubkey = msg.Pubkey
 	doctx.DelegatorAddress = msg.DelegatorAddress
@@ -196,7 +192,7 @@ func (m *DocTxMsgCreateValidator) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		msg   MsgStakeCreate
+		msg   MsgCreateValidator
 	)
 
 	ConvertMsg(v, &msg)
