@@ -10,6 +10,7 @@ import (
 	"github.com/irisnet/rainbow-sync/msgs/evidence"
 	"github.com/irisnet/rainbow-sync/msgs/gov"
 	"github.com/irisnet/rainbow-sync/msgs/htlc"
+	"github.com/irisnet/rainbow-sync/msgs/ibc"
 	"github.com/irisnet/rainbow-sync/msgs/nft"
 	"github.com/irisnet/rainbow-sync/msgs/record"
 	"github.com/irisnet/rainbow-sync/msgs/service"
@@ -57,6 +58,9 @@ func HandleTxMsg(v types.Msg) MsgDocInfo {
 	}
 	if GovDocInfo, ok := gov.HandleTxMsg(v); ok {
 		return GovDocInfo
+	}
+	if IbcDocInfo, ok := ibc.HandleTxMsg(v); ok {
+		return IbcDocInfo
 	}
 	return MsgDocInfo{}
 }

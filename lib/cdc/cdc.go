@@ -16,12 +16,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/irismod/coinswap"
-	"github.com/irismod/htlc"
-	"github.com/irismod/nft"
-	"github.com/irismod/record"
-	"github.com/irismod/service"
-	"github.com/irismod/token"
+	"github.com/irisnet/irismod/modules/coinswap"
+	"github.com/irisnet/irismod/modules/htlc"
+	"github.com/irisnet/irismod/modules/nft"
+	"github.com/irisnet/irismod/modules/record"
+	"github.com/irisnet/irismod/modules/service"
+	"github.com/irisnet/irismod/modules/token"
 )
 
 var (
@@ -48,11 +48,11 @@ var (
 
 // 初始化账户地址前缀
 func init() {
-	var cdc = codec.New()
+	var cdc = codec.NewLegacyAmino()
 
 	interfaceRegistry := ctypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := tx.NewTxConfig(marshaler, std.DefaultPublicKeyCodec{}, tx.DefaultSignModes)
+	txCfg := tx.NewTxConfig(marshaler, tx.DefaultSignModes)
 
 	encodecfg = params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
@@ -60,9 +60,9 @@ func init() {
 		TxConfig:          txCfg,
 		Amino:             cdc,
 	}
-	std.RegisterCodec(encodecfg.Amino)
+	std.RegisterLegacyAminoCodec(encodecfg.Amino)
 	std.RegisterInterfaces(encodecfg.InterfaceRegistry)
-	moduleBasics.RegisterCodec(encodecfg.Amino)
+	moduleBasics.RegisterLegacyAminoCodec(encodecfg.Amino)
 	moduleBasics.RegisterInterfaces(encodecfg.InterfaceRegistry)
 }
 func GetTxDecoder() sdk.TxDecoder {

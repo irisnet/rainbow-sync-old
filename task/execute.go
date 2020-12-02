@@ -1,6 +1,7 @@
 package task
 
 import (
+	"context"
 	"fmt"
 	"github.com/irisnet/rainbow-sync/block"
 	"github.com/irisnet/rainbow-sync/conf"
@@ -278,7 +279,7 @@ func getBlockChainLatestHeight() (int64, error) {
 	defer func() {
 		client.Release()
 	}()
-	status, err := client.Status()
+	status, err := client.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}

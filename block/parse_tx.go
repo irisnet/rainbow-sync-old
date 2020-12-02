@@ -12,6 +12,7 @@ import (
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
 	"github.com/tendermint/tendermint/types"
+	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
 	"time"
@@ -94,14 +95,15 @@ func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, error)
 }
 
 func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
-	resblock, err := client.Block(&b)
+	ctx := context.Background()
+	resblock, err := client.Block(ctx, &b)
 	if err != nil {
 		logger.Warn("get block result err, now try again", logger.String("err", err.Error()),
 			logger.Any("height", b))
 		// there is possible parse block fail when in iterator
 		var err2 error
 		client2 := pool.GetClient()
-		resblock, err2 = client2.Block(&b)
+		resblock, err2 = client2.Block(ctx, &b)
 		client2.Release()
 		if err2 != nil {
 			return nil, err2
@@ -136,13 +138,14 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 	memo := authTx.GetMemo()
 	height := block.Height
 	txHash := utils.BuildHex(txBytes.Hash())
-	res, err := client.Tx(txBytes.Hash(), false)
+	ctx := context.Background()
+	res, err := client.Tx(ctx, txBytes.Hash(), false)
 	if err != nil {
 		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
 		time.Sleep(time.Duration(1) * time.Second)
 		var err1 error
 		client2 := pool.GetClient()
-		res, err1 = client2.Tx(txBytes.Hash(), false)
+		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
 		client2.Release()
 		if err1 != nil {
 			logger.Error("get txResult err", logger.String("method", methodName), logger.String("err", err1.Error()))

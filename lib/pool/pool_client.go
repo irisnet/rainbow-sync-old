@@ -4,6 +4,7 @@
 package pool
 
 import (
+	"context"
 	"fmt"
 	"github.com/irisnet/rainbow-sync/logger"
 	rpcClient "github.com/tendermint/tendermint/rpc/client/http"
@@ -45,7 +46,7 @@ func (c *Client) Release() {
 
 func (c *Client) HeartBeat() error {
 	http := c.HTTP
-	_, err := http.Health()
+	_, err := http.Health(context.Background())
 	return err
 }
 
