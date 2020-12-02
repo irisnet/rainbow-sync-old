@@ -33,7 +33,6 @@ func CreateMsgDocInfo(msg sdk.Msg, handler func() (Msg, []string)) MsgDocInfo {
 }
 func BuildDocSigners(signers []sdk.AccAddress) []string {
 	var (
-		//firstSigner string
 		allSigners []string
 	)
 	if len(signers) == 0 {
