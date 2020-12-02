@@ -35,9 +35,9 @@ type Packet struct {
 	// actual opaque bytes transferred directly to the application module
 	Data string `bson:"data"`
 	// block height after which the packet times out
-	TimeoutHeight Height `json:"timeout_height"`
+	TimeoutHeight Height `bson:"timeout_height"`
 	// block timestamp (in nanoseconds) after which the packet times out
-	TimeoutTimestamp uint64 `json:"timeout_timestamp"`
+	TimeoutTimestamp uint64 `bson:"timeout_timestamp"`
 }
 
 func (m *DocMsgRecvPacket) GetType() string {

@@ -79,20 +79,20 @@ func (d Tx) EnsureIndexes() {
 }
 
 type Coin struct {
-	Denom  string `bson:"denom" json:"denom"`
-	Amount string `bson:"amount" json:"amount"`
+	Denom  string `bson:"denom"`
+	Amount string `bson:"amount"`
 }
 
 type Coins []*Coin
 
 type Fee struct {
-	Amount []Coin `bson:"amount" json:"amount"`
-	Gas    int64  `bson:"gas" json:"gas"`
+	Amount []Coin `bson:"amount"`
+	Gas    int64  `bson:"gas"`
 }
 
 type ActualFee struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
+	Denom  string `bson:"denom"`
+	Amount string `bson:"amount"`
 }
 
 func BuildDocCoins(coins sdk.Coins) []Coin {
