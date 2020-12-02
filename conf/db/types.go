@@ -1,13 +1,13 @@
 package db
 
 import (
-	"github.com/irisnet/rainbow-sync/logger"
 	constant "github.com/irisnet/rainbow-sync/conf"
+	"github.com/irisnet/rainbow-sync/logger"
 	"os"
 )
 
 var (
-	Addrs    = "localhost:27019"
+	Addrs    = "localhost:27018"
 	User     = "iris"
 	Passwd   = "irispassword"
 	Database = "rainbow-server"

@@ -1,11 +1,17 @@
 module github.com/irisnet/rainbow-sync
 
-go 1.13
+go 1.14
 
 require (
-	github.com/irisnet/irishub v0.16.0
+	github.com/cosmos/cosmos-sdk v0.34.4-0.20200825201020-d9fd4d2ca9a3
+	github.com/irismod/coinswap v0.0.0-20200901103745-f38672ac63ec
+    github.com/irismod/htlc v0.0.0-20200901103718-c3bf89708dce
+    github.com/irismod/nft v1.1.1-0.20200827095318-d16861212579
+    github.com/irismod/record v1.1.1-0.20200827095301-3e27fc43ae73
+    github.com/irismod/service v1.1.1-0.20200901115916-d898b826bf10
+    github.com/irismod/token v1.1.1-0.20200901121217-d3aa04e760e3
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
-	github.com/tendermint/tendermint v0.32.8
+	github.com/tendermint/tendermint v0.34.0-rc3
 	go.uber.org/zap v1.13.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -13,7 +19,6 @@ require (
 )
 
 replace (
-	github.com/tendermint/iavl => github.com/irisnet/iavl v0.12.3
-	github.com/tendermint/tendermint => github.com/irisnet/tendermint v0.32.1
-	golang.org/x/crypto => github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5
+	github.com/cosmos/cosmos-sdk => github.com/irisnet/cosmos-sdk v0.34.4-0.20200901030027-1e0963031861
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
 )

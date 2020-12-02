@@ -1,25 +1,26 @@
 //init client from clientPool.
 //client is httpClient of tendermint
 
-package helper
+package pool
 
 import (
 	"fmt"
-	rpcClient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/irisnet/rainbow-sync/logger"
+	rpcClient "github.com/tendermint/tendermint/rpc/client/http"
 	"time"
 )
 
 type Client struct {
 	Id string
-	rpcClient.Client
+	*rpcClient.HTTP
 }
 
-func newClient(addr string) *Client {
+func newClient(addr string) (*Client, error) {
+	client, err := rpcClient.New(addr, "/websocket")
 	return &Client{
-		Id:     generateId(addr),
-		Client: rpcClient.NewHTTP(addr, "/websocket"),
-	}
+		Id:   generateId(addr),
+		HTTP: client,
+	}, err
 }
 
 // get client from pool
@@ -43,7 +44,7 @@ func (c *Client) Release() {
 }
 
 func (c *Client) HeartBeat() error {
-	http := c.Client.(*rpcClient.HTTP)
+	http := c.HTTP
 	_, err := http.Health()
 	return err
 }

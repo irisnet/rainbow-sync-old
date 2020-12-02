@@ -1,18 +1,16 @@
 package cron
 
 import (
-	"time"
-	"os"
-	"os/signal"
-	"github.com/irisnet/rainbow-sync/logger"
-	"github.com/irisnet/rainbow-sync/db"
-	model "github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/block"
-	"github.com/irisnet/rainbow-sync/helper"
+	"github.com/irisnet/rainbow-sync/db"
+	"github.com/irisnet/rainbow-sync/lib/pool"
+	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/mgo.v2/txn"
-	"fmt"
+	"os"
+	"os/signal"
+	"time"
 )
 
 type CronService struct{}
@@ -69,7 +67,7 @@ func (s *CronService) StartCronService() {
 
 func GetUnknownTxsByPage(skip, limit int) (int, error) {
 
-	var res []model.IrisTx
+	var res []model.Tx
 	q := bson.M{"status": "unknown"}
 	sorts := []string{"-height"}
 
@@ -88,24 +86,8 @@ func GetUnknownTxsByPage(skip, limit int) (int, error) {
 	return len(res), nil
 }
 
-func GetCoinFlowByHash(txhash string) ([]model.IrisAssetDetail, error) {
-	var res []model.IrisAssetDetail
-	q := bson.M{"tx_hash": txhash}
-	sorts := []string{"-height"}
-
-	fn := func(c *mgo.Collection) error {
-		return c.Find(q).Sort(sorts...).All(&res)
-	}
-
-	if err := db.ExecCollection(model.CollectionNameAssetDetail, fn); err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func doWork(iristxs []model.IrisTx) {
-	client := helper.GetClient()
+func doWork(iristxs []model.Tx) {
+	client := pool.GetClient()
 	defer func() {
 		client.Release()
 	}()
@@ -118,16 +100,12 @@ func doWork(iristxs []model.IrisTx) {
 		if err := UpdateUnknowTxs(txs); err != nil {
 			logger.Warn("UpdateUnknowTxs have error", logger.String("error", err.Error()))
 		}
-		if err := UpdateCoinFlow(val.TxHash, val.Height, client); err != nil {
-			logger.Warn("UpdateCoinFlow have error", logger.String("error", err.Error()))
-		}
 	}
 
 }
 
-func ParseUnknownTxs(height int64, client *helper.Client) (resIrisTxs []*model.IrisTx, err error) {
-	var irisBlock block.Iris_Block
-	resIrisTxs, err = irisBlock.ParseIrisTxs(height, client)
+func ParseUnknownTxs(height int64, client *pool.Client) (resTxs []*model.Tx, err error) {
+	resTxs, err = block.ParseTxs(height, client)
 	if err != nil {
 		logger.Error("Parse block txs fail", logger.Int64("block", height),
 			logger.String("err", err.Error()))
@@ -135,22 +113,12 @@ func ParseUnknownTxs(height int64, client *helper.Client) (resIrisTxs []*model.I
 	return
 }
 
-func ParseCoinflows(height int64, client *helper.Client) (coinflows []*model.IrisAssetDetail, err error) {
-	var irisBlock block.Iris_Block
-	coinflows, err = irisBlock.ParseIrisAssetDetail(height, client)
-	if err != nil {
-		logger.Error("Parse block coinflow fail", logger.Int64("block", height),
-			logger.String("err", err.Error()))
-	}
-	return
-}
+func UpdateUnknowTxs(iristx []*model.Tx) error {
 
-func UpdateUnknowTxs(iristx []*model.IrisTx) error {
-
-	update_fn := func(tx *model.IrisTx) error {
+	update_fn := func(tx *model.Tx) error {
 		fn := func(c *mgo.Collection) error {
 			return c.Update(bson.M{"tx_hash": tx.TxHash},
-				bson.M{"$set": bson.M{"actual_fee": tx.ActualFee, "status": tx.Status, "tags": tx.Tags}})
+				bson.M{"$set": bson.M{"actual_fee": tx.ActualFee, "status": tx.Status, "events": tx.Events}})
 		}
 
 		if err := db.ExecCollection(model.CollectionNameIrisTx, fn); err != nil {
@@ -161,37 +129,6 @@ func UpdateUnknowTxs(iristx []*model.IrisTx) error {
 
 	for _, dbval := range iristx {
 		update_fn(dbval)
-	}
-
-	return nil
-}
-
-func UpdateCoinFlow(txhash string, height int64, client *helper.Client) error {
-
-	coinflows, err := GetCoinFlowByHash(txhash)
-	if err != nil {
-		return err
-	}
-	var ops []txn.Op
-
-	if len(coinflows) > 0 {
-		return fmt.Errorf("coinflow not need to update")
-	}
-	assetdetail, err := ParseCoinflows(height, client)
-	for _, dbval := range assetdetail {
-		ops = append(ops, txn.Op{
-			C:      model.CollectionNameAssetDetail,
-			Id:     bson.NewObjectId(),
-			Insert: dbval,
-		})
-
-	}
-
-	if len(ops) > 0 {
-		err := db.Txn(ops)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

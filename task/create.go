@@ -2,7 +2,6 @@ package task
 
 import (
 	"fmt"
-	"github.com/irisnet/rainbow-sync/block"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/logger"
@@ -13,19 +12,18 @@ import (
 )
 
 type TaskIrisService struct {
-	blockType     block.Iris_Block
 	syncIrisModel imodel.SyncTask
 }
 
 const maxRecordNumForBatchInsert = 1000
 
 func (s *TaskIrisService) StartCreateTask() {
-	blockNumPerWorkerHandle := int64(conf.BlockNumPerWorkerHandle)
+	blockNumPerWorkerHandle := int64(conf.SvrConf.BlockNumPerWorkerHandle)
 
-	logger.Info("Start create task", logger.String("Chain Block", s.blockType.Name()))
+	logger.Info("Start create task")
 
 	// buffer channel to limit goroutine num
-	chanLimit := make(chan bool, conf.WorkerNumCreateTask)
+	chanLimit := make(chan bool, conf.SvrConf.WorkerNumCreateTask)
 
 	for {
 		chanLimit <- true
@@ -44,8 +42,7 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("Create task failed", logger.Any("err", err),
-				logger.String("Chain Block", s.blockType.Name()))
+			logger.Error("Create task failed", logger.Any("err", err))
 		}
 		<-chanLimit
 	}()
@@ -58,41 +55,37 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 			model.SyncTaskStatusUnderway,
 		}, model.SyncTaskTypeFollow)
 	if err != nil {
-		logger.Error("Query sync task failed", logger.String("err", err.Error()),
-			logger.String("Chain Block", s.blockType.Name()))
+		logger.Error("Query sync task failed", logger.String("err", err.Error()))
 		return
 	}
 	if len(validFollowTasks) == 0 {
 		// get max end_height from sync_task
 		maxEndHeight, err := s.syncIrisModel.GetMaxBlockHeight()
 		if err != nil {
-			logger.Error("Get max endBlock failed", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+			logger.Error("Get max endBlock failed", logger.String("err", err.Error()))
 			return
 		}
 
 		blockChainLatestHeight, err := getBlockChainLatestHeight()
 		if err != nil {
-			logger.Error("Get current block height failed", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+			logger.Error("Get current block height failed", logger.String("err", err.Error()))
 			return
 		}
 
 		if maxEndHeight+blockNumPerWorkerHandle <= blockChainLatestHeight {
 			syncIrisTasks = createCatchUpTask(maxEndHeight, blockNumPerWorkerHandle, blockChainLatestHeight)
-			logMsg = fmt.Sprintf("Create  catch up task during follow task not exist,from-to:%v-%v,Chain Block:%v",
-				maxEndHeight+1, blockChainLatestHeight, s.blockType.Name())
+			logMsg = fmt.Sprintf("Create  catch up task during follow task not exist,from-to:%v-%v",
+				maxEndHeight+1, blockChainLatestHeight)
 		} else {
 			finished, err := s.assertAllCatchUpTaskFinished()
 			if err != nil {
-				logger.Error("AssertAllCatchUpTaskFinished failed", logger.String("err", err.Error()),
-					logger.String("Chain Block", s.blockType.Name()))
+				logger.Error("AssertAllCatchUpTaskFinished failed", logger.String("err", err.Error()))
 				return
 			}
 			if finished {
 				syncIrisTasks = createFollowTask(maxEndHeight, blockNumPerWorkerHandle, blockChainLatestHeight)
-				logMsg = fmt.Sprintf("Create follow task during follow task not exist,from-to:%v-%v,Chain Block:%v",
-					maxEndHeight+1, blockChainLatestHeight, s.blockType.Name())
+				logMsg = fmt.Sprintf("Create follow task during follow task not exist,from-to:%v-%v",
+					maxEndHeight+1, blockChainLatestHeight)
 			}
 		}
 	} else {
@@ -104,8 +97,7 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 
 		blockChainLatestHeight, err := getBlockChainLatestHeight()
 		if err != nil {
-			logger.Error("Get blockChain latest height failed", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+			logger.Error("Get blockChain latest height failed", logger.String("err", err.Error()))
 			return
 		}
 
@@ -113,8 +105,8 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 			syncIrisTasks = createCatchUpTask(followedHeight, blockNumPerWorkerHandle, blockChainLatestHeight)
 
 			invalidFollowTask = followTask
-			logMsg = fmt.Sprintf("Create catch up task during follow task exist,from-to:%v-%v,invalidFollowTaskId:%v,invalidFollowTaskCurHeight:%v,Chain Block:%v",
-				followedHeight+1, blockChainLatestHeight, invalidFollowTask.ID.Hex(), invalidFollowTask.CurrentHeight, s.blockType.Name())
+			logMsg = fmt.Sprintf("Create catch up task during follow task exist,from-to:%v-%v,invalidFollowTaskId:%v,invalidFollowTaskCurHeight:%v",
+				followedHeight+1, blockChainLatestHeight, invalidFollowTask.ID.Hex(), invalidFollowTask.CurrentHeight)
 
 		}
 	}
@@ -157,10 +149,9 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 	if len(ops) > 0 {
 		err := model.Txn(ops)
 		if err != nil {
-			logger.Warn("Create sync task fail", logger.String("err", err.Error()),
-				logger.String("Chain Block", s.blockType.Name()))
+			logger.Warn("Create sync task fail", logger.String("err", err.Error()))
 		} else {
-			logger.Info(fmt.Sprintf("Create sync task success,%v", logMsg), logger.String("Chain Block", s.blockType.Name()))
+			logger.Info(fmt.Sprintf("Create sync task success,%v", logMsg))
 		}
 	}
 
