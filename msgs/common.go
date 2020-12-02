@@ -21,7 +21,7 @@ func CreateMsgDocInfo(msg sdk.Msg, handler func() (Msg, []string)) MsgDocInfo {
 		Msg:  m,
 	}
 
-	_, signers = BuildDocSigners(msg.GetSigners())
+	signers = BuildDocSigners(msg.GetSigners())
 	addrs = append(addrs, signers...)
 	addrs = append(addrs, addrcollections...)
 
@@ -31,23 +31,19 @@ func CreateMsgDocInfo(msg sdk.Msg, handler func() (Msg, []string)) MsgDocInfo {
 		Addrs:    addrs,
 	}
 }
-func BuildDocSigners(signers []sdk.AccAddress) (string, []string) {
+func BuildDocSigners(signers []sdk.AccAddress) []string {
 	var (
-		firstSigner string
-		allSigners  []string
+		//firstSigner string
+		allSigners []string
 	)
 	if len(signers) == 0 {
-		return firstSigner, allSigners
+		return allSigners
 	}
 	for _, v := range signers {
-		if firstSigner == "" {
-			firstSigner = v.String()
-		}
-
 		allSigners = append(allSigners, v.String())
 	}
 
-	return firstSigner, allSigners
+	return allSigners
 }
 func ConvertMsg(v interface{}, msg interface{}) {
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)

@@ -11,7 +11,6 @@ type Tx struct {
 	Time      int64       `bson:"time"`
 	Height    int64       `bson:"height"`
 	TxHash    string      `bson:"tx_hash"`
-	Type      string      `bson:"type"`
 	Fee       *Fee        `bson:"fee"`
 	ActualFee *ActualFee  `bson:"actual_fee"`
 	Memo      string      `bson:"memo"`
@@ -69,6 +68,7 @@ func (d Tx) EnsureIndexes() {
 			Background: true},
 		mgo.Index{
 			Key:        []string{"-tx_hash"},
+			Unique:     true,
 			Background: true},
 		mgo.Index{
 			Key:        []string{"-type"},

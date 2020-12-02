@@ -185,13 +185,10 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 	if len(msgs) == 0 {
 		return docTx
 	}
-	for i, v := range msgs {
+	for _, v := range msgs {
 		msgDocInfo := HandleTxMsg(v)
 		if len(msgDocInfo.Addrs) == 0 {
 			continue
-		}
-		if i == 0 {
-			docTx.Type = msgDocInfo.DocTxMsg.Type
 		}
 
 		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
