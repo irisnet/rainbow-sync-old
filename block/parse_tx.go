@@ -73,26 +73,30 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, taskDoc model.S
 	return nil
 }
 
-func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, error) {
+func ParseBlock(b int64, client *pool.Client) (resBlock *model.Block, resTxs []*model.Tx, resErr error) {
 
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("parse  block fail", logger.Int64("height", b),
 				logger.Any("err", err))
+			resErr = fmt.Errorf("%v", err)
 		}
 	}()
 
-	resBlock := &model.Block{
+	resBlock = &model.Block{
 		Height:     b,
 		CreateTime: time.Now().Unix(),
 	}
 
 	txs, err := ParseTxs(b, client)
 	if err != nil {
-		return nil, nil, err
+		resErr = err
+		return
 	}
 
-	return resBlock, txs, nil
+	resTxs = txs
+
+	return
 }
 
 func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
@@ -131,7 +135,8 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
+			logger.Int64("height", block.Height))
 		return docTx
 	}
 	authTx := Tx.(signing.Tx)
@@ -150,6 +155,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 		client2.Release()
 		if err1 != nil {
 			logger.Error("get txResult err", logger.String("method", methodName), logger.String("err", err1.Error()))
+			return docTx
 		}
 	}
 
