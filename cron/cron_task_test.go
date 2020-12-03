@@ -1,15 +1,15 @@
 package cron
 
 import (
+	"github.com/irisnet/rainbow-sync/conf"
+	"github.com/irisnet/rainbow-sync/db"
+	"github.com/irisnet/rainbow-sync/lib/pool"
 	"testing"
 	"time"
-	"github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/helper"
-	"github.com/irisnet/rainbow-sync/conf"
 )
 
 func TestGetUnknownTxsByPage(t *testing.T) {
-	helper.Init(conf.BlockChainMonitorUrl, conf.MaxConnectionNum, conf.InitConnectionNum)
+	pool.Init(conf.SvrConf.NodeUrls, conf.SvrConf.MaxConnectionNum, conf.SvrConf.InitConnectionNum)
 	db.Start()
 	defer func() {
 		db.Stop()
@@ -18,7 +18,7 @@ func TestGetUnknownTxsByPage(t *testing.T) {
 }
 
 func TestCronService_StartCronService(t *testing.T) {
-	helper.Init(conf.BlockChainMonitorUrl, conf.MaxConnectionNum, conf.InitConnectionNum)
+	pool.Init(conf.SvrConf.NodeUrls, conf.SvrConf.MaxConnectionNum, conf.SvrConf.InitConnectionNum)
 	db.Start()
 	defer func() {
 		db.Stop()

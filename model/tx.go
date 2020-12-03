@@ -1,40 +1,41 @@
 package model
 
 import (
-	"github.com/irisnet/irishub/app/v1/asset"
-	"github.com/irisnet/irishub/app/v1/bank"
-	"github.com/irisnet/irishub/app/v1/distribution"
-	dtags "github.com/irisnet/irishub/app/v1/distribution/tags"
-	dtypes "github.com/irisnet/irishub/app/v1/distribution/types"
-	"github.com/irisnet/irishub/app/v1/gov"
-	"github.com/irisnet/irishub/app/v1/rand"
-	"github.com/irisnet/irishub/app/v1/slashing"
-	"github.com/irisnet/irishub/app/v1/stake"
-	"github.com/irisnet/irishub/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/irisnet/rainbow-sync/db"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
-type IrisTx struct {
-	Time      time.Time         `json:"time" bson:"time"`
-	Height    int64             `json:"height" bson:"height"`
-	TxHash    string            `json:"tx_hash" bson:"tx_hash"`
-	From      string            `json:"from" bson:"from"`
-	To        string            `json:"to" bson:"to"`
-	Initiator string            `json:"initiator" bson:"initiator"`
-	Amount    []*Coin           `json:"amount" bson:"amount"`
-	Type      string            `json:"type" bson:"type"`
-	Fee       *Fee              `json:"fee" bson:"fee"`
-	ActualFee *ActualFee        `json:"actual_fee" bson:"actual_fee"`
-	Memo      string            `json:"memo" bson:"memo"`
-	Status    string            `json:"status" bson:"status"`
-	Code      uint32            `json:"code" bson:"code"`
-	Log       string            `json:"log" bson:"log"`
-	Tags      map[string]string `json:"tags" bson:"tags"`
-	Msgs      []DocTxMsg        `bson:"msgs"`
+type Tx struct {
+	Time      int64       `bson:"time"`
+	Height    int64       `bson:"height"`
+	TxHash    string      `bson:"tx_hash"`
+	Fee       *Fee        `bson:"fee"`
+	ActualFee *ActualFee  `bson:"actual_fee"`
+	Memo      string      `bson:"memo"`
+	Status    string      `bson:"status"`
+	Log       string      `bson:"log"`
+	Types     []string    `bson:"types"`
+	Events    []Event     `bson:"events"`
+	Msgs      []DocTxMsg  `bson:"msgs"`
+	Signers   []string    `bson:"signers"`
+	Addrs     []string    `bson:"addrs"`
+	TxIndex   uint32      `bson:"tx_index"`
+	Ext       interface{} `bson:"ext"`
 }
+
+type (
+	Event struct {
+		Type       string   `bson:"type"`
+		Attributes []KvPair `bson:"attributes"`
+	}
+
+	KvPair struct {
+		Key   string `bson:"key"`
+		Value string `bson:"value"`
+	}
+)
 
 type DocTxMsg struct {
 	Type string `bson:"type"`
@@ -42,7 +43,7 @@ type DocTxMsg struct {
 }
 
 type Msg interface {
-	Type() string
+	GetType() string
 	BuildMsg(msg interface{})
 }
 
@@ -50,93 +51,76 @@ const (
 	CollectionNameIrisTx = "sync_iris_tx"
 )
 
-func (d IrisTx) Name() string {
+func (d Tx) Name() string {
 	return CollectionNameIrisTx
 }
 
-func (d IrisTx) PkKvPair() map[string]interface{} {
-	return bson.M{}
+func (d Tx) PkKvPair() map[string]interface{} {
+	return bson.M{"height": d.Height, "tx_index": d.TxIndex}
 }
 
-func (d IrisTx) EnsureIndexes() {
+func (d Tx) EnsureIndexes() {
 	var indexes []mgo.Index
 	indexes = append(indexes,
+		mgo.Index{
+			Key:        []string{"-height", "-tx_index"},
+			Unique:     true,
+			Background: true},
 		mgo.Index{
 			Key:        []string{"-tx_hash"},
 			Unique:     true,
 			Background: true},
 		mgo.Index{
-			Key:        []string{"-type"},
+			Key:        []string{"-types"},
 			Background: true},
 		mgo.Index{
-			Key:        []string{"-from"},
+			Key:        []string{"-signers"},
 			Background: true},
 		mgo.Index{
-			Key:        []string{"-to", "-height"},
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-initiator"},
+			Key:        []string{"-addrs"},
 			Background: true},
 	)
 
 	db.EnsureIndexes(d.Name(), indexes)
 }
 
-type (
-	MsgTransfer      = bank.MsgSend
-	MsgBurn          = bank.MsgBurn
-	MsgSetMemoRegexp = bank.MsgSetMemoRegexp
-
-	MsgStakeCreate                 = stake.MsgCreateValidator
-	MsgStakeEdit                   = stake.MsgEditValidator
-	MsgStakeDelegate               = stake.MsgDelegate
-	MsgStakeBeginUnbonding         = stake.MsgBeginUnbonding
-	MsgBeginRedelegate             = stake.MsgBeginRedelegate
-	MsgUnjail                      = slashing.MsgUnjail
-	MsgSetWithdrawAddress          = dtypes.MsgSetWithdrawAddress
-	MsgWithdrawDelegatorReward     = distribution.MsgWithdrawDelegatorReward
-	MsgWithdrawDelegatorRewardsAll = distribution.MsgWithdrawDelegatorRewardsAll
-	MsgWithdrawValidatorRewardsAll = distribution.MsgWithdrawValidatorRewardsAll
-
-	MsgDeposit                       = gov.MsgDeposit
-	MsgSubmitProposal                = gov.MsgSubmitProposal
-	MsgSubmitSoftwareUpgradeProposal = gov.MsgSubmitSoftwareUpgradeProposal
-	MsgSubmitTaxUsageProposal        = gov.MsgSubmitCommunityTaxUsageProposal
-	MsgSubmitTokenAdditionProposal   = gov.MsgSubmitTokenAdditionProposal
-	MsgVote                          = gov.MsgVote
-
-	MsgRequestRand = rand.MsgRequestRand
-
-	AssetIssueToken           = asset.MsgIssueToken
-	AssetEditToken            = asset.MsgEditToken
-	AssetMintToken            = asset.MsgMintToken
-	AssetTransferTokenOwner   = asset.MsgTransferTokenOwner
-	AssetCreateGateway        = asset.MsgCreateGateway
-	AssetEditGateWay          = asset.MsgEditGateway
-	AssetTransferGatewayOwner = asset.MsgTransferGatewayOwner
-
-	SdkCoins = types.Coins
-	KVPair   = types.KVPair
-)
-
-var (
-	TagDistributionReward       = dtags.Reward
-	TagDistributionWithdrawAddr = dtags.WithdrawAddr
-)
-
 type Coin struct {
-	Denom  string  `bson:"denom" json:"denom"`
-	Amount float64 `bson:"amount" json:"amount"`
+	Denom  string `bson:"denom"`
+	Amount string `bson:"amount"`
 }
 
 type Coins []*Coin
 
 type Fee struct {
-	Amount Coins `bson:"amount" json:"amount"`
-	Gas    int64 `bson:"gas" json:"gas"`
+	Amount []Coin `bson:"amount"`
+	Gas    int64  `bson:"gas"`
 }
 
 type ActualFee struct {
-	Denom  string  `json:"denom"`
-	Amount float64 `json:"amount"`
+	Denom  string `bson:"denom"`
+	Amount string `bson:"amount"`
+}
+
+func BuildDocCoins(coins sdk.Coins) []Coin {
+	var (
+		res []Coin
+	)
+	if len(coins) > 0 {
+		for _, v := range coins {
+			c := Coin{
+				Denom:  v.Denom,
+				Amount: v.Amount.String(),
+			}
+			res = append(res, c)
+		}
+	}
+
+	return res
+}
+
+func BuildDocCoin(coin sdk.Coin) Coin {
+	return Coin{
+		Denom:  coin.Denom,
+		Amount: coin.Amount.String(),
+	}
 }

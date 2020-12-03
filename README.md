@@ -8,7 +8,8 @@ A daemon that synchronizes IRIS hub data for the Rainbow wallet backend
 - `model`: mongodb script to create database
 - `task`: main logic of sync-server, sync data from blockChain and write to database
 - `db`: database model
-- `helper`: helper functions
+- `msgs`: tx msgs model
+- `lib`: cdc and client pool functions
 - `utils`: common functions
 - `main.go`: bootstrap project
 
@@ -35,8 +36,7 @@ docker build -t rainbow-sync .
 docker run --name rainbow-sync \&
 -v /mnt/data/rainbow-sync/logs:/root/go/src/github.com/irisnet/rainbow-sync/logs \&
 -e "DB_ADDR=127.0.0.1:27217" -e "DB_USER=user" \&
--e "DB_PASSWD=password" -e "DB_DATABASE=db_name" \&
--e "IRIS_NETWORK=testnet" \&
+-e "DB_PASSWD=password" -e "DB_DATABASE=db_name"  \&
 -e "SER_BC_FULL_NODES=tcp://localhost:26657,..." rainbow-sync
 ```
 
@@ -49,7 +49,6 @@ docker run --name rainbow-sync \&
 | DB_USER | string | "" | db user | user |
 | DB_PASSWD | string | "" |db passwd  | password |
 | DB_DATABASE | string | "" |database name  | db_name |
-| IRIS_NETWORK | string | "testnet" |irishub name  | testnet or mainnet |
 | SER_BC_FULL_NODES | string | tcp://localhost:26657 | iris full node rpc url | tcp://localhost:26657, tcp://127.0.0.2:26657 |
 | WORKER_NUM_EXECUTE_TASK | string | 30 | number of threads executing synchronization TX task | 30 |
 | WORKER_MAX_SLEEP_TIME | string | 120 | the maximum time (in seconds) that synchronization TX threads are allowed to be out of work | 120 |
