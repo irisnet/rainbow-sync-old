@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/hex"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
 	"github.com/irisnet/rainbow-sync/utils"
@@ -32,20 +31,21 @@ func (m *DocMsgUpdateRequestContext) BuildMsg(v interface{}) {
 		coins = append(coins, &model.Coin{Denom: one.Denom, Amount: one.Amount.String()})
 	}
 
-	m.RequestContextID = strings.ToUpper(hex.EncodeToString(msg.RequestContextId))
-	m.Providers = m.loadProviders(msg)
-	m.Consumer = msg.Consumer.String()
+	m.RequestContextID = strings.ToUpper(msg.RequestContextId)
+	m.Providers = msg.Providers
+	m.Consumer = msg.Consumer
 	m.ServiceFeeCap = coins
 	m.Timeout = msg.Timeout
 	m.RepeatedFrequency = msg.RepeatedFrequency
 	m.RepeatedTotal = msg.RepeatedTotal
 }
-func (m *DocMsgUpdateRequestContext) loadProviders(msg *MsgUpdateRequestContext) (ret []string) {
-	for _, one := range msg.Providers {
-		ret = append(ret, one.String())
-	}
-	return
-}
+
+//func (m *DocMsgUpdateRequestContext) loadProviders(msg *MsgUpdateRequestContext) (ret []string) {
+//	for _, one := range msg.Providers {
+//		ret = append(ret, one.String())
+//	}
+//	return
+//}
 func (m *DocMsgUpdateRequestContext) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	var (
 		addrs []string
@@ -53,8 +53,8 @@ func (m *DocMsgUpdateRequestContext) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, m.loadProviders(&msg)...)
-	addrs = append(addrs, msg.Consumer.String())
+	addrs = append(addrs, msg.Providers...)
+	addrs = append(addrs, msg.Consumer)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

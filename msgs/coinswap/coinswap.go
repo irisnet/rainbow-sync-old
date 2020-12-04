@@ -20,7 +20,7 @@ func (doctx *DocTxMsgAddLiquidity) GetType() string {
 
 func (doctx *DocTxMsgAddLiquidity) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgAddLiquidity)
-	doctx.Sender = msg.Sender.String()
+	doctx.Sender = msg.Sender
 	doctx.MinLiquidity = msg.MinLiquidity.String()
 	doctx.ExactIrisAmt = msg.ExactStandardAmt.String()
 	doctx.Deadline = msg.Deadline
@@ -35,7 +35,7 @@ func (m *DocTxMsgAddLiquidity) HandleTxMsg(v sdk.Msg) MsgDocInfo {
 	)
 
 	ConvertMsg(v, &msg)
-	addrs = append(addrs, msg.Sender.String())
+	addrs = append(addrs, msg.Sender)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}
@@ -57,7 +57,7 @@ func (doctx *DocTxMsgRemoveLiquidity) GetType() string {
 
 func (doctx *DocTxMsgRemoveLiquidity) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgRemoveLiquidity)
-	doctx.Sender = msg.Sender.String()
+	doctx.Sender = msg.Sender
 	doctx.MinIrisAmt = msg.MinStandardAmt.String()
 	doctx.MinToken = msg.MinToken.String()
 	doctx.Deadline = msg.Deadline
@@ -70,7 +70,7 @@ func (m *DocTxMsgRemoveLiquidity) HandleTxMsg(v sdk.Msg) MsgDocInfo {
 		msg   MsgRemoveLiquidity
 	)
 	ConvertMsg(v, &msg)
-	addrs = append(addrs, msg.Sender.String())
+	addrs = append(addrs, msg.Sender)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}
@@ -104,11 +104,11 @@ func (doctx *DocTxMsgSwapOrder) BuildMsg(txMsg interface{}) {
 	doctx.Deadline = msg.Deadline
 	doctx.IsBuyOrder = msg.IsBuyOrder
 	doctx.Input = Input{
-		Address: msg.Input.Address.String(),
+		Address: msg.Input.Address,
 		Coin:    model.BuildDocCoin(msg.Input.Coin),
 	}
 	doctx.Output = Output{
-		Address: msg.Output.Address.String(),
+		Address: msg.Output.Address,
 		Coin:    model.BuildDocCoin(msg.Output.Coin),
 	}
 }
@@ -120,7 +120,7 @@ func (m *DocTxMsgSwapOrder) HandleTxMsg(v sdk.Msg) MsgDocInfo {
 	)
 
 	ConvertMsg(v, &msg)
-	addrs = append(addrs, msg.Output.Address.String(), msg.Input.Address.String())
+	addrs = append(addrs, msg.Output.Address, msg.Input.Address)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

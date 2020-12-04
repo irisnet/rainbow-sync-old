@@ -28,9 +28,9 @@ func (m *DocMsgEnableServiceBinding) BuildMsg(v interface{}) {
 	}
 
 	m.ServiceName = msg.ServiceName
-	m.Provider = msg.Provider.String()
+	m.Provider = msg.Provider
 	m.Deposit = coins
-	m.Owner = msg.Owner.String()
+	m.Owner = msg.Owner
 }
 
 func (m *DocMsgEnableServiceBinding) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -40,7 +40,7 @@ func (m *DocMsgEnableServiceBinding) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Owner.String(), msg.Provider.String())
+	addrs = append(addrs, msg.Owner, msg.Provider)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

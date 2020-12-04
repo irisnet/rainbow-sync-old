@@ -19,8 +19,8 @@ func (m *DocMsgTransferTokenOwner) BuildMsg(v interface{}) {
 	msg := v.(*MsgTransferTokenOwner)
 
 	m.Symbol = msg.Symbol
-	m.SrcOwner = msg.SrcOwner.String()
-	m.DstOwner = msg.DstOwner.String()
+	m.SrcOwner = msg.SrcOwner
+	m.DstOwner = msg.DstOwner
 }
 
 func (m *DocMsgTransferTokenOwner) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -30,7 +30,7 @@ func (m *DocMsgTransferTokenOwner) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.SrcOwner.String(), msg.DstOwner.String())
+	addrs = append(addrs, msg.SrcOwner, msg.DstOwner)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}
