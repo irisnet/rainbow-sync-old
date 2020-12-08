@@ -4,7 +4,6 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/irisnet/rainbow-sync/constant"
 	"github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/lib/cdc"
 	"github.com/irisnet/rainbow-sync/lib/pool"
@@ -179,9 +178,9 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 		Memo:      memo,
 		TxIndex:   res.Index,
 	}
-	docTx.Status = constant.TxStatusSuccess
+	docTx.Status = TxStatusSuccess
 	if res.TxResult.Code != 0 {
-		docTx.Status = constant.TxStatusFail
+		docTx.Status = TxStatusFail
 		docTx.Log = res.TxResult.Log
 
 	}
