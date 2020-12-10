@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"encoding/json"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
 )
@@ -9,7 +8,7 @@ import (
 type DocTxMsgSubmitProposal struct {
 	Proposer       string       `bson:"proposer"`        //  Address of the proposer
 	InitialDeposit []model.Coin `bson:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
-	Content        string       `bson:"content"`
+	Content        interface{}  `bson:"content"`
 }
 
 func (doctx *DocTxMsgSubmitProposal) GetType() string {
@@ -18,8 +17,8 @@ func (doctx *DocTxMsgSubmitProposal) GetType() string {
 
 func (doctx *DocTxMsgSubmitProposal) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgSubmitProposal)
-	content, _ := json.Marshal(msg.Content)
-	doctx.Content = string(content)
+
+	doctx.Content = msg.GetContent()
 	doctx.Proposer = msg.Proposer
 	doctx.InitialDeposit = model.BuildDocCoins(msg.InitialDeposit)
 }
@@ -28,11 +27,11 @@ func (m *DocTxMsgSubmitProposal) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		msg   MsgSubmitProposal
+		//msg   MsgSubmitProposal
 	)
 
-	ConvertMsg(v, &msg)
-	addrs = append(addrs, msg.Proposer)
+	//ConvertMsg(v, &msg)
+	//addrs = append(addrs, msg.Proposer)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}
