@@ -102,8 +102,7 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
 	ctx := context.Background()
 	resblock, err := client.Block(ctx, &b)
 	if err != nil {
-		logger.Warn("get block result err, now try again", logger.String("err", err.Error()),
-			logger.Any("height", b))
+		time.Sleep(500 * time.Millisecond)
 		// there is possible parse block fail when in iterator
 		var err2 error
 		client2 := pool.GetClient()
@@ -127,10 +126,9 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
 func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx {
 
 	var (
-		docTxMsgs  []model.DocTxMsg
-		methodName = "ParseTx"
-		docTx      model.Tx
-		actualFee  *model.ActualFee
+		docTxMsgs []model.DocTxMsg
+		docTx     model.Tx
+		actualFee *model.ActualFee
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
@@ -146,14 +144,15 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 	ctx := context.Background()
 	res, err := client.Tx(ctx, txBytes.Hash(), false)
 	if err != nil {
-		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
-		time.Sleep(time.Duration(1) * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		var err1 error
 		client2 := pool.GetClient()
 		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
 		client2.Release()
 		if err1 != nil {
-			logger.Error("get txResult err", logger.String("method", methodName), logger.String("err", err1.Error()))
+			logger.Error("get txResult err",
+				logger.String("txHash", txHash),
+				logger.String("err", err1.Error()))
 			return docTx
 		}
 	}
