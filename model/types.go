@@ -11,6 +11,7 @@ var (
 		SyncTaskModel,
 		BlockModel,
 		TxModel,
+		new(TxMsg),
 	}
 )
 

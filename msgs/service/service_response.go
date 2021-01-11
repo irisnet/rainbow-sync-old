@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/hex"
 	. "github.com/irisnet/rainbow-sync/msgs"
 	"github.com/irisnet/rainbow-sync/utils"
 )
@@ -22,9 +21,9 @@ func (m *DocMsgServiceResponse) GetType() string {
 func (m *DocMsgServiceResponse) BuildMsg(msg interface{}) {
 	v := msg.(*MsgRespondService)
 
-	m.RequestId = hex.EncodeToString(v.RequestId)
-	m.Provider = v.Provider.String()
-	//m.Output = hex.EncodeToString(v.Output)
+	m.RequestId = v.RequestId
+	m.Provider = v.Provider
+	//m.Output = v.Output
 	m.Output = v.Output
 	m.Result = v.Result
 }
@@ -37,7 +36,7 @@ func (m *DocMsgServiceResponse) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
 
-	addrs = append(addrs, msg.Provider.String(), msg.Provider.String())
+	addrs = append(addrs, msg.Provider)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

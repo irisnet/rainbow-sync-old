@@ -19,8 +19,8 @@ func (m *DocMsgSetWithdrawAddress) GetType() string {
 func (m *DocMsgSetWithdrawAddress) BuildMsg(v interface{}) {
 	msg := v.(*MsgSetWithdrawAddress)
 
-	m.Owner = msg.Owner.String()
-	m.WithdrawAddress = msg.WithdrawAddress.String()
+	m.Owner = msg.Owner
+	m.WithdrawAddress = msg.WithdrawAddress
 }
 
 func (m *DocMsgSetWithdrawAddress) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -30,7 +30,7 @@ func (m *DocMsgSetWithdrawAddress) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Owner.String(), msg.WithdrawAddress.String())
+	addrs = append(addrs, msg.Owner, msg.WithdrawAddress)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

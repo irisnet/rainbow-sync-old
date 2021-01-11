@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/hex"
 	. "github.com/irisnet/rainbow-sync/msgs"
 	"github.com/irisnet/rainbow-sync/utils"
 	"strings"
@@ -21,8 +20,8 @@ func (m *DocMsgKillRequestContext) GetType() string {
 func (m *DocMsgKillRequestContext) BuildMsg(v interface{}) {
 	msg := v.(*MsgKillRequestContext)
 
-	m.RequestContextId = strings.ToUpper(hex.EncodeToString(msg.RequestContextId))
-	m.Consumer = msg.Consumer.String()
+	m.RequestContextId = strings.ToUpper(msg.RequestContextId)
+	m.Consumer = msg.Consumer
 }
 
 func (m *DocMsgKillRequestContext) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -32,7 +31,7 @@ func (m *DocMsgKillRequestContext) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Consumer.String())
+	addrs = append(addrs, msg.Consumer)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

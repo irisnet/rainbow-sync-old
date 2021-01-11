@@ -35,7 +35,7 @@ func (m *DocMsgTransfer) BuildMsg(v interface{}) {
 	m.SourceChannel = msg.SourceChannel
 	m.Sender = msg.Sender
 	m.Receiver = msg.Receiver
-	m.TimeoutHeight = Height{VersionNumber: msg.TimeoutHeight.VersionNumber, VersionHeight: msg.TimeoutHeight.VersionHeight}
+	m.TimeoutHeight = Height{RevisionNumber: msg.TimeoutHeight.RevisionNumber, RevisionHeight: msg.TimeoutHeight.RevisionHeight}
 	m.TimeoutTimestamp = msg.TimeoutTimestamp
 
 }

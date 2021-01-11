@@ -93,19 +93,22 @@ func doWork(iristxs []model.Tx) {
 	}()
 
 	for _, val := range iristxs {
-		txs, err := ParseUnknownTxs(val.Height, client)
+		txs, msgs, err := ParseUnknownTxs(val.Height, client)
 		if err != nil {
 			continue
 		}
 		if err := UpdateUnknowTxs(txs); err != nil {
 			logger.Warn("UpdateUnknowTxs have error", logger.String("error", err.Error()))
 		}
+		if err := UpdateUnknowMsgs(msgs); err != nil {
+			logger.Warn("UpdateUnknowMsgs have error", logger.String("error", err.Error()))
+		}
 	}
 
 }
 
-func ParseUnknownTxs(height int64, client *pool.Client) (resTxs []*model.Tx, err error) {
-	resTxs, err = block.ParseTxs(height, client)
+func ParseUnknownTxs(height int64, client *pool.Client) (resTxs []*model.Tx, txMsgs []model.TxMsg, err error) {
+	resTxs, txMsgs, err = block.ParseTxs(height, client)
 	if err != nil {
 		logger.Error("Parse block txs fail", logger.Int64("block", height),
 			logger.String("err", err.Error()))
@@ -129,6 +132,26 @@ func UpdateUnknowTxs(iristx []*model.Tx) error {
 
 	for _, dbval := range iristx {
 		update_fn(dbval)
+	}
+
+	return nil
+}
+func UpdateUnknowMsgs(iristx []model.TxMsg) error {
+
+	update_fn := func(txmsg *model.TxMsg) error {
+		fn := func(c *mgo.Collection) error {
+			return c.Update(bson.M{"tx_hash": txmsg.TxHash, "msg_index": txmsg.MsgIndex},
+				bson.M{"$set": bson.M{"status": txmsg.Status, "events": txmsg.Events}})
+		}
+
+		if err := db.ExecCollection(model.CollectionNameIrisTxMsg, fn); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	for _, dbval := range iristx {
+		update_fn(&dbval)
 	}
 
 	return nil

@@ -6,17 +6,17 @@ import (
 )
 
 type DocMsgRecvPacket struct {
-	Packet      Packet `bson:"packet"`
-	Proof       string `bson:"proof"`
-	ProofHeight Height `bson:"proof_height"`
-	Signer      string `bson:"signer"`
+	Packet          Packet `bson:"packet"`
+	ProofCommitment string `bson:"proof_commitment"`
+	ProofHeight     Height `bson:"proof_height"`
+	Signer          string `bson:"signer"`
 }
 
 type Height struct {
 	// the epoch that the client is currently on
-	VersionNumber uint64 `bson:"version_number"`
+	RevisionNumber uint64 `bson:"revision_number"`
 	// the height within the given epoch
-	VersionHeight uint64 `bson:"version_height"`
+	RevisionHeight uint64 `bson:"revision_height"`
 }
 
 type Packet struct {
@@ -47,8 +47,8 @@ func (m *DocMsgRecvPacket) GetType() string {
 func (m *DocMsgRecvPacket) BuildMsg(v interface{}) {
 	msg := v.(*MsgRecvPacket)
 
-	m.Proof = string(msg.Proof)
-	m.ProofHeight = Height{VersionHeight: msg.ProofHeight.VersionHeight, VersionNumber: msg.ProofHeight.VersionNumber}
+	m.ProofCommitment = string(msg.ProofCommitment)
+	m.ProofHeight = Height{RevisionHeight: msg.ProofHeight.RevisionHeight, RevisionNumber: msg.ProofHeight.RevisionNumber}
 	m.Signer = msg.Signer
 
 	m.Packet = DecodeToIBCRecord(msg.Packet)
@@ -61,7 +61,7 @@ func DecodeToIBCRecord(packet types.Packet) Packet {
 		DestinationChannel: packet.DestinationChannel,
 		DestinationPort:    packet.DestinationPort,
 		Data:               string(packet.Data),
-		TimeoutHeight:      Height{VersionHeight: packet.TimeoutHeight.VersionHeight, VersionNumber: packet.TimeoutHeight.VersionNumber},
+		TimeoutHeight:      Height{RevisionHeight: packet.TimeoutHeight.RevisionHeight, RevisionNumber: packet.TimeoutHeight.RevisionNumber},
 		TimeoutTimestamp:   packet.TimeoutTimestamp,
 	}
 }

@@ -26,7 +26,7 @@ func (m *DocMsgDefineService) BuildMsg(v interface{}) {
 	m.Name = msg.Name
 	m.Description = msg.Description
 	m.Tags = msg.Tags
-	m.Author = msg.Author.String()
+	m.Author = msg.Author
 	m.AuthorDescription = msg.AuthorDescription
 	m.Schemas = msg.Schemas
 }
@@ -39,7 +39,7 @@ func (m *DocMsgDefineService) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
 
-	addrs = append(addrs, msg.Author.String())
+	addrs = append(addrs, msg.Author)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

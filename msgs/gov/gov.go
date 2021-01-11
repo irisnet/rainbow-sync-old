@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"github.com/irisnet/rainbow-sync/lib/cdc"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
 	"github.com/irisnet/rainbow-sync/utils"
@@ -58,11 +59,11 @@ func (m *DocTxMsgSubmitProposal) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		//msg   MsgSubmitProposal
+		msg   MsgSubmitProposal
 	)
 
-	//ConvertMsg(v, &msg)
-	//addrs = append(addrs, msg.Proposer)
+	data, _ := cdc.GetMarshaler().MarshalJSON(v)
+	cdc.GetMarshaler().UnmarshalJSON(data, &msg)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

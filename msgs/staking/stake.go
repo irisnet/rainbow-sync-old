@@ -2,6 +2,7 @@ package staking
 
 import (
 	stake "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/irisnet/rainbow-sync/lib/cdc"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
 )
@@ -181,7 +182,7 @@ func (doctx *DocTxMsgCreateValidator) GetType() string {
 func (doctx *DocTxMsgCreateValidator) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgCreateValidator)
 	doctx.ValidatorAddress = msg.ValidatorAddress
-	doctx.Pubkey = msg.Pubkey
+	doctx.Pubkey = msg.Pubkey.String()
 	doctx.DelegatorAddress = msg.DelegatorAddress
 	doctx.MinSelfDelegation = msg.MinSelfDelegation.String()
 	doctx.Commission = CommissionRates{
@@ -199,7 +200,8 @@ func (m *DocTxMsgCreateValidator) HandleTxMsg(v SdkMsg) MsgDocInfo {
 		msg   MsgCreateValidator
 	)
 
-	ConvertMsg(v, &msg)
+	data, _ := cdc.GetMarshaler().MarshalJSON(v)
+	cdc.GetMarshaler().UnmarshalJSON(data, &msg)
 	addrs = append(addrs, msg.DelegatorAddress, msg.ValidatorAddress)
 	handler := func() (Msg, []string) {
 		return m, addrs
