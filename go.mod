@@ -1,10 +1,10 @@
 module github.com/irisnet/rainbow-sync
 
-go 1.14
+go 1.15
 
 require (
 	github.com/cosmos/cosmos-sdk v0.40.0
-	github.com/irisnet/irismod v1.1.1-0.20210110094232-8d48f9a795f4
+	github.com/irisnet/irismod v1.1.1-0.20210111090024-463e3e11dc14
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
 	github.com/tendermint/tendermint v0.34.1
 	go.uber.org/zap v1.13.0
