@@ -12,7 +12,7 @@ type Tx struct {
 	Height    int64       `bson:"height"`
 	TxHash    string      `bson:"tx_hash"`
 	Fee       *Fee        `bson:"fee"`
-	ActualFee *ActualFee  `bson:"actual_fee"`
+	ActualFee Coin        `bson:"actual_fee"`
 	Memo      string      `bson:"memo"`
 	Status    string      `bson:"status"`
 	Log       string      `bson:"log"`
@@ -99,11 +99,6 @@ type Coins []*Coin
 type Fee struct {
 	Amount []Coin `bson:"amount"`
 	Gas    int64  `bson:"gas"`
-}
-
-type ActualFee struct {
-	Denom  string `bson:"denom"`
-	Amount string `bson:"amount"`
 }
 
 func BuildDocCoins(coins sdk.Coins) []Coin {

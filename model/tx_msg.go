@@ -7,6 +7,8 @@ import (
 )
 
 type TxMsg struct {
+	Time      int64    `bson:"time"`
+	TxFee     Coin     `bson:"tx_fee"`
 	Height    int64    `bson:"height"`
 	TxHash    string   `bson:"tx_hash"`
 	Type      string   `bson:"type"`
@@ -15,8 +17,8 @@ type TxMsg struct {
 	TxStatus  string   `bson:"tx_status"`
 	TxMemo    string   `bson:"tx_memo"`
 	TxLog     string   `bson:"tx_log"`
-	GasUsed   int64    `json:"gas_used"`
-	GasWanted int64    `json:"gas_wanted"`
+	GasUsed   int64    `bson:"gas_used"`
+	GasWanted int64    `bson:"gas_wanted"`
 	Events    []Event  `bson:"events"`
 	Msg       DocTxMsg `bson:"msg"`
 	Addrs     []string `bson:"addrs"`

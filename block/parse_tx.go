@@ -141,7 +141,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docMsgs   []model.TxMsg
 		docTxMsgs []model.DocTxMsg
 		docTx     model.Tx
-		actualFee *model.ActualFee
+		actualFee model.Coin
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
@@ -173,12 +173,10 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	gasUsed := utils.Min(res.TxResult.GasUsed, fee.Gas)
 	if len(fee.Amount) > 0 {
 		gasPrice := utils.ParseFloat(fee.Amount[0].Amount) / float64(fee.Gas)
-		actualFee = &model.ActualFee{
+		actualFee = model.Coin{
 			Denom:  fee.Amount[0].Denom,
 			Amount: fmt.Sprint(float64(gasUsed) * gasPrice),
 		}
-	} else {
-		actualFee = &model.ActualFee{}
 	}
 
 	docTx = model.Tx{
@@ -218,6 +216,8 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
 
 		docMsg := model.TxMsg{
+			Time:      docTx.Time,
+			TxFee:     docTx.ActualFee,
 			Height:    docTx.Height,
 			TxHash:    docTx.TxHash,
 			Type:      msgDocInfo.DocTxMsg.Type,
