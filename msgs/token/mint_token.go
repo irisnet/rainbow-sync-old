@@ -21,8 +21,8 @@ func (m *DocMsgMintToken) BuildMsg(v interface{}) {
 
 	m.Symbol = msg.Symbol
 	m.Amount = msg.Amount
-	m.To = msg.To.String()
-	m.Owner = msg.Owner.String()
+	m.To = msg.To
+	m.Owner = msg.Owner
 }
 
 func (m *DocMsgMintToken) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -32,7 +32,7 @@ func (m *DocMsgMintToken) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Owner.String(), msg.To.String())
+	addrs = append(addrs, msg.Owner, msg.To)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

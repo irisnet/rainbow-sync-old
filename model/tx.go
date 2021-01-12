@@ -12,7 +12,7 @@ type Tx struct {
 	Height    int64       `bson:"height"`
 	TxHash    string      `bson:"tx_hash"`
 	Fee       *Fee        `bson:"fee"`
-	ActualFee *ActualFee  `bson:"actual_fee"`
+	ActualFee Coin        `bson:"actual_fee"`
 	Memo      string      `bson:"memo"`
 	Status    string      `bson:"status"`
 	Log       string      `bson:"log"`
@@ -27,13 +27,18 @@ type Tx struct {
 
 type (
 	Event struct {
-		Type       string   `bson:"type"`
-		Attributes []KvPair `bson:"attributes"`
+		Type       string   `bson:"type" json:"type"`
+		Attributes []KvPair `bson:"attributes" json:"attributes"`
 	}
 
 	KvPair struct {
-		Key   string `bson:"key"`
-		Value string `bson:"value"`
+		Key   string `bson:"key" json:"key"`
+		Value string `bson:"value" json:"value"`
+	}
+
+	MsgEvent struct {
+		MsgIndex int     `bson:"msg_index" json:"msg_index"`
+		Events   []Event `bson:"events" json:"events"`
 	}
 )
 
@@ -94,11 +99,6 @@ type Coins []*Coin
 type Fee struct {
 	Amount []Coin `bson:"amount"`
 	Gas    int64  `bson:"gas"`
-}
-
-type ActualFee struct {
-	Denom  string `bson:"denom"`
-	Amount string `bson:"amount"`
 }
 
 func BuildDocCoins(coins sdk.Coins) []Coin {

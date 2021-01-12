@@ -21,7 +21,7 @@ func (m *DocMsgEditToken) BuildMsg(v interface{}) {
 	msg := v.(*MsgEditToken)
 
 	m.Symbol = msg.Symbol
-	m.Owner = msg.Owner.String()
+	m.Owner = msg.Owner
 	m.Name = msg.Name
 	m.MaxSupply = msg.MaxSupply
 	m.Mintable = msg.Mintable.ToBool()
@@ -34,7 +34,7 @@ func (m *DocMsgEditToken) HandleTxMsg(v SdkMsg) MsgDocInfo {
 	)
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Owner.String())
+	addrs = append(addrs, msg.Owner)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

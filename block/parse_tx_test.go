@@ -24,18 +24,20 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 		{
 			name: "test parse iris tx",
 			args: args{
-				b:      857,
+				b:      9952,
 				client: client,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := ParseTxs(tt.args.b, tt.args.client)
+			res, msg, err := ParseTxs(tt.args.b, tt.args.client)
 			if err != nil {
 				t.Fatal(err)
 			}
 			resBytes, _ := json.Marshal(res)
+			t.Log(string(resBytes))
+			resBytes, _ = json.Marshal(msg)
 			t.Log(string(resBytes))
 		})
 	}

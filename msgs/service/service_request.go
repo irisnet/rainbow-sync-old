@@ -33,23 +33,16 @@ func (m *DocMsgCallService) BuildMsg(msg interface{}) {
 		coins = append(coins, &model.Coin{Denom: one.Denom, Amount: one.Amount.String()})
 	}
 	m.ServiceName = v.ServiceName
-	m.Providers = m.loadProviders(v)
-	m.Consumer = v.Consumer.String()
+	m.Providers = v.Providers
+	m.Consumer = v.Consumer
 	m.Input = v.Input
 	m.ServiceFeeCap = coins
 	m.Timeout = v.Timeout
-	//m.Input = hex.EncodeToString(v.Input)
+	//m.Input = v.Input
 	m.SuperMode = v.SuperMode
 	m.Repeated = v.Repeated
 	m.RepeatedFrequency = v.RepeatedFrequency
 	m.RepeatedTotal = v.RepeatedTotal
-}
-
-func (m *DocMsgCallService) loadProviders(v *MsgCallService) (ret []string) {
-	for _, one := range v.Providers {
-		ret = append(ret, one.String())
-	}
-	return
 }
 
 func (m *DocMsgCallService) HandleTxMsg(v SdkMsg) MsgDocInfo {
@@ -60,8 +53,8 @@ func (m *DocMsgCallService) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
 
-	addrs = append(addrs, m.loadProviders(&msg)...)
-	addrs = append(addrs, msg.Consumer.String())
+	addrs = append(addrs, msg.Providers...)
+	addrs = append(addrs, msg.Consumer)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

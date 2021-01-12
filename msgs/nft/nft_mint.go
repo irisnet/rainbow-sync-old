@@ -23,10 +23,10 @@ func (m *DocMsgNFTMint) GetType() string {
 func (m *DocMsgNFTMint) BuildMsg(v interface{}) {
 	msg := v.(*MsgNFTMint)
 
-	m.Sender = msg.Sender.String()
-	m.Recipient = msg.Recipient.String()
+	m.Sender = msg.Sender
+	m.Recipient = msg.Recipient
 	m.Id = strings.ToLower(msg.Id)
-	m.Denom = strings.ToLower(msg.Denom)
+	m.Denom = strings.ToLower(msg.DenomId)
 	m.URI = msg.URI
 	m.Data = msg.Data
 	m.Name = msg.Name
@@ -38,7 +38,7 @@ func (m *DocMsgNFTMint) HandleTxMsg(v SdkMsg) MsgDocInfo {
 		msg   MsgNFTMint
 	)
 	utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(v), &msg)
-	addrs = append(addrs, msg.Sender.String(), msg.Recipient.String())
+	addrs = append(addrs, msg.Sender, msg.Recipient)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

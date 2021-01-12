@@ -19,7 +19,7 @@ func (m *DocMsgCreateClient) GetType() string {
 func (m *DocMsgCreateClient) BuildMsg(v interface{}) {
 	msg := v.(*MsgCreateClient)
 
-	m.ClientID = msg.ClientId
+	//m.ClientID = msg.ClientId
 	m.Signer = msg.Signer
 	if msg.ClientState != nil {
 		m.ClientState = msg.ClientState.String()

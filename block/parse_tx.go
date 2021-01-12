@@ -18,9 +18,9 @@ import (
 	"time"
 )
 
-func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, taskDoc model.SyncTask) error {
+func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMsg, taskDoc model.SyncTask) error {
 	var (
-		ops, irisTxsOps []txn.Op
+		ops, insertOps []txn.Op
 	)
 
 	if blockDoc.Height == 0 {
@@ -33,16 +33,25 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, taskDoc model.S
 		Insert: blockDoc,
 	}
 
-	length_txs := len(irisTxs)
-	if length_txs > 0 {
-		irisTxsOps = make([]txn.Op, 0, length_txs)
-		for _, v := range irisTxs {
+	txAndMsgNum := len(txs) + len(txMsgs)
+	if txAndMsgNum > 0 {
+		insertOps = make([]txn.Op, 0, txAndMsgNum)
+		for _, v := range txs {
 			op := txn.Op{
 				C:      model.CollectionNameIrisTx,
 				Id:     bson.NewObjectId(),
 				Insert: v,
 			}
-			irisTxsOps = append(irisTxsOps, op)
+			insertOps = append(insertOps, op)
+		}
+
+		for _, v := range txMsgs {
+			op := txn.Op{
+				C:      model.CollectionNameIrisTxMsg,
+				Id:     bson.NewObjectId(),
+				Insert: v,
+			}
+			insertOps = append(insertOps, op)
 		}
 	}
 
@@ -59,8 +68,8 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, taskDoc model.S
 		},
 	}
 
-	ops = make([]txn.Op, 0, length_txs+2)
-	ops = append(append(ops, blockOp, updateOp), irisTxsOps...)
+	ops = make([]txn.Op, 0, txAndMsgNum+2)
+	ops = append(append(ops, blockOp, updateOp), insertOps...)
 
 	if len(ops) > 0 {
 		err := db.Txn(ops)
@@ -72,7 +81,7 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, taskDoc model.S
 	return nil
 }
 
-func ParseBlock(b int64, client *pool.Client) (resBlock *model.Block, resTxs []*model.Tx, resErr error) {
+func ParseBlock(b int64, client *pool.Client) (resBlock *model.Block, resTxs []*model.Tx, resTxMsgs []model.TxMsg, resErr error) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -87,18 +96,19 @@ func ParseBlock(b int64, client *pool.Client) (resBlock *model.Block, resTxs []*
 		CreateTime: time.Now().Unix(),
 	}
 
-	txs, err := ParseTxs(b, client)
+	txs, msgs, err := ParseTxs(b, client)
 	if err != nil {
 		resErr = err
 		return
 	}
 
 	resTxs = txs
+	resTxMsgs = msgs
 
 	return
 }
 
-func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
+func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) {
 	ctx := context.Background()
 	resblock, err := client.Block(ctx, &b)
 	if err != nil {
@@ -109,32 +119,35 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, error) {
 		resblock, err2 = client2.Block(ctx, &b)
 		client2.Release()
 		if err2 != nil {
-			return nil, err2
+			return nil, nil, err2
 		}
 	}
 	txs := make([]*model.Tx, 0, len(resblock.Block.Txs))
+	var docMsgs []model.TxMsg
 	for _, tx := range resblock.Block.Txs {
-		tx := ParseTx(tx, resblock.Block, client)
+		tx, msgs := ParseTx(tx, resblock.Block, client)
 		if tx.Height > 0 {
 			txs = append(txs, &tx)
+			docMsgs = append(docMsgs, msgs...)
 		}
 	}
-	return txs, nil
+	return txs, docMsgs, nil
 }
 
 // parse iris tx from iris block result tx
-func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx {
+func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.Tx, []model.TxMsg) {
 
 	var (
+		docMsgs   []model.TxMsg
 		docTxMsgs []model.DocTxMsg
 		docTx     model.Tx
-		actualFee *model.ActualFee
+		actualFee model.Coin
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
 		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
 			logger.Int64("height", block.Height))
-		return docTx
+		return docTx, docMsgs
 	}
 	authTx := Tx.(signing.Tx)
 	fee := BuildFee(authTx.GetFee(), authTx.GetGas())
@@ -153,19 +166,17 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 			logger.Error("get txResult err",
 				logger.String("txHash", txHash),
 				logger.String("err", err1.Error()))
-			return docTx
+			return docTx, docMsgs
 		}
 	}
 
 	gasUsed := utils.Min(res.TxResult.GasUsed, fee.Gas)
 	if len(fee.Amount) > 0 {
 		gasPrice := utils.ParseFloat(fee.Amount[0].Amount) / float64(fee.Gas)
-		actualFee = &model.ActualFee{
+		actualFee = model.Coin{
 			Denom:  fee.Amount[0].Denom,
 			Amount: fmt.Sprint(float64(gasUsed) * gasPrice),
 		}
-	} else {
-		actualFee = &model.ActualFee{}
 	}
 
 	docTx = model.Tx{
@@ -184,12 +195,16 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 
 	}
 	docTx.Events = parseEvents(res.TxResult.Events)
+	eventsIndexMap := make(map[int]model.MsgEvent)
+	if res.TxResult.Code == 0 {
+		eventsIndexMap = splitEvents(res.TxResult.Log)
+	}
 
 	msgs := authTx.GetMsgs()
 	if len(msgs) == 0 {
-		return docTx
+		return docTx, docMsgs
 	}
-	for _, v := range msgs {
+	for i, v := range msgs {
 		msgDocInfo := HandleTxMsg(v)
 		if len(msgDocInfo.Addrs) == 0 {
 			continue
@@ -199,6 +214,29 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
 		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
 		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
+
+		docMsg := model.TxMsg{
+			Time:      docTx.Time,
+			TxFee:     docTx.ActualFee,
+			Height:    docTx.Height,
+			TxHash:    docTx.TxHash,
+			Type:      msgDocInfo.DocTxMsg.Type,
+			MsgIndex:  i,
+			TxIndex:   res.Index,
+			TxStatus:  docTx.Status,
+			TxMemo:    memo,
+			TxLog:     docTx.Log,
+			GasUsed:   res.TxResult.GasUsed,
+			GasWanted: res.TxResult.GasWanted,
+		}
+		docMsg.Msg = msgDocInfo.DocTxMsg
+		if val, ok := eventsIndexMap[i]; ok {
+			docMsg.Events = val.Events
+		}
+		docMsg.Addrs = removeDuplicatesFromSlice(msgDocInfo.Addrs)
+		docMsg.TxSigners = removeDuplicatesFromSlice(msgDocInfo.Signers)
+		docMsgs = append(docMsgs, docMsg)
+
 	}
 	docTx.Addrs = removeDuplicatesFromSlice(docTx.Addrs)
 	docTx.Types = removeDuplicatesFromSlice(docTx.Types)
@@ -207,10 +245,10 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) model.Tx
 
 	// don't save txs which have not parsed
 	if docTx.TxHash == "" {
-		return model.Tx{}
+		return model.Tx{}, docMsgs
 	}
 
-	return docTx
+	return docTx, docMsgs
 
 }
 
@@ -242,4 +280,18 @@ func parseEvents(events []aTypes.Event) []model.Event {
 	}
 
 	return eventDocs
+}
+
+func splitEvents(log string) map[int]model.MsgEvent {
+	var eventDocs []model.MsgEvent
+	if log != "" {
+		utils.UnMarshalJsonIgnoreErr(log, &eventDocs)
+
+	}
+
+	msgIndexMap := make(map[int]model.MsgEvent, len(eventDocs))
+	for _, val := range eventDocs {
+		msgIndexMap[val.MsgIndex] = val
+	}
+	return msgIndexMap
 }

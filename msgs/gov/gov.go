@@ -1,8 +1,10 @@
 package gov
 
 import (
+	"github.com/irisnet/rainbow-sync/lib/cdc"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
+	"github.com/irisnet/rainbow-sync/utils"
 )
 
 type DocTxMsgSubmitProposal struct {
@@ -18,20 +20,50 @@ func (doctx *DocTxMsgSubmitProposal) GetType() string {
 func (doctx *DocTxMsgSubmitProposal) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgSubmitProposal)
 
-	doctx.Content = msg.GetContent()
+	doctx.Content = CovertContent(msg.GetContent())
 	doctx.Proposer = msg.Proposer
 	doctx.InitialDeposit = model.BuildDocCoins(msg.InitialDeposit)
+}
+
+func CovertContent(content GovContent) interface{} {
+	switch content.ProposalType() {
+	case ProposalTypeCancelSoftwareUpgrade:
+		var data ContentCancelSoftwareUpgradeProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	case ProposalTypeSoftwareUpgrade:
+		var data ContentSoftwareUpgradeProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	case ProposalTypeCommunityPoolSpend:
+		var data ContentCommunityPoolSpendProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	case ProposalTypeClientUpdate:
+		var data ContentClientUpdateProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	case ProposalTypeText:
+		var data ContentTextProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	case ProposalTypeParameterChange:
+		var data ContentParameterChangeProposal
+		utils.UnMarshalJsonIgnoreErr(utils.MarshalJsonIgnoreErr(content), &data)
+		return data
+	}
+	return content
 }
 
 func (m *DocTxMsgSubmitProposal) HandleTxMsg(v SdkMsg) MsgDocInfo {
 
 	var (
 		addrs []string
-		//msg   MsgSubmitProposal
+		msg   MsgSubmitProposal
 	)
 
-	//ConvertMsg(v, &msg)
-	//addrs = append(addrs, msg.Proposer)
+	data, _ := cdc.GetMarshaler().MarshalJSON(v)
+	cdc.GetMarshaler().UnmarshalJSON(data, &msg)
 	handler := func() (Msg, []string) {
 		return m, addrs
 	}

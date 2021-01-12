@@ -173,7 +173,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		}
 
 		// parse data from block
-		blockDoc, txDocs, err := block.ParseBlock(inProcessBlock, client)
+		blockDoc, txDocs, txMsgs, err := block.ParseBlock(inProcessBlock, client)
 		if err != nil {
 			logger.Error("Parse block fail", logger.Int64("block", inProcessBlock),
 				logger.String("err", err.Error()))
@@ -194,7 +194,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 				taskDoc.Status = model.SyncTaskStatusCompleted
 			}
 
-			err := block.SaveDocsWithTxn(blockDoc, txDocs, taskDoc)
+			err := block.SaveDocsWithTxn(blockDoc, txDocs, txMsgs, taskDoc)
 			if err != nil {
 				logger.Error("save docs fail", logger.String("err", err.Error()))
 			} else {
