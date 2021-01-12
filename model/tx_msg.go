@@ -22,12 +22,12 @@ type TxMsg struct {
 	Events    []Event  `bson:"events"`
 	Msg       DocTxMsg `bson:"msg"`
 	Addrs     []string `bson:"addrs"`
+	TxAddrs   []string `bson:"tx_addrs"`
 	TxSigners []string `bson:"tx_signers"`
 }
 
 const (
 	IrisTxMsgStatus         = "tx_status"
-	IrisTxMsgSigners        = "tx_signers"
 	CollectionNameIrisTxMsg = "sync_iris_tx_msg"
 )
 
@@ -43,20 +43,8 @@ func (d TxMsg) EnsureIndexes() {
 	var indexes []mgo.Index
 	indexes = append(indexes,
 		mgo.Index{
-			Key:        []string{"-height"},
-			Background: true},
-		mgo.Index{
 			Key:        []string{"-tx_hash", "-msg_index"},
 			Unique:     true,
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-type"},
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-" + IrisTxMsgSigners},
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-addrs"},
 			Background: true},
 	)
 
