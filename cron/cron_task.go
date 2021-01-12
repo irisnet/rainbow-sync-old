@@ -141,7 +141,7 @@ func UpdateUnknowMsgs(iristx []model.TxMsg) error {
 	update_fn := func(txmsg *model.TxMsg) error {
 		fn := func(c *mgo.Collection) error {
 			return c.Update(bson.M{"tx_hash": txmsg.TxHash, "msg_index": txmsg.MsgIndex},
-				bson.M{"$set": bson.M{"status": txmsg.Status, "events": txmsg.Events}})
+				bson.M{"$set": bson.M{model.IrisTxMsgStatus: txmsg.TxStatus, "events": txmsg.Events}})
 		}
 
 		if err := db.ExecCollection(model.CollectionNameIrisTxMsg, fn); err != nil {

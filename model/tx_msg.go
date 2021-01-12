@@ -12,7 +12,7 @@ type TxMsg struct {
 	Type      string   `bson:"type"`
 	MsgIndex  int      `bson:"msg_index"`
 	TxIndex   uint32   `bson:"tx_index"`
-	Status    string   `bson:"status"`
+	TxStatus  string   `bson:"tx_status"`
 	TxMemo    string   `bson:"tx_memo"`
 	TxLog     string   `bson:"tx_log"`
 	GasUsed   int64    `json:"gas_used"`
@@ -20,10 +20,12 @@ type TxMsg struct {
 	Events    []Event  `bson:"events"`
 	Msg       DocTxMsg `bson:"msg"`
 	Addrs     []string `bson:"addrs"`
-	Signers   []string `bson:"signers"`
+	TxSigners []string `bson:"tx_signers"`
 }
 
 const (
+	IrisTxMsgStatus         = "tx_status"
+	IrisTxMsgSigners        = "tx_signers"
 	CollectionNameIrisTxMsg = "sync_iris_tx_msg"
 )
 
@@ -49,7 +51,7 @@ func (d TxMsg) EnsureIndexes() {
 			Key:        []string{"-type"},
 			Background: true},
 		mgo.Index{
-			Key:        []string{"-signers"},
+			Key:        []string{"-" + IrisTxMsgSigners},
 			Background: true},
 		mgo.Index{
 			Key:        []string{"-addrs"},
