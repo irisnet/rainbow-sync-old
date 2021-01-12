@@ -226,7 +226,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			Status:    docTx.Status,
 			TxMemo:    memo,
 			TxLog:     docTx.Log,
-			GasUsed:   gasUsed,
+			GasUsed:   res.TxResult.GasUsed,
 			GasWanted: res.TxResult.GasWanted,
 		}
 		docMsg.Msg = msgDocInfo.DocTxMsg
