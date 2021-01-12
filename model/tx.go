@@ -75,15 +75,6 @@ func (d Tx) EnsureIndexes() {
 			Key:        []string{"-tx_hash"},
 			Unique:     true,
 			Background: true},
-		mgo.Index{
-			Key:        []string{"-types"},
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-signers"},
-			Background: true},
-		mgo.Index{
-			Key:        []string{"-addrs"},
-			Background: true},
 	)
 
 	db.EnsureIndexes(d.Name(), indexes)

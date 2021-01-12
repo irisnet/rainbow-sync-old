@@ -248,6 +248,9 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		return model.Tx{}, docMsgs
 	}
 
+	for i, _ := range docMsgs {
+		docMsgs[i].TxAddrs = docTx.Addrs
+	}
 	return docTx, docMsgs
 
 }
