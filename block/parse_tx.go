@@ -18,9 +18,9 @@ import (
 	"time"
 )
 
-func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, irisMsgs []model.TxMsg, taskDoc model.SyncTask) error {
+func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMsg, taskDoc model.SyncTask) error {
 	var (
-		ops, irisTxsOps []txn.Op
+		ops, insertOps []txn.Op
 	)
 
 	if blockDoc.Height == 0 {
@@ -33,25 +33,25 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, irisMsgs []mode
 		Insert: blockDoc,
 	}
 
-	length_txs := len(irisTxs) + len(irisMsgs)
-	if length_txs > 0 {
-		irisTxsOps = make([]txn.Op, 0, length_txs)
-		for _, v := range irisTxs {
+	txAndMsgNum := len(txs) + len(txMsgs)
+	if txAndMsgNum > 0 {
+		insertOps = make([]txn.Op, 0, txAndMsgNum)
+		for _, v := range txs {
 			op := txn.Op{
 				C:      model.CollectionNameIrisTx,
 				Id:     bson.NewObjectId(),
 				Insert: v,
 			}
-			irisTxsOps = append(irisTxsOps, op)
+			insertOps = append(insertOps, op)
 		}
 
-		for _, v := range irisMsgs {
+		for _, v := range txMsgs {
 			op := txn.Op{
 				C:      model.CollectionNameIrisTxMsg,
 				Id:     bson.NewObjectId(),
 				Insert: v,
 			}
-			irisTxsOps = append(irisTxsOps, op)
+			insertOps = append(insertOps, op)
 		}
 	}
 
@@ -68,8 +68,8 @@ func SaveDocsWithTxn(blockDoc *model.Block, irisTxs []*model.Tx, irisMsgs []mode
 		},
 	}
 
-	ops = make([]txn.Op, 0, length_txs+2)
-	ops = append(append(ops, blockOp, updateOp), irisTxsOps...)
+	ops = make([]txn.Op, 0, txAndMsgNum+2)
+	ops = append(append(ops, blockOp, updateOp), insertOps...)
 
 	if len(ops) > 0 {
 		err := db.Txn(ops)
