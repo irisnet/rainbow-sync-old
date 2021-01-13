@@ -23,6 +23,7 @@ type TxMsg struct {
 	Msg       DocTxMsg `bson:"msg"`
 	Addrs     []string `bson:"addrs"`
 	TxAddrs   []string `bson:"tx_addrs"`
+	Signers   []string `bson:"signers"`
 	TxSigners []string `bson:"tx_signers"`
 }
 
