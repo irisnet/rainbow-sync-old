@@ -1,4 +1,4 @@
-FROM golang:1.13.1-alpine3.10 as builder
+FROM golang:1.15.5-alpine3.12 as builder
 
 # Set up dependencies
 ENV PACKAGES go make git libc-dev bash
@@ -16,7 +16,7 @@ WORKDIR $REPO_PATH
 RUN apk add --no-cache $PACKAGES && \
     cd $REPO_PATH && make all
 
-FROM alpine:3.10
+FROM alpine:3.12
 
 ENV BINARY_NAME	rainbow-sync-iris
 COPY --from=builder /go/src/$BINARY_NAME /usr/local/bin/$BINARY_NAME
