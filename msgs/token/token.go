@@ -15,6 +15,10 @@ func HandleTxMsg(v types.Msg) (MsgDocInfo, bool) {
 		docMsg := DocMsgMintToken{}
 		msgDocInfo = docMsg.HandleTxMsg(v)
 		break
+	case new(MsgBurnToken).Type():
+		docMsg := DocMsgBurnToken{}
+		msgDocInfo = docMsg.HandleTxMsg(v)
+		break
 	case new(MsgEditToken).Type():
 		docMsg := DocMsgEditToken{}
 		msgDocInfo = docMsg.HandleTxMsg(v)
