@@ -112,7 +112,7 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) 
 	ctx := context.Background()
 	resblock, err := client.Block(ctx, &b)
 	if err != nil {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		// there is possible parse block fail when in iterator
 		var err2 error
 		client2 := pool.GetClient()
@@ -157,7 +157,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	ctx := context.Background()
 	res, err := client.Tx(ctx, txBytes.Hash(), false)
 	if err != nil {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		var err1 error
 		client2 := pool.GetClient()
 		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
