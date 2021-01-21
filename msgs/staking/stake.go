@@ -5,6 +5,7 @@ import (
 	"github.com/irisnet/rainbow-sync/lib/cdc"
 	"github.com/irisnet/rainbow-sync/model"
 	. "github.com/irisnet/rainbow-sync/msgs"
+	"github.com/irisnet/rainbow-sync/utils"
 )
 
 // MsgDelegate - struct for bonding transactions
@@ -182,7 +183,9 @@ func (doctx *DocTxMsgCreateValidator) GetType() string {
 func (doctx *DocTxMsgCreateValidator) BuildMsg(txMsg interface{}) {
 	msg := txMsg.(*MsgCreateValidator)
 	doctx.ValidatorAddress = msg.ValidatorAddress
-	doctx.Pubkey = msg.Pubkey.String()
+	if msg.Pubkey != nil {
+		doctx.Pubkey = utils.MarshalJsonIgnoreErr(msg.Pubkey)
+	}
 	doctx.DelegatorAddress = msg.DelegatorAddress
 	doctx.MinSelfDelegation = msg.MinSelfDelegation.String()
 	doctx.Commission = CommissionRates{

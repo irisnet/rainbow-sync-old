@@ -13,6 +13,7 @@ type (
 		Pricing     string `bson:"pricing"`
 		QoS         uint64 `bson:"qos"`
 		Owner       string `bson:"owner"`
+		Options     string `bson:"options"`
 	}
 )
 
@@ -33,6 +34,7 @@ func (m *DocMsgBindService) BuildMsg(v interface{}) {
 	m.Pricing = msg.Pricing
 	m.QoS = msg.QoS
 	m.Owner = msg.Owner
+	m.Options = msg.Options
 }
 
 func (m *DocMsgBindService) HandleTxMsg(v SdkMsg) MsgDocInfo {

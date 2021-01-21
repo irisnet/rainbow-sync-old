@@ -162,8 +162,9 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		}
 
 		// if inProcessBlock > blockChainLatestHeight, should wait blockChainLatestHeight update
-		if taskType == model.SyncTaskTypeFollow && inProcessBlock > blockChainLatestHeight {
-			logger.Info("wait blockChain latest height update.",
+		if taskType == model.SyncTaskTypeFollow && inProcessBlock+int64(conf.SvrConf.BehindBlockNum) > blockChainLatestHeight {
+			logger.Info(fmt.Sprintf("wait blockChain latest height update, must interval %v block",
+				conf.SvrConf.BehindBlockNum),
 				logger.Int64("curSyncedHeight", inProcessBlock-1),
 				logger.Int64("blockChainLatestHeight", blockChainLatestHeight))
 			time.Sleep(2 * time.Second)

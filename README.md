@@ -53,6 +53,7 @@ docker run --name rainbow-sync \&
 | WORKER_NUM_EXECUTE_TASK | string | 30 | number of threads executing synchronization TX task | 30 |
 | WORKER_MAX_SLEEP_TIME | string | 120 | the maximum time (in seconds) that synchronization TX threads are allowed to be out of work | 120 |
 | BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | number of blocks per sync TX task | 50 |
+| BEHIND_BLOCK_NUM | string | 0 | wait block num to handle tx | 0 |
 
 - Remarks
   - synchronizes  irishub data from  specify block height(such as:17908 current time:1576208532)
