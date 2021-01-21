@@ -19,6 +19,7 @@ var (
 
 	initConnectionNum = 50  // fast init num of tendermint client pool
 	maxConnectionNum  = 100 // max size of tendermint client pool
+	behindBlockNum    = 0
 )
 
 type ServerConf struct {
@@ -30,6 +31,7 @@ type ServerConf struct {
 
 	MaxConnectionNum  int
 	InitConnectionNum int
+	BehindBlockNum    int
 }
 
 const (
@@ -42,6 +44,7 @@ const (
 	EnvNameWorkerNumExecuteTask    = "WORKER_NUM_EXECUTE_TASK"
 	EnvNameWorkerMaxSleepTime      = "WORKER_MAX_SLEEP_TIME"
 	EnvNameBlockNumPerWorkerHandle = "BLOCK_NUM_PER_WORKER_HANDLE"
+	EnvNameBehindBlockNum          = "BEHIND_BLOCK_NUM"
 )
 
 // get value of env var
@@ -73,6 +76,13 @@ func init() {
 			logger.Fatal("Can't convert str to int", logger.String(EnvNameBlockNumPerWorkerHandle, v))
 		}
 	}
+	if v, ok := os.LookupEnv(EnvNameBehindBlockNum); ok {
+		if n, err := strconv.Atoi(v); err != nil {
+			logger.Fatal("convert str to int fail", logger.String(EnvNameBehindBlockNum, v))
+		} else {
+			behindBlockNum = n
+		}
+	}
 	SvrConf = &ServerConf{
 		NodeUrls:                blockChainMonitorUrl,
 		WorkerNumCreateTask:     workerNumCreateTask,
@@ -82,6 +92,7 @@ func init() {
 
 		MaxConnectionNum:  maxConnectionNum,
 		InitConnectionNum: initConnectionNum,
+		BehindBlockNum:    behindBlockNum,
 	}
 	logger.Debug("print server config", logger.String("serverConf", utils.MarshalJsonIgnoreErr(SvrConf)))
 }
