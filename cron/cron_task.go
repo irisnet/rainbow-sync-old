@@ -68,7 +68,7 @@ func (s *CronService) StartCronService() {
 func GetUnknownTxsByPage(skip, limit int) (int, error) {
 
 	var res []model.Tx
-	q := bson.M{"status": "unknown"}
+	q := bson.M{"status": block.TxStatusUnknown}
 	sorts := []string{"-height"}
 
 	fn := func(c *mgo.Collection) error {
@@ -121,7 +121,7 @@ func UpdateUnknowTxs(iristx []*model.Tx) error {
 	update_fn := func(tx *model.Tx) error {
 		fn := func(c *mgo.Collection) error {
 			return c.Update(bson.M{"tx_hash": tx.TxHash},
-				bson.M{"$set": bson.M{"actual_fee": tx.ActualFee, "status": tx.Status, "events": tx.Events}})
+				bson.M{"$set": bson.M{"status": tx.Status, "log": tx.Log, "tx_index": tx.TxIndex, "events": tx.Events}})
 		}
 
 		if err := db.ExecCollection(model.CollectionNameIrisTx, fn); err != nil {
@@ -141,7 +141,12 @@ func UpdateUnknowMsgs(iristx []model.TxMsg) error {
 	update_fn := func(txmsg *model.TxMsg) error {
 		fn := func(c *mgo.Collection) error {
 			return c.Update(bson.M{"tx_hash": txmsg.TxHash, "msg_index": txmsg.MsgIndex},
-				bson.M{"$set": bson.M{model.IrisTxMsgStatus: txmsg.TxStatus, "events": txmsg.Events}})
+				bson.M{"$set": bson.M{model.IrisTxMsgStatus: txmsg.TxStatus,
+					"tx_log":     txmsg.TxLog,
+					"tx_index":   txmsg.TxIndex,
+					"gas_wanted": txmsg.GasWanted,
+					"gas_used":   txmsg.GasUsed,
+					"events":     txmsg.Events}})
 		}
 
 		if err := db.ExecCollection(model.CollectionNameIrisTxMsg, fn); err != nil {

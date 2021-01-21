@@ -138,10 +138,11 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) 
 func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.Tx, []model.TxMsg) {
 
 	var (
-		docMsgs   []model.TxMsg
-		docTxMsgs []model.DocTxMsg
-		docTx     model.Tx
-		actualFee model.Coin
+		docMsgs            []model.TxMsg
+		docTxMsgs          []model.DocTxMsg
+		docTx              model.Tx
+		actualFee          model.Coin
+		gasUsed, gasWanted int64
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
@@ -166,15 +167,12 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			logger.Error("get txResult err",
 				logger.String("txHash", txHash),
 				logger.String("err", err1.Error()))
-			return docTx, docMsgs
+			//return docTx, docMsgs
 		}
 	}
 
 	if len(fee.Amount) > 0 {
-		actualFee = model.Coin{
-			Denom:  fee.Amount[0].Denom,
-			Amount: fee.Amount[0].Amount,
-		}
+		actualFee = fee.Amount[0]
 	}
 
 	docTx = model.Tx{
@@ -184,18 +182,27 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		Fee:       fee,
 		ActualFee: actualFee,
 		Memo:      memo,
-		TxIndex:   res.Index,
+		//TxIndex:   res.Index,
 	}
-	docTx.Status = TxStatusSuccess
-	if res.TxResult.Code != 0 {
-		docTx.Status = TxStatusFail
-		docTx.Log = res.TxResult.Log
-
-	}
-	docTx.Events = parseEvents(res.TxResult.Events)
+	docTx.Status = TxStatusUnknown
 	eventsIndexMap := make(map[int]model.MsgEvent)
-	if res.TxResult.Code == 0 {
-		eventsIndexMap = splitEvents(res.TxResult.Log)
+	if res != nil {
+		docTx.TxIndex = res.Index
+
+		if res.TxResult.Code != 0 {
+			docTx.Status = TxStatusFail
+			docTx.Log = res.TxResult.Log
+		} else {
+			docTx.Status = TxStatusSuccess
+		}
+
+		docTx.Events = parseEvents(res.TxResult.Events)
+		if res.TxResult.Code == 0 {
+			eventsIndexMap = splitEvents(res.TxResult.Log)
+		}
+
+		gasUsed = res.TxResult.GasUsed
+		gasWanted = res.TxResult.GasWanted
 	}
 
 	msgs := authTx.GetMsgs()
@@ -220,12 +227,12 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			TxHash:    docTx.TxHash,
 			Type:      msgDocInfo.DocTxMsg.Type,
 			MsgIndex:  i,
-			TxIndex:   res.Index,
+			TxIndex:   docTx.TxIndex,
 			TxStatus:  docTx.Status,
 			TxMemo:    memo,
 			TxLog:     docTx.Log,
-			GasUsed:   res.TxResult.GasUsed,
-			GasWanted: res.TxResult.GasWanted,
+			GasUsed:   gasUsed,
+			GasWanted: gasWanted,
 		}
 		docMsg.Msg = msgDocInfo.DocTxMsg
 		if val, ok := eventsIndexMap[i]; ok {
