@@ -12,6 +12,7 @@ var (
 		BlockModel,
 		TxModel,
 		new(TxMsg),
+		new(ErrTx),
 	}
 )
 

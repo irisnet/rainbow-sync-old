@@ -141,6 +141,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docMsgs   []model.TxMsg
 		docTxMsgs []model.DocTxMsg
 		docTx     model.Tx
+		docFailTx model.ErrTx
 		actualFee model.Coin
 	)
 	Tx, err := cdc.GetTxDecoder()(txBytes)
@@ -163,9 +164,14 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
 		client2.Release()
 		if err1 != nil {
-			logger.Error("get txResult err",
-				logger.String("txHash", txHash),
-				logger.String("err", err1.Error()))
+			docFailTx.Height = height
+			docFailTx.TxHash = txHash
+			docFailTx.Log = err1.Error()
+			if err := docFailTx.Save(); err != nil && err.Error() != "record exist" {
+				logger.Error("save txResult err",
+					logger.String("txHash", txHash),
+					logger.String("err", err1.Error()))
+			}
 			return docTx, docMsgs
 		}
 	}

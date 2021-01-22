@@ -6,8 +6,8 @@ import (
 	"github.com/irisnet/rainbow-sync/lib/pool"
 	"github.com/irisnet/rainbow-sync/logger"
 	"github.com/irisnet/rainbow-sync/model"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/txn"
 	"os"
 	"os/signal"
 	"time"
@@ -33,20 +33,20 @@ func (s *CronService) StartCronService() {
 			runValue := true
 			skip := 0
 			for runValue {
-				total, err := GetUnknownTxsByPage(skip, 20)
+				total, err := GetErrTxsByPage(skip, 20)
 				if err != nil {
-					logger.Error("GetUnknownTxsByPage have error", logger.String("err", err.Error()))
+					logger.Error("Get ErrTxs ByPage have error", logger.String("err", err.Error()))
 				}
 				if total < 20 {
 					runValue = false
-					logger.Debug("finish GetUnknownTxsByPage.")
+					logger.Debug("finish Get ErrTxs ByPage.")
 				} else {
 					skip = skip + total
-					logger.Debug("continue GetUnknownTxsByPage", logger.Int("skip", skip))
+					logger.Debug("continue Get ErrTxs ByPage", logger.Int("skip", skip))
 				}
 			}
 
-			logger.Debug("finish update  txs.")
+			logger.Debug("finish repair  err tx.")
 		}
 		fn_update()
 		for {
@@ -65,17 +65,10 @@ func (s *CronService) StartCronService() {
 	go fn()
 }
 
-func GetUnknownTxsByPage(skip, limit int) (int, error) {
+func GetErrTxsByPage(skip, limit int) (int, error) {
 
-	var res []model.Tx
-	q := bson.M{"status": "unknown"}
-	sorts := []string{"-height"}
-
-	fn := func(c *mgo.Collection) error {
-		return c.Find(q).Sort(sorts...).Skip(skip).Limit(limit).All(&res)
-	}
-
-	if err := db.ExecCollection(model.CollectionNameIrisTx, fn); err != nil {
+	res, err := new(model.ErrTx).Find(skip, limit)
+	if err != nil {
 		return 0, err
 	}
 
@@ -85,74 +78,64 @@ func GetUnknownTxsByPage(skip, limit int) (int, error) {
 
 	return len(res), nil
 }
-
-func doWork(iristxs []model.Tx) {
+func doWork(failtxs []model.ErrTx) {
 	client := pool.GetClient()
 	defer func() {
 		client.Release()
 	}()
 
-	for _, val := range iristxs {
-		txs, msgs, err := ParseUnknownTxs(val.Height, client)
+	for _, val := range failtxs {
+		txs, msgs, err := block.ParseTxs(val.Height, client)
 		if err != nil {
 			continue
 		}
-		if err := UpdateUnknowTxs(txs); err != nil {
-			logger.Warn("UpdateUnknowTxs have error", logger.String("error", err.Error()))
+		if err := RepareTxs(txs, msgs, val); err != nil {
+			continue
 		}
-		if err := UpdateUnknowMsgs(msgs); err != nil {
-			logger.Warn("UpdateUnknowMsgs have error", logger.String("error", err.Error()))
+		val.Repair = 1
+		if err := db.Update(&val); err != nil {
+			logger.Error(err.Error(),
+				logger.Int64("height", val.Height),
+				logger.String("txhash", val.TxHash),
+			)
 		}
 	}
 
 }
 
-func ParseUnknownTxs(height int64, client *pool.Client) (resTxs []*model.Tx, txMsgs []model.TxMsg, err error) {
-	resTxs, txMsgs, err = block.ParseTxs(height, client)
-	if err != nil {
-		logger.Error("Parse block txs fail", logger.Int64("block", height),
-			logger.String("err", err.Error()))
+func RepareTxs(txs []*model.Tx, txMsgs []model.TxMsg, failtx model.ErrTx) error {
+	var (
+		ops []txn.Op
+	)
+	txAndMsgNum := len(txs) + len(txMsgs)
+	if txAndMsgNum > 0 {
+		ops = make([]txn.Op, 0, txAndMsgNum)
+		for _, v := range txs {
+			if failtx.TxHash != v.TxHash {
+				continue
+			}
+			op := txn.Op{
+				C:      model.CollectionNameIrisTx,
+				Id:     bson.NewObjectId(),
+				Insert: v,
+			}
+			ops = append(ops, op)
+		}
+
+		for _, v := range txMsgs {
+			if failtx.TxHash != v.TxHash {
+				continue
+			}
+			op := txn.Op{
+				C:      model.CollectionNameIrisTxMsg,
+				Id:     bson.NewObjectId(),
+				Insert: v,
+			}
+			ops = append(ops, op)
+		}
 	}
-	return
-}
-
-func UpdateUnknowTxs(iristx []*model.Tx) error {
-
-	update_fn := func(tx *model.Tx) error {
-		fn := func(c *mgo.Collection) error {
-			return c.Update(bson.M{"tx_hash": tx.TxHash},
-				bson.M{"$set": bson.M{"actual_fee": tx.ActualFee, "status": tx.Status, "events": tx.Events}})
-		}
-
-		if err := db.ExecCollection(model.CollectionNameIrisTx, fn); err != nil {
-			return err
-		}
+	if len(ops) <= 0 {
 		return nil
 	}
-
-	for _, dbval := range iristx {
-		update_fn(dbval)
-	}
-
-	return nil
-}
-func UpdateUnknowMsgs(iristx []model.TxMsg) error {
-
-	update_fn := func(txmsg *model.TxMsg) error {
-		fn := func(c *mgo.Collection) error {
-			return c.Update(bson.M{"tx_hash": txmsg.TxHash, "msg_index": txmsg.MsgIndex},
-				bson.M{"$set": bson.M{model.IrisTxMsgStatus: txmsg.TxStatus, "events": txmsg.Events}})
-		}
-
-		if err := db.ExecCollection(model.CollectionNameIrisTxMsg, fn); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	for _, dbval := range iristx {
-		update_fn(&dbval)
-	}
-
-	return nil
+	return db.Txn(ops)
 }
