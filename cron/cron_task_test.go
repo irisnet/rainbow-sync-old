@@ -14,7 +14,7 @@ func TestGetUnknownTxsByPage(t *testing.T) {
 	defer func() {
 		db.Stop()
 	}()
-	GetUnknownTxsByPage(0, 2)
+	GetErrTxsByPage(0, 2)
 }
 
 func TestCronService_StartCronService(t *testing.T) {

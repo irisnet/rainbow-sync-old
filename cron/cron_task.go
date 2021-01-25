@@ -18,7 +18,7 @@ type CronService struct{}
 func (s *CronService) StartCronService() {
 	fn := func() {
 		logger.Debug("Start  CronService ...")
-		ticker := time.NewTicker(5 * time.Minute)
+		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 		stop := make(chan os.Signal)
 		signal.Notify(stop, os.Interrupt)
@@ -85,33 +85,46 @@ func doWork(failtxs []model.ErrTx) {
 	}()
 
 	for _, val := range failtxs {
-		txs, msgs, err := block.ParseTxs(val.Height, client)
+		block, txs, msgs, err := block.ParseBlock(val.Height, client)
 		if err != nil {
+			logger.Error(err.Error())
 			continue
 		}
-		if err := RepareTxs(txs, msgs, val); err != nil {
+		num, err := RepareTxs(block, txs, msgs, val)
+		if err != nil {
+			logger.Error(err.Error())
 			continue
 		}
-		val.Repair = 1
-		if err := db.Update(&val); err != nil {
-			logger.Error(err.Error(),
-				logger.Int64("height", val.Height),
-				logger.String("txhash", val.TxHash),
-			)
+		if len(txs) > 0 && num > 0 {
+			val.Repair = 1
+			if err := db.Update(&val); err != nil {
+				logger.Error(err.Error(),
+					logger.Int64("height", val.Height),
+					logger.String("txhash", val.TxHash),
+				)
+			}
 		}
 	}
 
 }
 
-func RepareTxs(txs []*model.Tx, txMsgs []model.TxMsg, failtx model.ErrTx) error {
+func RepareTxs(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMsg, failtx model.ErrTx) (int, error) {
 	var (
 		ops []txn.Op
 	)
+	if blockDoc.Height > 0 {
+		blockOp := txn.Op{
+			C:      model.CollectionNameBlock,
+			Id:     bson.NewObjectId(),
+			Insert: blockDoc,
+		}
+		ops = append(ops, blockOp)
+	}
+
 	txAndMsgNum := len(txs) + len(txMsgs)
 	if txAndMsgNum > 0 {
-		ops = make([]txn.Op, 0, txAndMsgNum)
 		for _, v := range txs {
-			if failtx.TxHash != v.TxHash {
+			if failtx.TxHash != "" && failtx.TxHash != v.TxHash {
 				continue
 			}
 			op := txn.Op{
@@ -123,7 +136,7 @@ func RepareTxs(txs []*model.Tx, txMsgs []model.TxMsg, failtx model.ErrTx) error 
 		}
 
 		for _, v := range txMsgs {
-			if failtx.TxHash != v.TxHash {
+			if failtx.TxHash != "" && failtx.TxHash != v.TxHash {
 				continue
 			}
 			op := txn.Op{
@@ -135,7 +148,7 @@ func RepareTxs(txs []*model.Tx, txMsgs []model.TxMsg, failtx model.ErrTx) error 
 		}
 	}
 	if len(ops) <= 0 {
-		return nil
+		return 0, nil
 	}
-	return db.Txn(ops)
+	return len(ops), db.Txn(ops)
 }
