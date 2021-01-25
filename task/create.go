@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/lib/pool"
 	"github.com/irisnet/rainbow-sync/logger"
 	imodel "github.com/irisnet/rainbow-sync/model"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
 	"time"
 )
-
-func init() {
-	pool.Init(conf.SvrConf.NodeUrls, conf.SvrConf.MaxConnectionNum, conf.SvrConf.InitConnectionNum)
-	defer func() {
-		pool.ClosePool()
-	}()
-}
 
 type TaskIrisService struct {
 	syncIrisModel imodel.SyncTask
