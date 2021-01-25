@@ -39,7 +39,6 @@ const (
 
 	TxStatusSuccess = "success"
 	TxStatusFail    = "fail"
-	TxStatusUnknown = "unknown"
 )
 
 func init() {
