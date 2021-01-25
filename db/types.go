@@ -4,6 +4,7 @@ package db
 
 const (
 	CollectionNameTxn = "sync_mgo_txn"
+	ExistError        = "record exist"
 )
 
 type (

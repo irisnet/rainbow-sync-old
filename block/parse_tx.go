@@ -119,6 +119,12 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) 
 		resblock, err2 = client2.Block(ctx, &b)
 		client2.Release()
 		if err2 != nil {
+			var docFailTx model.ErrTx
+			docFailTx.Height = b
+			docFailTx.Log = err2.Error()
+			if err := docFailTx.Save(); err != nil && err.Error() != db.ExistError {
+				logger.Error("save error block failed", logger.String("err", err.Error()))
+			}
 			return nil, nil, err2
 		}
 	}
@@ -144,17 +150,25 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docFailTx model.ErrTx
 		actualFee model.Coin
 	)
+	txHash := utils.BuildHex(txBytes.Hash())
 	Tx, err := cdc.GetTxDecoder()(txBytes)
 	if err != nil {
-		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
-			logger.Int64("height", block.Height))
+		docFailTx.Height = block.Height
+		docFailTx.TxHash = txHash
+		docFailTx.Log = fmt.Sprintf("TxDecoder have error:%v", err.Error())
+		if err := docFailTx.Save(); err != nil && err.Error() != db.ExistError {
+			logger.Error("save TxDecoder txs failed",
+				logger.Int64("height", block.Height),
+				logger.String("txhash", txHash),
+				logger.String("err", err.Error()))
+		}
 		return docTx, docMsgs
 	}
 	authTx := Tx.(signing.Tx)
 	fee := BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
 	height := block.Height
-	txHash := utils.BuildHex(txBytes.Hash())
+
 	ctx := context.Background()
 	res, err := client.Tx(ctx, txBytes.Hash(), false)
 	if err != nil {
@@ -167,10 +181,11 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			docFailTx.Height = height
 			docFailTx.TxHash = txHash
 			docFailTx.Log = err1.Error()
-			if err := docFailTx.Save(); err != nil && err.Error() != "record exist" {
-				logger.Error("save txResult err",
-					logger.String("txHash", txHash),
-					logger.String("err", err1.Error()))
+			if err := docFailTx.Save(); err != nil && err.Error() != db.ExistError {
+				logger.Error("save txResult  txs failed",
+					logger.Int64("height", block.Height),
+					logger.String("txhash", txHash),
+					logger.String("err", err.Error()))
 			}
 			return docTx, docMsgs
 		}

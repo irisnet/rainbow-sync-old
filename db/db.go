@@ -73,7 +73,7 @@ func Save(h Docs) error {
 		pk := h.PkKvPair()
 		n, _ := c.Find(pk).Count()
 		if n >= 1 {
-			return fmt.Errorf("record exist")
+			return fmt.Errorf(ExistError)
 		}
 		return c.Insert(h)
 	}
