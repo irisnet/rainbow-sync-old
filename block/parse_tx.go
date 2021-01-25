@@ -177,10 +177,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 
 	if len(fee.Amount) > 0 {
-		actualFee = model.Coin{
-			Denom:  fee.Amount[0].Denom,
-			Amount: fee.Amount[0].Amount,
-		}
+		actualFee = fee.Amount[0]
 	}
 
 	docTx = model.Tx{
