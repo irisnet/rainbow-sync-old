@@ -121,7 +121,7 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) 
 		if err2 != nil {
 			var docFailTx model.ErrTx
 			docFailTx.Height = b
-			docFailTx.Log = err2.Error()
+			docFailTx.Log = fmt.Sprintf("parse block err:%v", err2.Error())
 			if err := docFailTx.Save(); err != nil && err.Error() != db.ExistError {
 				logger.Error("save error block failed", logger.String("err", err.Error()))
 			}
