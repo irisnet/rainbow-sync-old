@@ -60,15 +60,6 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		<-chanLimit
 		client.Release()
 	}()
-
-	catchingup, err := isCatchingUp()
-	if err != nil {
-		logger.Error("Get node status failed", logger.String("err", err.Error()))
-		return
-	}
-	if catchingup {
-		return
-	}
 	// check whether exist executable task
 	// status = unhandled or
 	// status = underway and now - lastUpdateTime > confTime
@@ -290,17 +281,4 @@ func getBlockChainLatestHeight() (int64, error) {
 	}
 
 	return status.SyncInfo.LatestBlockHeight, nil
-}
-
-func isCatchingUp() (bool, error) {
-	client := pool.GetClient()
-	defer func() {
-		client.Release()
-	}()
-	status, err := client.Status(context.Background())
-	if err != nil {
-		return true, err
-	}
-
-	return status.SyncInfo.CatchingUp, nil
 }

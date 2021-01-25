@@ -46,14 +46,6 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		}
 		<-chanLimit
 	}()
-	catchingup, err := isCatchingUp()
-	if err != nil {
-		logger.Error("Get node status failed", logger.String("err", err.Error()))
-		return
-	}
-	if catchingup {
-		return
-	}
 	// check valid follow task if exist
 	// status of valid follow task is unhandled or underway
 	validFollowTasks, err := s.syncIrisModel.QueryAll(

@@ -88,6 +88,13 @@ func (f *PoolFactory) ValidateObject(ctx context.Context, object *commonPool.Poo
 		}
 		return false
 	}
+	stat, err := c.Status(ctx)
+	if err != nil {
+		return false
+	}
+	if stat.SyncInfo.CatchingUp {
+		return false
+	}
 	return true
 }
 
