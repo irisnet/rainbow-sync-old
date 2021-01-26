@@ -29,10 +29,6 @@ func (s *TaskIrisService) StartExecuteTask() {
 
 	// buffer channel to limit goroutine num
 	chanLimit := make(chan bool, conf.SvrConf.WorkerNumExecuteTask)
-	pool.Init(conf.SvrConf.NodeUrls, conf.SvrConf.MaxConnectionNum, conf.SvrConf.InitConnectionNum)
-	defer func() {
-		pool.ClosePool()
-	}()
 
 	for {
 		chanLimit <- true
@@ -64,7 +60,6 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		<-chanLimit
 		client.Release()
 	}()
-
 	// check whether exist executable task
 	// status = unhandled or
 	// status = underway and now - lastUpdateTime > confTime

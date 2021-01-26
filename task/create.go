@@ -46,7 +46,6 @@ func (s *TaskIrisService) createTask(blockNumPerWorkerHandle int64, chanLimit ch
 		}
 		<-chanLimit
 	}()
-
 	// check valid follow task if exist
 	// status of valid follow task is unhandled or underway
 	validFollowTasks, err := s.syncIrisModel.QueryAll(
