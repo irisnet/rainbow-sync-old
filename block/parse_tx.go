@@ -5,13 +5,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/lib/cdc"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/lib/pool"
-	"github.com/irisnet/rainbow-sync/logger"
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
+	"github.com/weichang-bianjie/msg-sdk/codec"
+	msgsdktypes "github.com/weichang-bianjie/msg-sdk/types"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
@@ -139,11 +140,11 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 
 	var (
 		docMsgs   []model.TxMsg
-		docTxMsgs []model.DocTxMsg
+		docTxMsgs []msgsdktypes.DocTxMsg
 		docTx     model.Tx
-		actualFee model.Coin
+		actualFee msgsdktypes.Coin
 	)
-	Tx, err := cdc.GetTxDecoder()(txBytes)
+	Tx, err := codec.GetTxDecoder()(txBytes)
 	if err != nil {
 		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
 			logger.Int64("height", block.Height))
@@ -171,10 +172,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 
 	if len(fee.Amount) > 0 {
-		actualFee = model.Coin{
-			Denom:  fee.Amount[0].Denom,
-			Amount: fee.Amount[0].Amount,
-		}
+		actualFee = fee.Amount[0]
 	}
 
 	docTx = model.Tx{
@@ -256,7 +254,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 
 func BuildFee(fee sdk.Coins, gas uint64) *model.Fee {
 	return &model.Fee{
-		Amount: model.BuildDocCoins(fee),
+		Amount: msgsdktypes.BuildDocCoins(fee),
 		Gas:    int64(gas),
 	}
 }

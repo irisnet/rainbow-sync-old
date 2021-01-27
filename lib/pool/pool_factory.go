@@ -3,7 +3,7 @@ package pool
 import (
 	"context"
 	"github.com/irisnet/rainbow-sync/conf"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	commonPool "github.com/jolestar/go-commons-pool"
 	"math/rand"
 	"sync"

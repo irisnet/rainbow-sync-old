@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	conf "github.com/irisnet/rainbow-sync/conf/db"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"

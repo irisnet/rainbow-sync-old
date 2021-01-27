@@ -4,9 +4,9 @@ go 1.15
 
 require (
 	github.com/cosmos/cosmos-sdk v0.40.0
-	github.com/irisnet/irismod v1.1.1-0.20210111090024-463e3e11dc14
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
 	github.com/tendermint/tendermint v0.34.1
+	github.com/weichang-bianjie/msg-sdk v0.0.0-20210127095957-c6c9a54ce1f2
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
