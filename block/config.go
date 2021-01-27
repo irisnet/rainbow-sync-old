@@ -2,9 +2,10 @@ package block
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/irisnet/rainbow-sync/conf"
 )
 
-const (
+var (
 
 	// Bech32ChainPrefix defines the prefix of this chain
 	Bech32ChainPrefix = "i"
@@ -25,17 +26,17 @@ const (
 	PrefixAddress = "a"
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = Bech32ChainPrefix + PrefixAcc + PrefixAddress
+	Bech32PrefixAccAddr = conf.SvrConf.Bech32ChainPrefix + PrefixAcc + PrefixAddress
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = Bech32ChainPrefix + PrefixAcc + PrefixPublic
+	Bech32PrefixAccPub = conf.SvrConf.Bech32ChainPrefix + PrefixAcc + PrefixPublic
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = Bech32ChainPrefix + PrefixValidator + PrefixAddress
+	Bech32PrefixValAddr = conf.SvrConf.Bech32ChainPrefix + PrefixValidator + PrefixAddress
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = Bech32ChainPrefix + PrefixValidator + PrefixPublic
+	Bech32PrefixValPub = conf.SvrConf.Bech32ChainPrefix + PrefixValidator + PrefixPublic
 	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = Bech32ChainPrefix + PrefixConsensus + PrefixAddress
+	Bech32PrefixConsAddr = conf.SvrConf.Bech32ChainPrefix + PrefixConsensus + PrefixAddress
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = Bech32ChainPrefix + PrefixConsensus + PrefixPublic
+	Bech32PrefixConsPub = conf.SvrConf.Bech32ChainPrefix + PrefixConsensus + PrefixPublic
 
 	TxStatusSuccess = "success"
 	TxStatusFail    = "fail"

@@ -20,6 +20,7 @@ var (
 	initConnectionNum = 50  // fast init num of tendermint client pool
 	maxConnectionNum  = 100 // max size of tendermint client pool
 	behindBlockNum    = 0
+	bech32ChainPrefix = "i"
 )
 
 type ServerConf struct {
@@ -32,6 +33,7 @@ type ServerConf struct {
 	MaxConnectionNum  int
 	InitConnectionNum int
 	BehindBlockNum    int
+	Bech32ChainPrefix string
 }
 
 const (
@@ -45,6 +47,7 @@ const (
 	EnvNameWorkerMaxSleepTime      = "WORKER_MAX_SLEEP_TIME"
 	EnvNameBlockNumPerWorkerHandle = "BLOCK_NUM_PER_WORKER_HANDLE"
 	EnvNameBehindBlockNum          = "BEHIND_BLOCK_NUM"
+	EnvNameBech32ChainPrefix       = "BECH32_CHAIN_PREFIX"
 )
 
 // get value of env var
@@ -69,7 +72,9 @@ func init() {
 			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerMaxSleepTime, v))
 		}
 	}
-
+	if v, ok := os.LookupEnv(EnvNameBech32ChainPrefix); ok {
+		bech32ChainPrefix = v
+	}
 	if v, found := os.LookupEnv(EnvNameBlockNumPerWorkerHandle); found {
 		blockNumPerWorkerHandle, err = strconv.Atoi(v)
 		if err != nil {
@@ -93,6 +98,7 @@ func init() {
 		MaxConnectionNum:  maxConnectionNum,
 		InitConnectionNum: initConnectionNum,
 		BehindBlockNum:    behindBlockNum,
+		Bech32ChainPrefix: bech32ChainPrefix,
 	}
 	logger.Debug("print server config", logger.String("serverConf", utils.MarshalJsonIgnoreErr(SvrConf)))
 }
