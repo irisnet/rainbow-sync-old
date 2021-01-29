@@ -1,12 +1,12 @@
 package block
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/irisnet/rainbow-sync/lib/msgsdk"
 	. "github.com/weichang-bianjie/msg-sdk/modules"
+	"github.com/weichang-bianjie/msg-sdk/types"
 )
 
-func HandleTxMsg(v types.Msg) MsgDocInfo {
+func HandleTxMsg(v types.SdkMsg) MsgDocInfo {
 	if BankDocInfo, ok := msgsdk.MsgClient.Bank.HandleTxMsg(v); ok {
 		return BankDocInfo
 	}

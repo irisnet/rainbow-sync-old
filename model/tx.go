@@ -11,7 +11,7 @@ type Tx struct {
 	Time      int64            `bson:"time"`
 	Height    int64            `bson:"height"`
 	TxHash    string           `bson:"tx_hash"`
-	Fee       *Fee             `bson:"fee"`
+	Fee       *types.Fee       `bson:"fee"`
 	ActualFee types.Coin       `bson:"actual_fee"`
 	Memo      string           `bson:"memo"`
 	Status    string           `bson:"status"`
@@ -68,9 +68,4 @@ func (d Tx) EnsureIndexes() {
 	)
 
 	db.EnsureIndexes(d.Name(), indexes)
-}
-
-type Fee struct {
-	Amount []types.Coin `bson:"amount"`
-	Gas    int64        `bson:"gas"`
 }

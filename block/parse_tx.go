@@ -2,8 +2,6 @@ package block
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/lib/pool"
@@ -144,14 +142,13 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docTx     model.Tx
 		actualFee msgsdktypes.Coin
 	)
-	Tx, err := codec.GetTxDecoder()(txBytes)
+	authTx, err := codec.GetSigningTx(txBytes)
 	if err != nil {
 		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
 			logger.Int64("height", block.Height))
 		return docTx, docMsgs
 	}
-	authTx := Tx.(signing.Tx)
-	fee := BuildFee(authTx.GetFee(), authTx.GetGas())
+	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
 	height := block.Height
 	txHash := utils.BuildHex(txBytes.Hash())
@@ -250,13 +247,6 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 	return docTx, docMsgs
 
-}
-
-func BuildFee(fee sdk.Coins, gas uint64) *model.Fee {
-	return &model.Fee{
-		Amount: msgsdktypes.BuildDocCoins(fee),
-		Gas:    int64(gas),
-	}
 }
 
 func parseEvents(events []aTypes.Event) []model.Event {
