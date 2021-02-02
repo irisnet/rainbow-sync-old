@@ -2,27 +2,27 @@ package model
 
 import (
 	"github.com/irisnet/rainbow-sync/db"
-	"github.com/weichang-bianjie/msg-sdk/types"
+	"github.com/kaifei-bianjie/msg-parser/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type Tx struct {
-	Time      int64            `bson:"time"`
-	Height    int64            `bson:"height"`
-	TxHash    string           `bson:"tx_hash"`
-	Fee       *types.Fee       `bson:"fee"`
-	ActualFee types.Coin       `bson:"actual_fee"`
-	Memo      string           `bson:"memo"`
-	Status    string           `bson:"status"`
-	Log       string           `bson:"log"`
-	Types     []string         `bson:"types"`
-	Events    []Event          `bson:"events"`
-	Msgs      []types.DocTxMsg `bson:"msgs"`
-	Signers   []string         `bson:"signers"`
-	Addrs     []string         `bson:"addrs"`
-	TxIndex   uint32           `bson:"tx_index"`
-	Ext       interface{}      `bson:"ext"`
+	Time      int64         `bson:"time"`
+	Height    int64         `bson:"height"`
+	TxHash    string        `bson:"tx_hash"`
+	Fee       *types.Fee    `bson:"fee"`
+	ActualFee types.Coin    `bson:"actual_fee"`
+	Memo      string        `bson:"memo"`
+	Status    string        `bson:"status"`
+	Log       string        `bson:"log"`
+	Types     []string      `bson:"types"`
+	Events    []Event       `bson:"events"`
+	Msgs      []types.TxMsg `bson:"msgs"`
+	Signers   []string      `bson:"signers"`
+	Addrs     []string      `bson:"addrs"`
+	TxIndex   uint32        `bson:"tx_index"`
+	Ext       interface{}   `bson:"ext"`
 }
 
 type (

@@ -7,10 +7,10 @@ import (
 	"github.com/irisnet/rainbow-sync/lib/pool"
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
+	"github.com/kaifei-bianjie/msg-parser/codec"
+	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
-	"github.com/weichang-bianjie/msg-sdk/codec"
-	msgsdktypes "github.com/weichang-bianjie/msg-sdk/types"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"
@@ -138,7 +138,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 
 	var (
 		docMsgs   []model.TxMsg
-		docTxMsgs []msgsdktypes.DocTxMsg
+		docTxMsgs []msgsdktypes.TxMsg
 		docTx     model.Tx
 		actualFee msgsdktypes.Coin
 	)
