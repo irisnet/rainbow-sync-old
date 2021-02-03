@@ -3,12 +3,11 @@ module github.com/irisnet/rainbow-sync
 go 1.15
 
 require (
-	github.com/cosmos/cosmos-sdk v0.40.0
-	github.com/irisnet/irismod v1.1.1-0.20210111090024-463e3e11dc14
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
-	github.com/tendermint/tendermint v0.34.1
+	github.com/tendermint/tendermint v0.34.3
+	github.com/kaifei-bianjie/msg-parser v0.0.0-20210202102810-65924f17d0bc
 	go.uber.org/zap v1.13.0
-	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect

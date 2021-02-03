@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"math/rand"
 	"strconv"
 	"strings"

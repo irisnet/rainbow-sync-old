@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	imodel "github.com/irisnet/rainbow-sync/model"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2/txn"

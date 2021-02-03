@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/utils"
 	"os"
 	"strconv"
@@ -10,7 +10,7 @@ import (
 
 var (
 	SvrConf              *ServerConf
-	blockChainMonitorUrl = []string{"tcp://192.168.150.31:16657"}
+	blockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
 
 	workerNumCreateTask     = 1
 	workerNumExecuteTask    = 30

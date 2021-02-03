@@ -2,7 +2,7 @@ package db
 
 import (
 	constant "github.com/irisnet/rainbow-sync/conf"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"os"
 )
 

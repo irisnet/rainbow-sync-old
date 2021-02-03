@@ -56,7 +56,7 @@ docker run --name rainbow-sync \&
 | BEHIND_BLOCK_NUM | string | 0 | wait block num to handle tx | 0 |
 
 - Remarks
-  - synchronizes  irishub data from  specify block height(such as:17908 current time:1576208532)
+  - synchronizes  block chain data from  specify block height(such as:17908 current time:1576208532)
   
      At first,stop the rainbow-sync and create the task. Run:
   ```bash

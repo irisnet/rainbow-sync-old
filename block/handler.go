@@ -1,65 +1,52 @@
 package block
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
-	. "github.com/irisnet/rainbow-sync/msgs"
-	"github.com/irisnet/rainbow-sync/msgs/bank"
-	"github.com/irisnet/rainbow-sync/msgs/coinswap"
-	"github.com/irisnet/rainbow-sync/msgs/crisis"
-	"github.com/irisnet/rainbow-sync/msgs/distribution"
-	"github.com/irisnet/rainbow-sync/msgs/evidence"
-	"github.com/irisnet/rainbow-sync/msgs/gov"
-	"github.com/irisnet/rainbow-sync/msgs/htlc"
-	"github.com/irisnet/rainbow-sync/msgs/ibc"
-	"github.com/irisnet/rainbow-sync/msgs/nft"
-	"github.com/irisnet/rainbow-sync/msgs/record"
-	"github.com/irisnet/rainbow-sync/msgs/service"
-	"github.com/irisnet/rainbow-sync/msgs/slashing"
-	"github.com/irisnet/rainbow-sync/msgs/staking"
-	"github.com/irisnet/rainbow-sync/msgs/token"
+	"github.com/irisnet/rainbow-sync/lib/msgparser"
+	. "github.com/kaifei-bianjie/msg-parser/modules"
+	"github.com/kaifei-bianjie/msg-parser/types"
 )
 
-func HandleTxMsg(v types.Msg) MsgDocInfo {
-	if BankDocInfo, ok := bank.HandleTxMsg(v); ok {
+func HandleTxMsg(v types.SdkMsg) MsgDocInfo {
+	if BankDocInfo, ok := msgparser.MsgClient.Bank.HandleTxMsg(v); ok {
 		return BankDocInfo
 	}
-	if IServiceDocInfo, ok := service.HandleTxMsg(v); ok {
+	if IServiceDocInfo, ok := msgparser.MsgClient.Service.HandleTxMsg(v); ok {
 		return IServiceDocInfo
 	}
-	if NftDocInfo, ok := nft.HandleTxMsg(v); ok {
+	if NftDocInfo, ok := msgparser.MsgClient.Nft.HandleTxMsg(v); ok {
 		return NftDocInfo
 	}
-	if RecordDocInfo, ok := record.HandleTxMsg(v); ok {
+	if RecordDocInfo, ok := msgparser.MsgClient.Record.HandleTxMsg(v); ok {
 		return RecordDocInfo
 	}
-	if TokenDocInfo, ok := token.HandleTxMsg(v); ok {
+	if TokenDocInfo, ok := msgparser.MsgClient.Token.HandleTxMsg(v); ok {
 		return TokenDocInfo
 	}
-	if CoinswapDocInfo, ok := coinswap.HandleTxMsg(v); ok {
+	if CoinswapDocInfo, ok := msgparser.MsgClient.Coinswap.HandleTxMsg(v); ok {
 		return CoinswapDocInfo
 	}
-	if CrisisDocInfo, ok := crisis.HandleTxMsg(v); ok {
+	if CrisisDocInfo, ok := msgparser.MsgClient.Crisis.HandleTxMsg(v); ok {
 		return CrisisDocInfo
 	}
-	if DistrubutionDocInfo, ok := distribution.HandleTxMsg(v); ok {
+	if DistrubutionDocInfo, ok := msgparser.MsgClient.Distribution.HandleTxMsg(v); ok {
 		return DistrubutionDocInfo
 	}
-	if SlashingDocInfo, ok := slashing.HandleTxMsg(v); ok {
+	if SlashingDocInfo, ok := msgparser.MsgClient.Slashing.HandleTxMsg(v); ok {
 		return SlashingDocInfo
 	}
-	if EvidenceDocInfo, ok := evidence.HandleTxMsg(v); ok {
+	if EvidenceDocInfo, ok := msgparser.MsgClient.Evidence.HandleTxMsg(v); ok {
 		return EvidenceDocInfo
 	}
-	if HtlcDocInfo, ok := htlc.HandleTxMsg(v); ok {
+	if HtlcDocInfo, ok := msgparser.MsgClient.Htlc.HandleTxMsg(v); ok {
 		return HtlcDocInfo
 	}
-	if StakingDocInfo, ok := staking.HandleTxMsg(v); ok {
+	if StakingDocInfo, ok := msgparser.MsgClient.Staking.HandleTxMsg(v); ok {
 		return StakingDocInfo
 	}
-	if GovDocInfo, ok := gov.HandleTxMsg(v); ok {
+	if GovDocInfo, ok := msgparser.MsgClient.Gov.HandleTxMsg(v); ok {
 		return GovDocInfo
 	}
-	if IbcDocInfo, ok := ibc.HandleTxMsg(v); ok {
+	if IbcDocInfo, ok := msgparser.MsgClient.Ibc.HandleTxMsg(v); ok {
 		return IbcDocInfo
 	}
 	return MsgDocInfo{}

@@ -2,14 +2,13 @@ package block
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/lib/cdc"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/lib/pool"
-	"github.com/irisnet/rainbow-sync/logger"
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
+	"github.com/kaifei-bianjie/msg-parser/codec"
+	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
 	"golang.org/x/net/context"
@@ -139,18 +138,17 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 
 	var (
 		docMsgs   []model.TxMsg
-		docTxMsgs []model.DocTxMsg
+		docTxMsgs []msgsdktypes.TxMsg
 		docTx     model.Tx
-		actualFee model.Coin
+		actualFee msgsdktypes.Coin
 	)
-	Tx, err := cdc.GetTxDecoder()(txBytes)
+	authTx, err := codec.GetSigningTx(txBytes)
 	if err != nil {
 		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
 			logger.Int64("height", block.Height))
 		return docTx, docMsgs
 	}
-	authTx := Tx.(signing.Tx)
-	fee := BuildFee(authTx.GetFee(), authTx.GetGas())
+	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
 	height := block.Height
 	txHash := utils.BuildHex(txBytes.Hash())
@@ -171,10 +169,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 
 	if len(fee.Amount) > 0 {
-		actualFee = model.Coin{
-			Denom:  fee.Amount[0].Denom,
-			Amount: fee.Amount[0].Amount,
-		}
+		actualFee = fee.Amount[0]
 	}
 
 	docTx = model.Tx{
@@ -252,13 +247,6 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 	return docTx, docMsgs
 
-}
-
-func BuildFee(fee sdk.Coins, gas uint64) *model.Fee {
-	return &model.Fee{
-		Amount: model.BuildDocCoins(fee),
-		Gas:    int64(gas),
-	}
 }
 
 func parseEvents(events []aTypes.Event) []model.Event {

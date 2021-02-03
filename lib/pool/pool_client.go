@@ -6,7 +6,7 @@ package pool
 import (
 	"context"
 	"fmt"
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	rpcClient "github.com/tendermint/tendermint/rpc/client/http"
 	"time"
 )
