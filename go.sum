@@ -308,10 +308,8 @@ github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210129082404-2c9bcb6903a0 h1:qCh/YRT/03k/UEaPhUYMo0GYxjOv1Rt6g7OMpe/GF7Q=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210129082404-2c9bcb6903a0/go.mod h1:4o0tSQgeqBzdgptohP+IjqK1V2ItZziLHLkmnS6mvBE=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210202102810-65924f17d0bc h1:40qxmyecwWDh9rxgFwLBx8JmmTKQ+bqChj6oPQzagJQ=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210202102810-65924f17d0bc/go.mod h1:6hD28imVMlfwHOzwBa5maA7IwLgbtTcF6FpFx1XgPN4=
+github.com/kaifei-bianjie/msg-parser v0.0.0-20210205025444-68411682d9a1 h1:l9zWJSv6W4UBNI+WlYXAcezCeswcEqQ9HkXX4Vhgnio=
+github.com/kaifei-bianjie/msg-parser v0.0.0-20210205025444-68411682d9a1/go.mod h1:6hD28imVMlfwHOzwBa5maA7IwLgbtTcF6FpFx1XgPN4=
 github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d h1:Z+RDyXzjKE0i2sTjZ/b1uxiGtPhFy34Ou/Tk0qwN0kM=
 github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d/go.mod h1:JJNrCn9otv/2QP4D7SMJBgaleKpOf66PnW6F5WGNRIc=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
