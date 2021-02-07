@@ -13,6 +13,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -171,8 +172,16 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		// parse data from block
 		blockDoc, txDocs, txMsgs, err := block.ParseBlock(inProcessBlock, client)
 		if err != nil {
-			logger.Error("Parse block fail", logger.Int64("block", inProcessBlock),
-				logger.String("err", err.Error()))
+			if !utils.CheckSkipErr(err, utils.NoSupportMsgTypeTag) &&
+				!utils.CheckSkipErr(err, utils.ErrNoSupportTxPrefix) {
+				logger.Error("Parse block fail",
+					logger.Int64("height", inProcessBlock),
+					logger.String("errTag", utils.GetErrTag(err)),
+					logger.String("err", err.Error()))
+				//continue to assert task is valid
+				blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
+				continue
+			}
 		}
 
 		// check task owner
@@ -192,7 +201,14 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 
 			err := block.SaveDocsWithTxn(blockDoc, txDocs, txMsgs, taskDoc)
 			if err != nil {
-				logger.Error("save docs fail", logger.String("err", err.Error()))
+				if !strings.Contains(err.Error(), utils.ErrDbNotFindTransaction) {
+					logger.Error("save docs fail",
+						logger.Int64("height", inProcessBlock),
+						logger.String("err", err.Error()))
+					//continue to assert task is valid
+					blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
+					continue
+				}
 			} else {
 				task.CurrentHeight = inProcessBlock
 			}

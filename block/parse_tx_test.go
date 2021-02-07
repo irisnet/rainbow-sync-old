@@ -29,11 +29,13 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, msg, err := ParseTxs(tt.args.b, tt.args.client)
+			block, res, msg, err := ParseBlock(tt.args.b, tt.args.client)
 			if err != nil {
 				t.Fatal(err)
 			}
-			resBytes, _ := json.Marshal(res)
+			resBytes, _ := json.Marshal(block)
+			t.Log(string(resBytes))
+			resBytes, _ = json.Marshal(res)
 			t.Log(string(resBytes))
 			resBytes, _ = json.Marshal(msg)
 			t.Log(string(resBytes))

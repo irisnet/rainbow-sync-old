@@ -15,6 +15,21 @@ func BuildHex(bytes []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bytes))
 }
 
+func ConvertErr(height int64, txHash, errTag string, err error) error {
+	return fmt.Errorf("%v-%v-%v-%v", err.Error(), errTag, height, txHash)
+}
+
+func CheckSkipErr(err error, tag string) bool {
+	return strings.Contains(err.Error(), tag)
+}
+func GetErrTag(err error) string {
+	slice := strings.Split(err.Error(), "-")
+	if len(slice) == 4 {
+		return slice[2]
+	}
+	return ""
+}
+
 func Min(x, y int64) int64 {
 	if x < y {
 		return x
