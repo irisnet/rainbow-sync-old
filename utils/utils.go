@@ -19,9 +19,6 @@ func ConvertErr(height int64, txHash, errTag string, err error) error {
 	return fmt.Errorf("%v-%v-%v-%v", err.Error(), errTag, height, txHash)
 }
 
-func CheckSkipErr(err error, tag string) bool {
-	return strings.Contains(err.Error(), tag)
-}
 func GetErrTag(err error) string {
 	slice := strings.Split(err.Error(), "-")
 	if len(slice) == 4 {
