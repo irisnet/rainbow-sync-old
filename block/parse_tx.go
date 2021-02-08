@@ -80,34 +80,14 @@ func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMs
 	return nil
 }
 
-func ParseBlock(b int64, client *pool.Client) (resBlock *model.Block, resTxs []*model.Tx, resTxMsgs []model.TxMsg, resErr error) {
+func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, []model.TxMsg, error) {
 
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("parse  block fail", logger.Int64("height", b),
 				logger.Any("err", err))
-			resErr = fmt.Errorf("%v", err)
 		}
 	}()
-
-	resBlock = &model.Block{
-		Height:     b,
-		CreateTime: time.Now().Unix(),
-	}
-
-	txs, msgs, err := ParseTxs(b, client)
-	if err != nil {
-		resErr = err
-		return
-	}
-
-	resTxs = txs
-	resTxMsgs = msgs
-
-	return
-}
-
-func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) {
 	ctx := context.Background()
 	resblock, err := client.Block(ctx, &b)
 	if err != nil {
@@ -118,23 +98,30 @@ func ParseTxs(b int64, client *pool.Client) ([]*model.Tx, []model.TxMsg, error) 
 		resblock, err2 = client2.Block(ctx, &b)
 		client2.Release()
 		if err2 != nil {
-			return nil, nil, err2
+			return nil, nil, nil, utils.ConvertErr(b, "", "ParseBlock", err2)
 		}
+	}
+	blockDoc := model.Block{
+		Height:     b,
+		CreateTime: time.Now().Unix(),
 	}
 	txs := make([]*model.Tx, 0, len(resblock.Block.Txs))
 	var docMsgs []model.TxMsg
 	for _, tx := range resblock.Block.Txs {
-		tx, msgs := ParseTx(tx, resblock.Block, client)
+		tx, msgs, err := ParseTx(tx, resblock.Block, client)
+		if err != nil {
+			return &blockDoc, txs, docMsgs, err
+		}
 		if tx.Height > 0 {
 			txs = append(txs, &tx)
 			docMsgs = append(docMsgs, msgs...)
 		}
 	}
-	return txs, docMsgs, nil
+	return &blockDoc, txs, docMsgs, nil
 }
 
 // parse iris tx from iris block result tx
-func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.Tx, []model.TxMsg) {
+func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.Tx, []model.TxMsg, error) {
 
 	var (
 		docMsgs   []model.TxMsg
@@ -142,16 +129,18 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docTx     model.Tx
 		actualFee msgsdktypes.Coin
 	)
+	height := block.Height
+	txHash := utils.BuildHex(txBytes.Hash())
 	authTx, err := codec.GetSigningTx(txBytes)
 	if err != nil {
-		logger.Error("TxDecoder have error", logger.String("err", err.Error()),
+		logger.Warn(err.Error(),
+			logger.String("errTag", "TxDecoder"),
+			logger.String("txhash", txHash),
 			logger.Int64("height", block.Height))
-		return docTx, docMsgs
+		return docTx, docMsgs, nil
 	}
 	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
-	height := block.Height
-	txHash := utils.BuildHex(txBytes.Hash())
 	ctx := context.Background()
 	res, err := client.Tx(ctx, txBytes.Hash(), false)
 	if err != nil {
@@ -161,10 +150,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
 		client2.Release()
 		if err1 != nil {
-			logger.Error("get txResult err",
-				logger.String("txHash", txHash),
-				logger.String("err", err1.Error()))
-			return docTx, docMsgs
+			return docTx, docMsgs, utils.ConvertErr(block.Height, txHash, "TxResult", err1)
 		}
 	}
 
@@ -181,9 +167,9 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		Memo:      memo,
 		TxIndex:   res.Index,
 	}
-	docTx.Status = TxStatusSuccess
+	docTx.Status = utils.TxStatusSuccess
 	if res.TxResult.Code != 0 {
-		docTx.Status = TxStatusFail
+		docTx.Status = utils.TxStatusFail
 		docTx.Log = res.TxResult.Log
 
 	}
@@ -195,7 +181,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 
 	msgs := authTx.GetMsgs()
 	if len(msgs) == 0 {
-		return docTx, docMsgs
+		return docTx, docMsgs, nil
 	}
 	for i, v := range msgs {
 		msgDocInfo := HandleTxMsg(v)
@@ -237,15 +223,19 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	docTx.Msgs = docTxMsgs
 
 	// don't save txs which have not parsed
-	if docTx.TxHash == "" {
-		return model.Tx{}, docMsgs
+	if len(docTx.Addrs) == 0 {
+		logger.Warn(utils.NoSupportMsgTypeTag,
+			logger.String("errTag", "TxMsg"),
+			logger.String("txhash", txHash),
+			logger.Int64("height", height))
+		return docTx, docMsgs, nil
 	}
 
 	for i, _ := range docMsgs {
 		docMsgs[i].TxAddrs = docTx.Addrs
 		docMsgs[i].TxSigners = docTx.Signers
 	}
-	return docTx, docMsgs
+	return docTx, docMsgs, nil
 
 }
 

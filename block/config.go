@@ -37,9 +37,6 @@ var (
 	Bech32PrefixConsAddr = conf.SvrConf.Bech32ChainPrefix + PrefixConsensus + PrefixAddress
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
 	Bech32PrefixConsPub = conf.SvrConf.Bech32ChainPrefix + PrefixConsensus + PrefixPublic
-
-	TxStatusSuccess = "success"
-	TxStatusFail    = "fail"
 )
 
 func init() {
