@@ -225,6 +225,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	// don't save txs which have not parsed
 	if len(docTx.Addrs) == 0 {
 		logger.Warn(utils.NoSupportMsgTypeTag,
+			logger.String("errTag", "TxMsg"),
 			logger.String("txhash", txHash),
 			logger.Int64("height", height))
 		return docTx, docMsgs, nil
