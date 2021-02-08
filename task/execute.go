@@ -172,16 +172,13 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		// parse data from block
 		blockDoc, txDocs, txMsgs, err := block.ParseBlock(inProcessBlock, client)
 		if err != nil {
-			if !utils.CheckSkipErr(err, utils.NoSupportMsgTypeTag) &&
-				!utils.CheckSkipErr(err, utils.ErrNoSupportTxPrefix) {
-				logger.Error("Parse block fail",
-					logger.Int64("height", inProcessBlock),
-					logger.String("errTag", utils.GetErrTag(err)),
-					logger.String("err", err.Error()))
-				//continue to assert task is valid
-				blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
-				continue
-			}
+			logger.Error("Parse block fail",
+				logger.Int64("height", inProcessBlock),
+				logger.String("errTag", utils.GetErrTag(err)),
+				logger.String("err", err.Error()))
+			//continue to assert task is valid
+			blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
+			continue
 		}
 
 		// check task owner

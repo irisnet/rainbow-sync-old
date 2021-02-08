@@ -107,17 +107,10 @@ func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, []mode
 	}
 	txs := make([]*model.Tx, 0, len(resblock.Block.Txs))
 	var docMsgs []model.TxMsg
-	for i, tx := range resblock.Block.Txs {
+	for _, tx := range resblock.Block.Txs {
 		tx, msgs, err := ParseTx(tx, resblock.Block, client)
 		if err != nil {
-			if !utils.CheckSkipErr(err, utils.NoSupportMsgTypeTag) &&
-				!utils.CheckSkipErr(err, utils.ErrNoSupportTxPrefix) {
-				return &blockDoc, txs, docMsgs, err
-			}
-			logger.Warn("skip no support txs",
-				logger.String("err", err.Error()),
-				logger.Int("tx_index", i),
-				logger.Int64("height", b))
+			return &blockDoc, txs, docMsgs, err
 		}
 		if tx.Height > 0 {
 			txs = append(txs, &tx)
@@ -140,7 +133,11 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	txHash := utils.BuildHex(txBytes.Hash())
 	authTx, err := codec.GetSigningTx(txBytes)
 	if err != nil {
-		return docTx, docMsgs, utils.ConvertErr(block.Height, txHash, "TxDecoder", err)
+		logger.Warn("TxDecoder have error",
+			logger.String("txhash", txHash),
+			logger.Int64("height", block.Height),
+			logger.String("err", err.Error()))
+		return docTx, docMsgs, nil
 	}
 	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
@@ -226,8 +223,11 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	docTx.Msgs = docTxMsgs
 
 	// don't save txs which have not parsed
-	if docTx.TxHash == "" {
-		return model.Tx{}, docMsgs, utils.ConvertErr(block.Height, txHash, "TxMsg", fmt.Errorf(utils.NoSupportMsgTypeTag))
+	if len(docTx.Addrs) == 0 {
+		logger.Warn(utils.NoSupportMsgTypeTag,
+			logger.String("txhash", txHash),
+			logger.Int64("height", height))
+		return model.Tx{}, docMsgs, nil
 	}
 
 	for i, _ := range docMsgs {
