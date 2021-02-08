@@ -22,7 +22,7 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 		{
 			name: "test parse iris tx",
 			args: args{
-				b:      4435,
+				b:      559216,
 				client: client,
 			},
 		},

@@ -133,10 +133,10 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	txHash := utils.BuildHex(txBytes.Hash())
 	authTx, err := codec.GetSigningTx(txBytes)
 	if err != nil {
-		logger.Warn("TxDecoder have error",
+		logger.Warn(err.Error(),
+			logger.String("errTag", "TxDecoder"),
 			logger.String("txhash", txHash),
-			logger.Int64("height", block.Height),
-			logger.String("err", err.Error()))
+			logger.Int64("height", block.Height))
 		return docTx, docMsgs, nil
 	}
 	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
@@ -227,7 +227,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		logger.Warn(utils.NoSupportMsgTypeTag,
 			logger.String("txhash", txHash),
 			logger.Int64("height", height))
-		return model.Tx{}, docMsgs, nil
+		return docTx, docMsgs, nil
 	}
 
 	for i, _ := range docMsgs {
