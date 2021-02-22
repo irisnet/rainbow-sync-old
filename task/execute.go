@@ -1,36 +1,35 @@
 package task
 
 import (
+	"context"
 	"fmt"
-	"github.com/irisnet/rainbow-sync/logger"
-	imodel "github.com/irisnet/rainbow-sync/model"
+	"github.com/irisnet/rainbow-sync/block"
 	"github.com/irisnet/rainbow-sync/conf"
 	model "github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/helper"
+	"github.com/irisnet/rainbow-sync/lib/logger"
+	"github.com/irisnet/rainbow-sync/lib/pool"
+	imodel "github.com/irisnet/rainbow-sync/model"
+	"github.com/irisnet/rainbow-sync/utils"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
+	"strings"
 	"time"
-	"github.com/irisnet/rainbow-sync/utils"
 )
 
 func (s *TaskIrisService) StartExecuteTask() {
 	var (
-		blockNumPerWorkerHandle = int64(conf.BlockNumPerWorkerHandle)
-		workerMaxSleepTime      = int64(conf.WorkerMaxSleepTime)
+		blockNumPerWorkerHandle = int64(conf.SvrConf.BlockNumPerWorkerHandle)
+		workerMaxSleepTime      = int64(conf.SvrConf.WorkerMaxSleepTime)
 	)
 	if workerMaxSleepTime <= 1*60 {
 		logger.Fatal("workerMaxSleepTime shouldn't less than 1 minute")
 	}
 
-	logger.Info("Start execute task", logger.String("Chain Block", s.blockType.Name()))
+	logger.Info("Start execute task")
 
 	// buffer channel to limit goroutine num
-	chanLimit := make(chan bool, conf.WorkerNumExecuteTask)
-	helper.Init(conf.BlockChainMonitorUrl, conf.MaxConnectionNum, conf.InitConnectionNum)
-	defer func() {
-		helper.ClosePool()
-	}()
+	chanLimit := make(chan bool, conf.SvrConf.WorkerNumExecuteTask)
 
 	for {
 		chanLimit <- true
@@ -52,7 +51,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 
 	healthCheckQuit := make(chan bool)
 	workerId = genWorkerId()
-	client := helper.GetClient()
+	client := pool.GetClient()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -62,7 +61,6 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		<-chanLimit
 		client.Release()
 	}()
-
 	// check whether exist executable task
 	// status = unhandled or
 	// status = underway and now - lastUpdateTime > confTime
@@ -82,9 +80,9 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			// this task has been take over by other goroutine
-			logger.Info("Task has been take over by other goroutine", logger.String("Chain Block", s.blockType.Name()))
+			logger.Info("Task has been take over by other goroutine")
 		} else {
-			logger.Error("Take over task fail", logger.String("Chain Block", s.blockType.Name()), logger.String("err", err.Error()))
+			logger.Error("Take over task fail", logger.String("err", err.Error()))
 		}
 		return
 	} else {
@@ -97,7 +95,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 	} else {
 		taskType = model.SyncTaskTypeFollow
 	}
-	logger.Info("worker begin execute task", logger.String("Chain Block", s.blockType.Name()),
+	logger.Info("worker begin execute task",
 		logger.String("curWorker", workerId), logger.Any("taskId", task.ID),
 		logger.String("from-to", fmt.Sprintf("%v-%v", task.StartHeight, task.EndHeight)))
 
@@ -108,7 +106,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 	workerHealthCheck := func(taskId bson.ObjectId, currentWorker string) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("worker health check err", logger.String("Chain Block", s.blockType.Name()), logger.Any("err", r))
+				logger.Error("worker health check err", logger.Any("err", r))
 			}
 		}()
 
@@ -116,7 +114,7 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 			for {
 				select {
 				case <-healthCheckQuit:
-					logger.Info("get health check quit signal, now exit health check", logger.String("Chain Block", s.blockType.Name()))
+					logger.Info("get health check quit signal, now exit health check")
 					return
 				default:
 					task, err := s.syncIrisModel.GetTaskByIdAndWorker(taskId, workerId)
@@ -124,19 +122,19 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 						if _, valid := assertTaskValid(task, blockNumPerWorkerHandle); valid {
 							// update task last update time
 							if err := s.syncIrisModel.UpdateLastUpdateTime(task); err != nil {
-								logger.Error("update last update time fail", logger.String("Chain Block", s.blockType.Name()), logger.String("err", err.Error()))
+								logger.Error("update last update time fail", logger.String("err", err.Error()))
 							}
 						} else {
-							logger.Info("task is invalid, exit health check", logger.String("Chain Block", s.blockType.Name()), logger.String("taskId", taskId.Hex()))
+							logger.Info("task is invalid, exit health check", logger.String("taskId", taskId.Hex()))
 							return
 						}
 					} else {
 						if err == mgo.ErrNotFound {
-							logger.Info("task may be task over by other goroutine, exit health check", logger.String("Chain Block", s.blockType.Name()),
+							logger.Info("task may be task over by other goroutine, exit health check",
 								logger.String("taskId", taskId.Hex()), logger.String("curWorker", workerId))
 							return
 						} else {
-							logger.Error("get task by id and worker fail", logger.String("Chain Block", s.blockType.Name()), logger.String("taskId", taskId.Hex()),
+							logger.Error("get task by id and worker fail", logger.String("taskId", taskId.Hex()),
 								logger.String("curWorker", workerId))
 						}
 					}
@@ -160,8 +158,9 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		}
 
 		// if inProcessBlock > blockChainLatestHeight, should wait blockChainLatestHeight update
-		if taskType == model.SyncTaskTypeFollow && inProcessBlock > blockChainLatestHeight {
-			logger.Info("wait blockChain latest height update.", logger.String("Chain Block", s.blockType.Name()),
+		if taskType == model.SyncTaskTypeFollow && inProcessBlock+int64(conf.SvrConf.BehindBlockNum) > blockChainLatestHeight {
+			logger.Info(fmt.Sprintf("wait blockChain latest height update, must interval %v block",
+				conf.SvrConf.BehindBlockNum),
 				logger.Int64("curSyncedHeight", inProcessBlock-1),
 				logger.Int64("blockChainLatestHeight", blockChainLatestHeight))
 			time.Sleep(2 * time.Second)
@@ -171,16 +170,21 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 		}
 
 		// parse data from block
-		blockDoc, assetDetailDocs, txDocs, err := s.blockType.ParseBlock(inProcessBlock, client)
+		blockDoc, txDocs, txMsgs, err := block.ParseBlock(inProcessBlock, client)
 		if err != nil {
-			logger.Error("Parse block fail", logger.String("Chain Block", s.blockType.Name()), logger.Int64("block", inProcessBlock),
+			logger.Error("Parse block fail",
+				logger.Int64("height", inProcessBlock),
+				logger.String("errTag", utils.GetErrTag(err)),
 				logger.String("err", err.Error()))
+			//continue to assert task is valid
+			blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
+			continue
 		}
 
 		// check task owner
 		workerUnchanged, err := assertTaskWorkerUnchanged(task.ID, task.WorkerId)
 		if err != nil {
-			logger.Error("assert task worker is unchanged fail", logger.String("Chain Block", s.blockType.Name()), logger.String("err", err.Error()))
+			logger.Error("assert task worker is unchanged fail", logger.String("err", err.Error()))
 		}
 		if workerUnchanged {
 			// save data and update sync task
@@ -192,9 +196,16 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 				taskDoc.Status = model.SyncTaskStatusCompleted
 			}
 
-			err := s.blockType.SaveDocsWithTxn(blockDoc, assetDetailDocs, txDocs, taskDoc)
+			err := block.SaveDocsWithTxn(blockDoc, txDocs, txMsgs, taskDoc)
 			if err != nil {
-				logger.Error("save docs fail", logger.String("Chain Block", s.blockType.Name()), logger.String("err", err.Error()))
+				if !strings.Contains(err.Error(), utils.ErrDbNotFindTransaction) {
+					logger.Error("save docs fail",
+						logger.Int64("height", inProcessBlock),
+						logger.String("err", err.Error()))
+					//continue to assert task is valid
+					blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
+					continue
+				}
 			} else {
 				task.CurrentHeight = inProcessBlock
 			}
@@ -202,13 +213,13 @@ func (s *TaskIrisService) executeTask(blockNumPerWorkerHandle, maxWorkerSleepTim
 			// continue to assert task is valid
 			blockChainLatestHeight, isValid = assertTaskValid(task, blockNumPerWorkerHandle)
 		} else {
-			logger.Info("task worker changed", logger.String("Chain Block", s.blockType.Name()), logger.Any("task_id", task.ID),
+			logger.Info("task worker changed", logger.Any("task_id", task.ID),
 				logger.String("origin worker", workerId), logger.String("current worker", task.WorkerId))
 			return
 		}
 	}
 
-	logger.Info("worker finish execute task", logger.String("Chain Block", s.blockType.Name()),
+	logger.Info("worker finish execute task",
 		logger.String("task_worker", task.WorkerId), logger.Any("task_id", task.ID),
 		logger.String("from-to-current", fmt.Sprintf("%v-%v-%v", task.StartHeight, task.EndHeight, task.CurrentHeight)))
 }
@@ -273,11 +284,11 @@ func assertTaskWorkerUnchanged(taskId bson.ObjectId, workerId string) (bool, err
 
 // get current block height
 func getBlockChainLatestHeight() (int64, error) {
-	client := helper.GetClient()
+	client := pool.GetClient()
 	defer func() {
 		client.Release()
 	}()
-	status, err := client.Status()
+	status, err := client.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}

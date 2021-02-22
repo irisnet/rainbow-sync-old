@@ -1,9 +1,10 @@
-package helper
+package pool
 
 import (
 	"context"
+	"github.com/irisnet/rainbow-sync/conf"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	commonPool "github.com/jolestar/go-commons-pool"
-	"github.com/irisnet/rainbow-sync/logger"
 	"math/rand"
 	"sync"
 )
@@ -24,9 +25,9 @@ var (
 	ctx         = context.Background()
 )
 
-func Init(BlockChainMonitorUrl []string, MaxConnectionNum, InitConnectionNum int) {
+func init() {
 	var syncMap sync.Map
-	for _, url := range BlockChainMonitorUrl {
+	for _, url := range conf.SvrConf.NodeUrls {
 		key := generateId(url)
 		endPoint := EndPoint{
 			Address:   url,
@@ -40,9 +41,9 @@ func Init(BlockChainMonitorUrl []string, MaxConnectionNum, InitConnectionNum int
 	}
 
 	config := commonPool.NewDefaultPoolConfig()
-	config.MaxTotal = MaxConnectionNum
-	config.MaxIdle = InitConnectionNum
-	config.MinIdle = InitConnectionNum
+	config.MaxTotal = conf.SvrConf.MaxConnectionNum
+	config.MaxIdle = conf.SvrConf.InitConnectionNum
+	config.MinIdle = conf.SvrConf.InitConnectionNum
 	config.TestOnBorrow = true
 	config.TestOnCreate = true
 	config.TestWhileIdle = true
@@ -59,7 +60,12 @@ func ClosePool() {
 
 func (f *PoolFactory) MakeObject(ctx context.Context) (*commonPool.PooledObject, error) {
 	endpoint := f.GetEndPoint()
-	return commonPool.NewPooledObject(newClient(endpoint.Address)), nil
+	c, err := newClient(endpoint.Address)
+	if err != nil {
+		return nil, err
+	} else {
+		return commonPool.NewPooledObject(c), nil
+	}
 }
 
 func (f *PoolFactory) DestroyObject(ctx context.Context, object *commonPool.PooledObject) error {
@@ -80,6 +86,13 @@ func (f *PoolFactory) ValidateObject(ctx context.Context, object *commonPool.Poo
 			endPoint.Available = true
 			f.peersMap.Store(c.Id, endPoint)
 		}
+		return false
+	}
+	stat, err := c.Status(ctx)
+	if err != nil {
+		return false
+	}
+	if stat.SyncInfo.CatchingUp {
 		return false
 	}
 	return true

@@ -1,147 +1,30 @@
 package utils
 
 import (
-	"strings"
 	"encoding/hex"
-	"strconv"
-	"github.com/irisnet/irishub/codec"
-	"github.com/irisnet/irishub/modules/auth"
-	abci "github.com/tendermint/tendermint/abci/types"
-	imodel "github.com/irisnet/rainbow-sync/model"
-	"github.com/irisnet/rainbow-sync/helper"
-	"github.com/irisnet/rainbow-sync/constant"
-	"github.com/irisnet/rainbow-sync/logger"
+	"encoding/json"
 	"fmt"
-	"regexp"
-	"github.com/irisnet/irishub/app"
-	"github.com/irisnet/irishub/types"
-	"github.com/irisnet/rainbow-sync/conf"
-	"time"
+	"github.com/irisnet/rainbow-sync/lib/logger"
 	"math/rand"
+	"strconv"
+	"strings"
+	"time"
 )
-
-var (
-	cdc *codec.Codec
-)
-
-// 初始化账户地址前缀
-func init() {
-	if conf.IrisNetwork == types.Mainnet {
-		types.SetNetworkType(types.Mainnet)
-	}
-	cdc = app.MakeLatestCodec()
-}
-
-func GetCodec() *codec.Codec {
-	return cdc
-}
 
 func BuildHex(bytes []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bytes))
 }
 
-func ParseCoins(coinsStr string) (coins imodel.Coins) {
-	coinsStr = strings.TrimSpace(coinsStr)
-	if len(coinsStr) == 0 {
-		return
-	}
-
-	coinStrs := strings.Split(coinsStr, ",")
-	for _, coinStr := range coinStrs {
-		coin := ParseCoin(coinStr)
-		coins = append(coins, coin)
-	}
-	return coins
+func ConvertErr(height int64, txHash, errTag string, err error) error {
+	return fmt.Errorf("%v-%v-%v-%v", err.Error(), errTag, height, txHash)
 }
 
-func ParseCoin(coinStr string) (coin *imodel.Coin) {
-	var (
-		reDnm  = `[A-Za-z0-9]{2,}\S*`
-		reAmt  = `[0-9]+[.]?[0-9]*`
-		reSpc  = `[[:space:]]*`
-		reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
-	)
-
-	coinStr = strings.TrimSpace(coinStr)
-
-	matches := reCoin.FindStringSubmatch(coinStr)
-	if matches == nil {
-		logger.Error("invalid coin expression", logger.Any("coin", coinStr))
-		return coin
+func GetErrTag(err error) string {
+	slice := strings.Split(err.Error(), "-")
+	if len(slice) == 4 {
+		return slice[1]
 	}
-	denom, amount := matches[2], matches[1]
-
-	amount = getPrecision(amount)
-	amt, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		logger.Error("Convert str to int failed", logger.Any("amount", amount))
-		return coin
-	}
-
-	return &imodel.Coin{
-		Denom:  denom,
-		Amount: amt,
-	}
-}
-
-func getPrecision(amount string) string {
-	length := len(amount)
-	if length > 15 {
-		nums := strings.Split(amount, ".")
-		if len(nums) > 2 {
-			return amount
-		}
-
-		if len_num0 := len(nums[0]); len_num0 > 15 {
-			amount = string([]byte(nums[0])[:15])
-			for i := 1; i <= len_num0-15; i++ {
-				amount += "0"
-			}
-		} else {
-			//leng_num1 := len(nums[1])
-			leng_append := 16 - len_num0
-			amount = nums[0] + "." + string([]byte(nums[1])[:leng_append])
-			//for i := 1; i <= leng_num1-leng_append; i++ {
-			//	amount += "0"
-			//}
-		}
-	}
-	return amount
-}
-
-func BuildFee(fee auth.StdFee) *imodel.Fee {
-	return &imodel.Fee{
-		Amount: ParseCoins(fee.Amount.String()),
-		Gas:    int64(fee.Gas),
-	}
-}
-
-// get tx status and log by query txHash
-func QueryTxResult(txHash []byte) (string, abci.ResponseDeliverTx, error) {
-	var resDeliverTx abci.ResponseDeliverTx
-	status := constant.TxStatusSuccess
-
-	client := helper.GetClient()
-	defer client.Release()
-
-	res, err := client.Tx(txHash, false)
-	if err != nil {
-		logger.Warn("QueryTxResult have error, now try again", logger.String("err", err.Error()))
-		time.Sleep(time.Duration(1) * time.Second)
-		var err1 error
-		client2 := helper.GetClient()
-		res, err1 = client2.Tx(txHash, false)
-		client2.Release()
-		if err1 != nil {
-			return "unknown", resDeliverTx, err1
-		}
-	}
-	result := res.TxResult
-	if result.Code != 0 {
-		status = constant.TxStatusFail
-	}
-
-	return status, result, nil
+	return ""
 }
 
 func Min(x, y int64) int64 {
@@ -181,4 +64,13 @@ func RoundFloat(num float64, bit int) (i float64) {
 func RandInt(n int) int {
 	rand.NewSource(time.Now().Unix())
 	return rand.Intn(n)
+}
+
+func MarshalJsonIgnoreErr(v interface{}) string {
+	data, _ := json.Marshal(v)
+	return string(data)
+}
+
+func UnMarshalJsonIgnoreErr(data string, v interface{}) {
+	json.Unmarshal([]byte(data), &v)
 }

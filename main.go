@@ -1,13 +1,14 @@
 package main
 
 import (
+	"github.com/irisnet/rainbow-sync/db"
+	"github.com/irisnet/rainbow-sync/lib/logger"
+	"github.com/irisnet/rainbow-sync/lib/pool"
+	"github.com/irisnet/rainbow-sync/model"
+	"github.com/irisnet/rainbow-sync/task"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/irisnet/rainbow-sync/logger"
-	"github.com/irisnet/rainbow-sync/db"
-	"github.com/irisnet/rainbow-sync/task"
-	"github.com/irisnet/rainbow-sync/model"
 
 	"runtime"
 )
@@ -20,6 +21,7 @@ func main() {
 		logger.Info("System Exit")
 
 		db.Stop()
+		pool.ClosePool()
 
 		if err := recover(); err != nil {
 			logger.Error("", logger.Any("err", err))

@@ -3,16 +3,15 @@ package model
 import "github.com/irisnet/rainbow-sync/db"
 
 var (
-	SyncTaskModel    SyncTask
-	BlockModel       Block
-	TxModel          IrisTx
-	AssetDetailModel IrisAssetDetail
+	SyncTaskModel SyncTask
+	BlockModel    Block
+	TxModel       Tx
 
 	Collections = []db.Docs{
 		SyncTaskModel,
 		BlockModel,
 		TxModel,
-		AssetDetailModel,
+		new(TxMsg),
 	}
 )
 

@@ -2,20 +2,18 @@ package block
 
 import (
 	"encoding/json"
-	irisConf "github.com/irisnet/rainbow-sync/conf"
-	"github.com/irisnet/rainbow-sync/helper"
+	"github.com/irisnet/rainbow-sync/lib/pool"
 	"testing"
 )
 
 func TestIris_Block_ParseIrisTx(t *testing.T) {
-	helper.Init(irisConf.BlockChainMonitorUrl, irisConf.MaxConnectionNum, irisConf.InitConnectionNum)
-	client := helper.GetClient()
+	client := pool.GetClient()
 	defer func() {
 		client.Release()
 	}()
 	type args struct {
 		b      int64
-		client *helper.Client
+		client *pool.Client
 	}
 	tests := []struct {
 		name string
@@ -24,19 +22,22 @@ func TestIris_Block_ParseIrisTx(t *testing.T) {
 		{
 			name: "test parse iris tx",
 			args: args{
-				b:      2877965,
+				b:      559216,
 				client: client,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			iris := Iris_Block{}
-			res, err := iris.ParseIrisTxs(tt.args.b, tt.args.client)
+			block, res, msg, err := ParseBlock(tt.args.b, tt.args.client)
 			if err != nil {
 				t.Fatal(err)
 			}
-			resBytes, _ := json.Marshal(res)
+			resBytes, _ := json.Marshal(block)
+			t.Log(string(resBytes))
+			resBytes, _ = json.Marshal(res)
+			t.Log(string(resBytes))
+			resBytes, _ = json.Marshal(msg)
 			t.Log(string(resBytes))
 		})
 	}

@@ -1,24 +1,40 @@
 package conf
 
 import (
-	"github.com/irisnet/rainbow-sync/logger"
+	"github.com/irisnet/rainbow-sync/lib/logger"
+	"github.com/irisnet/rainbow-sync/utils"
 	"os"
 	"strconv"
 	"strings"
 )
 
 var (
-	BlockChainMonitorUrl = []string{"tcp://192.168.150.31:26657"}
+	SvrConf              *ServerConf
+	blockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
 
-	IrisNetwork             = "testnet"
-	WorkerNumCreateTask     = 1
-	WorkerNumExecuteTask    = 30
-	WorkerMaxSleepTime      = 2 * 60
-	BlockNumPerWorkerHandle = 50
+	workerNumCreateTask     = 1
+	workerNumExecuteTask    = 30
+	workerMaxSleepTime      = 2 * 60
+	blockNumPerWorkerHandle = 50
 
-	InitConnectionNum = 50  // fast init num of tendermint client pool
-	MaxConnectionNum  = 100 // max size of tendermint client pool
+	initConnectionNum = 50  // fast init num of tendermint client pool
+	maxConnectionNum  = 100 // max size of tendermint client pool
+	behindBlockNum    = 0
+	bech32ChainPrefix = "i"
 )
+
+type ServerConf struct {
+	NodeUrls                []string
+	WorkerNumCreateTask     int
+	WorkerNumExecuteTask    int
+	WorkerMaxSleepTime      int
+	BlockNumPerWorkerHandle int
+
+	MaxConnectionNum  int
+	InitConnectionNum int
+	BehindBlockNum    int
+	Bech32ChainPrefix string
+}
 
 const (
 	EnvNameDbAddr     = "DB_ADDR"
@@ -30,7 +46,8 @@ const (
 	EnvNameWorkerNumExecuteTask    = "WORKER_NUM_EXECUTE_TASK"
 	EnvNameWorkerMaxSleepTime      = "WORKER_MAX_SLEEP_TIME"
 	EnvNameBlockNumPerWorkerHandle = "BLOCK_NUM_PER_WORKER_HANDLE"
-	EnvNameIrisNetwork             = "IRIS_NETWORK"
+	EnvNameBehindBlockNum          = "BEHIND_BLOCK_NUM"
+	EnvNameBech32ChainPrefix       = "BECH32_CHAIN_PREFIX"
 )
 
 // get value of env var
@@ -39,42 +56,49 @@ func init() {
 
 	nodeUrl, found := os.LookupEnv(EnvNameSerNetworkFullNodes)
 	if found {
-		BlockChainMonitorUrl = strings.Split(nodeUrl, ",")
+		blockChainMonitorUrl = strings.Split(nodeUrl, ",")
 	}
-	logger.Info("Env Value", logger.Any(EnvNameSerNetworkFullNodes, BlockChainMonitorUrl))
 
-
-	workerNumExecuteTask, found := os.LookupEnv(EnvNameWorkerNumExecuteTask)
-	if found {
-		WorkerNumExecuteTask, err = strconv.Atoi(workerNumExecuteTask)
+	if v, found := os.LookupEnv(EnvNameWorkerNumExecuteTask); found {
+		workerNumExecuteTask, err = strconv.Atoi(v)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumExecuteTask, workerNumExecuteTask))
+			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerNumExecuteTask, v))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerNumExecuteTask, WorkerNumExecuteTask))
 
-	workerMaxSleepTime, found := os.LookupEnv(EnvNameWorkerMaxSleepTime)
-	if found {
-		WorkerMaxSleepTime, err = strconv.Atoi(workerMaxSleepTime)
+	if v, found := os.LookupEnv(EnvNameWorkerMaxSleepTime); found {
+		workerMaxSleepTime, err = strconv.Atoi(v)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerMaxSleepTime, workerMaxSleepTime))
+			logger.Fatal("Can't convert str to int", logger.String(EnvNameWorkerMaxSleepTime, v))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameWorkerMaxSleepTime, WorkerMaxSleepTime))
-
-	blockNumPerWorkerHandle, found := os.LookupEnv(EnvNameBlockNumPerWorkerHandle)
-	if found {
-		BlockNumPerWorkerHandle, err = strconv.Atoi(blockNumPerWorkerHandle)
+	if v, ok := os.LookupEnv(EnvNameBech32ChainPrefix); ok {
+		bech32ChainPrefix = v
+	}
+	if v, found := os.LookupEnv(EnvNameBlockNumPerWorkerHandle); found {
+		blockNumPerWorkerHandle, err = strconv.Atoi(v)
 		if err != nil {
-			logger.Fatal("Can't convert str to int", logger.String(EnvNameBlockNumPerWorkerHandle, blockNumPerWorkerHandle))
+			logger.Fatal("Can't convert str to int", logger.String(EnvNameBlockNumPerWorkerHandle, v))
 		}
 	}
-	logger.Info("Env Value", logger.Int(EnvNameBlockNumPerWorkerHandle, BlockNumPerWorkerHandle))
-	network, found := os.LookupEnv(EnvNameIrisNetwork)
-	if found {
-		IrisNetwork = network
-	} else {
-		panic("not found " + EnvNameIrisNetwork)
+	if v, ok := os.LookupEnv(EnvNameBehindBlockNum); ok {
+		if n, err := strconv.Atoi(v); err != nil {
+			logger.Fatal("convert str to int fail", logger.String(EnvNameBehindBlockNum, v))
+		} else {
+			behindBlockNum = n
+		}
 	}
-	logger.Info("Env Value", logger.String(EnvNameIrisNetwork, IrisNetwork))
+	SvrConf = &ServerConf{
+		NodeUrls:                blockChainMonitorUrl,
+		WorkerNumCreateTask:     workerNumCreateTask,
+		WorkerNumExecuteTask:    workerNumExecuteTask,
+		WorkerMaxSleepTime:      workerMaxSleepTime,
+		BlockNumPerWorkerHandle: blockNumPerWorkerHandle,
+
+		MaxConnectionNum:  maxConnectionNum,
+		InitConnectionNum: initConnectionNum,
+		BehindBlockNum:    behindBlockNum,
+		Bech32ChainPrefix: bech32ChainPrefix,
+	}
+	logger.Debug("print server config", logger.String("serverConf", utils.MarshalJsonIgnoreErr(SvrConf)))
 }
