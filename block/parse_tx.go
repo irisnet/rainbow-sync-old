@@ -166,6 +166,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		ActualFee: actualFee,
 		Memo:      memo,
 		TxIndex:   res.Index,
+		TxId:      buildTxId(height, res.Index),
 	}
 	docTx.Status = utils.TxStatusSuccess
 	if res.TxResult.Code != 0 {
@@ -237,6 +238,19 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 	return docTx, docMsgs, nil
 
+}
+
+//unique index: (height,tx_index)
+//txIndex: max value is 9999
+//return height*10000+tx_index
+func buildTxId(height int64, txIndex uint32) uint64 {
+	if txIndex > 9999 {
+		logger.Warn("build TxId failed for only support txIndex max value is 9999",
+			logger.Int64("height", height),
+			logger.Uint32("tx_index", txIndex))
+		return uint64(height*10000 + 9999)
+	}
+	return uint64(height*10000) + uint64(txIndex)
 }
 
 func parseEvents(events []aTypes.Event) []model.Event {
