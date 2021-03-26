@@ -3,53 +3,127 @@ package block
 import (
 	"github.com/irisnet/rainbow-sync/lib/msgparser"
 	. "github.com/kaifei-bianjie/msg-parser/modules"
+	"github.com/kaifei-bianjie/msg-parser/modules/bank"
+	"github.com/kaifei-bianjie/msg-parser/modules/coinswap"
+	"github.com/kaifei-bianjie/msg-parser/modules/distribution"
+	"github.com/kaifei-bianjie/msg-parser/modules/staking"
 	"github.com/kaifei-bianjie/msg-parser/types"
 )
 
-func HandleTxMsg(v types.SdkMsg) MsgDocInfo {
-	if BankDocInfo, ok := msgparser.MsgClient.Bank.HandleTxMsg(v); ok {
-		return BankDocInfo
+func HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
+	var (
+		msgDoc CustomMsgDocInfo
+		denoms []string
+	)
+	if bankDocInfo, ok := msgparser.MsgClient.Bank.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = bankDocInfo
+		switch bankDocInfo.DocTxMsg.Type {
+		case MsgTypeSend:
+			doc := bankDocInfo.DocTxMsg.Msg.(*bank.DocMsgSend)
+			denoms = parseDenoms(doc.Amount)
+		case MsgTypeMultiSend:
+			doc := bankDocInfo.DocTxMsg.Msg.(*bank.DocMsgMultiSend)
+			if len(doc.Inputs) > 0 {
+				for _, v := range doc.Inputs {
+					denoms = append(denoms, parseDenoms(v.Coins)...)
+				}
+			}
+			if len(doc.Outputs) > 0 {
+				for _, v := range doc.Outputs {
+					denoms = append(denoms, parseDenoms(v.Coins)...)
+				}
+			}
+		}
+		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
+		return msgDoc
 	}
-	if IServiceDocInfo, ok := msgparser.MsgClient.Service.HandleTxMsg(v); ok {
-		return IServiceDocInfo
+	if iServiceDocInfo, ok := msgparser.MsgClient.Service.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = iServiceDocInfo
+		return msgDoc
 	}
-	if NftDocInfo, ok := msgparser.MsgClient.Nft.HandleTxMsg(v); ok {
-		return NftDocInfo
+	if nftDocInfo, ok := msgparser.MsgClient.Nft.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = nftDocInfo
+		return msgDoc
 	}
-	if RecordDocInfo, ok := msgparser.MsgClient.Record.HandleTxMsg(v); ok {
-		return RecordDocInfo
+	if recordDocInfo, ok := msgparser.MsgClient.Record.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = recordDocInfo
+		return msgDoc
 	}
-	if TokenDocInfo, ok := msgparser.MsgClient.Token.HandleTxMsg(v); ok {
-		return TokenDocInfo
+	if tokenDocInfo, ok := msgparser.MsgClient.Token.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = tokenDocInfo
+		return msgDoc
 	}
-	if CoinswapDocInfo, ok := msgparser.MsgClient.Coinswap.HandleTxMsg(v); ok {
-		return CoinswapDocInfo
+	if coinswapDocInfo, ok := msgparser.MsgClient.Coinswap.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = coinswapDocInfo
+		switch coinswapDocInfo.DocTxMsg.Type {
+		case MsgTypeSwapOrder:
+			doc := coinswapDocInfo.DocTxMsg.Msg.(*coinswap.DocTxMsgSwapOrder)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.Input.Coin})...)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.Output.Coin})...)
+		case MsgTypeAddLiquidity:
+			doc := coinswapDocInfo.DocTxMsg.Msg.(*coinswap.DocTxMsgAddLiquidity)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.MaxToken})...)
+		case MsgTypeRemoveLiquidity:
+			doc := coinswapDocInfo.DocTxMsg.Msg.(*coinswap.DocTxMsgRemoveLiquidity)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.WithdrawLiquidity})...)
+		}
+		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
+		return msgDoc
 	}
-	if CrisisDocInfo, ok := msgparser.MsgClient.Crisis.HandleTxMsg(v); ok {
-		return CrisisDocInfo
+	if crisisDocInfo, ok := msgparser.MsgClient.Crisis.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = crisisDocInfo
+		return msgDoc
 	}
-	if DistrubutionDocInfo, ok := msgparser.MsgClient.Distribution.HandleTxMsg(v); ok {
-		return DistrubutionDocInfo
+	if distrubutionDocInfo, ok := msgparser.MsgClient.Distribution.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = distrubutionDocInfo
+		switch distrubutionDocInfo.DocTxMsg.Type {
+		case MsgTypeMsgFundCommunityPool:
+			doc := distrubutionDocInfo.DocTxMsg.Msg.(*distribution.DocTxMsgFundCommunityPool)
+			denoms = append(denoms, parseDenoms(doc.Amount)...)
+		case MsgTypeWithdrawDelegatorReward:
+		case MsgTypeMsgWithdrawValidatorCommission:
+			break
+		}
+		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
+		return msgDoc
 	}
-	if SlashingDocInfo, ok := msgparser.MsgClient.Slashing.HandleTxMsg(v); ok {
-		return SlashingDocInfo
+	if slashingDocInfo, ok := msgparser.MsgClient.Slashing.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = slashingDocInfo
+		return msgDoc
 	}
-	if EvidenceDocInfo, ok := msgparser.MsgClient.Evidence.HandleTxMsg(v); ok {
-		return EvidenceDocInfo
+	if evidenceDocInfo, ok := msgparser.MsgClient.Evidence.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = evidenceDocInfo
+		return msgDoc
 	}
-	if HtlcDocInfo, ok := msgparser.MsgClient.Htlc.HandleTxMsg(v); ok {
-		return HtlcDocInfo
+	if htlcDocInfo, ok := msgparser.MsgClient.Htlc.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = htlcDocInfo
+		return msgDoc
 	}
-	if StakingDocInfo, ok := msgparser.MsgClient.Staking.HandleTxMsg(v); ok {
-		return StakingDocInfo
+	if stakingDocInfo, ok := msgparser.MsgClient.Staking.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = stakingDocInfo
+		switch stakingDocInfo.DocTxMsg.Type {
+		case MsgTypeStakeDelegate:
+			doc := stakingDocInfo.DocTxMsg.Msg.(*staking.DocTxMsgDelegate)
+			denoms = append(denoms, parseDenoms(convertCoins([]Coin{doc.Amount}))...)
+		case MsgTypeStakeBeginUnbonding:
+			doc := stakingDocInfo.DocTxMsg.Msg.(*staking.DocTxMsgBeginUnbonding)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.Amount})...)
+		case MsgTypeBeginRedelegate:
+			doc := stakingDocInfo.DocTxMsg.Msg.(*staking.DocTxMsgBeginRedelegate)
+			denoms = append(denoms, parseDenoms([]types.Coin{doc.Amount})...)
+		}
+		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
+		return msgDoc
 	}
-	if GovDocInfo, ok := msgparser.MsgClient.Gov.HandleTxMsg(v); ok {
-		return GovDocInfo
+	if govDocInfo, ok := msgparser.MsgClient.Gov.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = govDocInfo
+		return msgDoc
 	}
-	if IbcDocInfo, ok := msgparser.MsgClient.Ibc.HandleTxMsg(v); ok {
-		return IbcDocInfo
+	if ibcDocInfo, ok := msgparser.MsgClient.Ibc.HandleTxMsg(v); ok {
+		msgDoc.MsgDocInfo = ibcDocInfo
+		return msgDoc
 	}
-	return MsgDocInfo{}
+	return msgDoc
 }
 
 func removeDuplicatesFromSlice(data []string) (result []string) {
