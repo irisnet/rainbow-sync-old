@@ -26,6 +26,7 @@ type TxMsg struct {
 	TxAddrs   []string    `bson:"tx_addrs"`
 	Signers   []string    `bson:"signers"`
 	TxSigners []string    `bson:"tx_signers"`
+	Denoms    []string    `bson:"denoms"`
 }
 
 const (

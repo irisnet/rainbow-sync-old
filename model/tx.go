@@ -22,6 +22,7 @@ type Tx struct {
 	Signers   []string      `bson:"signers"`
 	Addrs     []string      `bson:"addrs"`
 	TxIndex   uint32        `bson:"tx_index"`
+	TxId      uint64        `bson:"tx_id"`
 	Ext       interface{}   `bson:"ext"`
 }
 
