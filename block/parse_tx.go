@@ -8,6 +8,8 @@ import (
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
 	"github.com/kaifei-bianjie/msg-parser/codec"
+	. "github.com/kaifei-bianjie/msg-parser/modules"
+	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
 	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
@@ -194,6 +196,18 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
 		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
 		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
+		switch msgDocInfo.DocTxMsg.Type {
+		case MsgTypeIBCTransfer:
+			if ibcTranferMsg, ok := msgDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTransfer); ok {
+				ibcTranferMsg.PacketId = buildPacketId(res.TxResult.Events)
+				msgDocInfo.DocTxMsg.Msg = ibcTranferMsg
+			} else {
+				logger.Warn("ibc transfer handler packet_id failed", logger.String("errTag", "TxMsg"),
+					logger.String("txhash", txHash),
+					logger.Int("msg_index", i),
+					logger.Int64("height", height))
+			}
+		}
 
 		docMsg := model.TxMsg{
 			Time:      docTx.Time,
@@ -252,6 +266,31 @@ func buildTxId(height int64, txIndex uint32) uint64 {
 		return uint64(height*10000 + 9999)
 	}
 	return uint64(height*10000) + uint64(txIndex)
+}
+
+func buildPacketId(events []aTypes.Event) string {
+	if len(events) > 0 {
+		var mapKeyValue map[string]string
+		for _, e := range events {
+			if len(e.Attributes) > 0 && e.Type == utils.IbcTransferEventTypeSendPacket {
+				mapKeyValue = make(map[string]string, len(e.Attributes))
+				for _, v := range e.Attributes {
+					mapKeyValue[string(v.Key)] = string(v.Value)
+				}
+				break
+			}
+		}
+
+		if len(mapKeyValue) > 0 {
+			scPort := mapKeyValue[utils.IbcTransferEventAttriKeyPacketScPort]
+			scChannel := mapKeyValue[utils.IbcTransferEventAttriKeyPacketScChannel]
+			dcPort := mapKeyValue[utils.IbcTransferEventAttriKeyPacketDcPort]
+			dcChannel := mapKeyValue[utils.IbcTransferEventAttriKeyPacketDcChannels]
+			sequence := mapKeyValue[utils.IbcTransferEventAttriKeyPacketSequence]
+			return fmt.Sprintf("%v%v%v%v%v", scPort, scChannel, dcPort, dcChannel, sequence)
+		}
+	}
+	return ""
 }
 
 func parseEvents(events []aTypes.Event) []model.Event {
