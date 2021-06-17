@@ -215,6 +215,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		}
 		docMsg.Addrs = removeDuplicatesFromSlice(msgDocInfo.Addrs)
 		docMsg.Signers = removeDuplicatesFromSlice(msgDocInfo.Signers)
+		docMsg.Denoms = msgDocInfo.Denoms
 		docMsgs = append(docMsgs, docMsg)
 
 	}
