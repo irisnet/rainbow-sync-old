@@ -192,10 +192,6 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			continue
 		}
 
-		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
-		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
-		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
-		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
 		switch msgDocInfo.DocTxMsg.Type {
 		case MsgTypeIBCTransfer:
 			if ibcTranferMsg, ok := msgDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTransfer); ok {
@@ -208,6 +204,11 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 					logger.Int64("height", height))
 			}
 		}
+
+		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
+		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
+		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
+		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
 
 		docMsg := model.TxMsg{
 			Time:      docTx.Time,
