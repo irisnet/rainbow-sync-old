@@ -126,9 +126,6 @@ func HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
 		case MsgTypeIBCTransfer:
 			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTransfer)
 			denoms = append(denoms, doc.Token.Denom)
-		case MsgTypeRecvPacket:
-			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgRecvPacket)
-			denoms = append(denoms, doc.Packet.Data.Denom)
 		case MsgTypeTimeout:
 			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTimeout)
 			denoms = append(denoms, doc.Packet.Data.Denom)
