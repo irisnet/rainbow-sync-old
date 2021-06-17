@@ -6,6 +6,7 @@ import (
 	"github.com/kaifei-bianjie/msg-parser/modules/bank"
 	"github.com/kaifei-bianjie/msg-parser/modules/coinswap"
 	"github.com/kaifei-bianjie/msg-parser/modules/distribution"
+	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
 	"github.com/kaifei-bianjie/msg-parser/modules/staking"
 	"github.com/kaifei-bianjie/msg-parser/types"
 )
@@ -121,6 +122,15 @@ func HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
 	}
 	if ibcDocInfo, ok := msgparser.MsgClient.Ibc.HandleTxMsg(v); ok {
 		msgDoc.MsgDocInfo = ibcDocInfo
+		switch ibcDocInfo.DocTxMsg.Type {
+		case MsgTypeIBCTransfer:
+			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTransfer)
+			denoms = append(denoms, doc.Token.Denom)
+		case MsgTypeTimeout:
+			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTimeout)
+			denoms = append(denoms, doc.Packet.Data.Denom)
+		}
+		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
 		return msgDoc
 	}
 	return msgDoc
