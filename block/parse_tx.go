@@ -8,6 +8,8 @@ import (
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
 	"github.com/kaifei-bianjie/msg-parser/codec"
+	. "github.com/kaifei-bianjie/msg-parser/modules"
+	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
 	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
@@ -190,6 +192,29 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			continue
 		}
 
+		switch msgDocInfo.DocTxMsg.Type {
+		case MsgTypeIBCTransfer:
+			if ibcTranferMsg, ok := msgDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTransfer); ok {
+				if val, exist := eventsIndexMap[i]; exist {
+					ibcTranferMsg.PacketId = buildPacketId(val.Events)
+					msgDocInfo.DocTxMsg.Msg = ibcTranferMsg
+				}
+
+			} else {
+				logger.Warn("ibc transfer handler packet_id failed", logger.String("errTag", "TxMsg"),
+					logger.String("txhash", txHash),
+					logger.Int("msg_index", i),
+					logger.Int64("height", height))
+			}
+		case MsgTypeRecvPacket:
+			if val, ok := eventsIndexMap[i]; ok {
+				denom := getIbcRecvPacketDenom(val.Events)
+				msgDocInfo.Denoms = append(msgDocInfo.Denoms, denom)
+				msgDocInfo.Denoms = removeDuplicatesFromSlice(msgDocInfo.Denoms)
+			}
+
+		}
+
 		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
 		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
 		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
@@ -252,6 +277,47 @@ func buildTxId(height int64, txIndex uint32) uint64 {
 		return uint64(height*10000 + 9999)
 	}
 	return uint64(height*10000) + uint64(txIndex)
+}
+
+func getIbcRecvPacketDenom(events []model.Event) string {
+	if len(events) > 0 {
+		for _, e := range events {
+			if len(e.Attributes) > 0 && e.Type == utils.IbcRecvPacketEventTypeDenomTrace {
+				for _, v := range e.Attributes {
+					if v.Key == utils.IbcRecvPacketEventAttrKeyDenomTrace {
+						return v.Value
+					}
+
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func buildPacketId(events []model.Event) string {
+	if len(events) > 0 {
+		var mapKeyValue map[string]string
+		for _, e := range events {
+			if len(e.Attributes) > 0 && e.Type == utils.IbcTransferEventTypeSendPacket {
+				mapKeyValue = make(map[string]string, len(e.Attributes))
+				for _, v := range e.Attributes {
+					mapKeyValue[v.Key] = v.Value
+				}
+				break
+			}
+		}
+
+		if len(mapKeyValue) > 0 {
+			scPort := mapKeyValue[utils.IbcTransferEventAttriKeyPacketScPort]
+			scChannel := mapKeyValue[utils.IbcTransferEventAttriKeyPacketScChannel]
+			dcPort := mapKeyValue[utils.IbcTransferEventAttriKeyPacketDcPort]
+			dcChannel := mapKeyValue[utils.IbcTransferEventAttriKeyPacketDcChannels]
+			sequence := mapKeyValue[utils.IbcTransferEventAttriKeyPacketSequence]
+			return fmt.Sprintf("%v%v%v%v%v", scPort, scChannel, dcPort, dcChannel, sequence)
+		}
+	}
+	return ""
 }
 
 func parseEvents(events []aTypes.Event) []model.Event {
