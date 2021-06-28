@@ -10,7 +10,7 @@ import (
 
 var (
 	SvrConf              *ServerConf
-	blockChainMonitorUrl = []string{"tcp://192.168.150.31:56657"}
+	blockChainMonitorUrl = []string{"tcp://192.168.150.40:26657"}
 
 	workerNumCreateTask     = 1
 	workerNumExecuteTask    = 30
