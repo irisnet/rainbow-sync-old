@@ -326,8 +326,8 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210617063714-8e4372796b64 h1:s1MznCrBcAa6HmiepaSrbU/49T1e5k0WudInfq62KHU=
-github.com/kaifei-bianjie/msg-parser v0.0.0-20210617063714-8e4372796b64/go.mod h1:tObH5GOAuGZIQojqpqjZCXrAvKgg7j+H42B+2LGVffs=
+github.com/kaifei-bianjie/msg-parser v0.0.0-20210628091709-cc4fcbfab443 h1:VeOytCsobpPbnh2l2nRAK72exo+FzHUygIZqmZWKcgw=
+github.com/kaifei-bianjie/msg-parser v0.0.0-20210628091709-cc4fcbfab443/go.mod h1:tObH5GOAuGZIQojqpqjZCXrAvKgg7j+H42B+2LGVffs=
 github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d h1:Z+RDyXzjKE0i2sTjZ/b1uxiGtPhFy34Ou/Tk0qwN0kM=
 github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d/go.mod h1:JJNrCn9otv/2QP4D7SMJBgaleKpOf66PnW6F5WGNRIc=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
