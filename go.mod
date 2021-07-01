@@ -6,6 +6,7 @@ require (
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
 	github.com/kaifei-bianjie/msg-parser v0.0.0-20210628091709-cc4fcbfab443
 	github.com/tendermint/tendermint v0.34.8
+	github.com/weichang-bianjie/metric-sdk v1.0.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
