@@ -5,6 +5,7 @@ package pool
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/irisnet/rainbow-sync/lib/logger"
 	rpcClient "github.com/tendermint/tendermint/rpc/client/http"
@@ -52,4 +53,25 @@ func (c *Client) HeartBeat() error {
 
 func generateId(address string) string {
 	return fmt.Sprintf("peer[%s]", address)
+}
+
+func GetClientWithTimeout(timeout time.Duration) (*Client, error) {
+	c := make(chan interface{})
+	errCh := make(chan error)
+	go func() {
+		client, err := pool.BorrowObject(ctx)
+		if err != nil {
+			errCh <- err
+		} else {
+			c <- client
+		}
+	}()
+	select {
+	case res := <-c:
+		return res.(*Client), nil
+	case res := <-errCh:
+		return nil, res
+	case <-time.After(timeout):
+		return nil, errors.New("rpc node timeout")
+	}
 }

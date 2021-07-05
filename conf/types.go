@@ -21,6 +21,7 @@ var (
 	maxConnectionNum  = 100 // max size of tendermint client pool
 	behindBlockNum    = 0
 	bech32ChainPrefix = "i"
+	promethousPort    = 9090
 )
 
 type ServerConf struct {
@@ -34,6 +35,7 @@ type ServerConf struct {
 	InitConnectionNum int
 	BehindBlockNum    int
 	Bech32ChainPrefix string
+	PromethousPort    int
 }
 
 const (
@@ -48,6 +50,7 @@ const (
 	EnvNameBlockNumPerWorkerHandle = "BLOCK_NUM_PER_WORKER_HANDLE"
 	EnvNameBehindBlockNum          = "BEHIND_BLOCK_NUM"
 	EnvNameBech32ChainPrefix       = "BECH32_CHAIN_PREFIX"
+	EnvNamePromethousPort          = "PROMETHOUS_PORT"
 )
 
 // get value of env var
@@ -88,6 +91,13 @@ func init() {
 			behindBlockNum = n
 		}
 	}
+	if v, ok := os.LookupEnv(EnvNamePromethousPort); ok {
+		if n, err := strconv.Atoi(v); err != nil {
+			logger.Fatal("convert str to int fail", logger.String(EnvNamePromethousPort, v))
+		} else {
+			promethousPort = n
+		}
+	}
 	SvrConf = &ServerConf{
 		NodeUrls:                blockChainMonitorUrl,
 		WorkerNumCreateTask:     workerNumCreateTask,
@@ -99,6 +109,7 @@ func init() {
 		InitConnectionNum: initConnectionNum,
 		BehindBlockNum:    behindBlockNum,
 		Bech32ChainPrefix: bech32ChainPrefix,
+		PromethousPort:    promethousPort,
 	}
 	logger.Debug("print server config", logger.String("serverConf", utils.MarshalJsonIgnoreErr(SvrConf)))
 }
