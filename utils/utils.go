@@ -74,3 +74,17 @@ func MarshalJsonIgnoreErr(v interface{}) string {
 func UnMarshalJsonIgnoreErr(data string, v interface{}) {
 	json.Unmarshal([]byte(data), &v)
 }
+
+func RemoveDuplicatesFromSlice(data []string) (result []string) {
+	tempSet := make(map[string]string, len(data))
+	for _, val := range data {
+		if _, ok := tempSet[val]; ok || val == "" {
+			continue
+		}
+		tempSet[val] = val
+	}
+	for one := range tempSet {
+		result = append(result, one)
+	}
+	return
+}
