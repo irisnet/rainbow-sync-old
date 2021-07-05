@@ -55,7 +55,6 @@ docker run --name rainbow-sync \&
 | BLOCK_NUM_PER_WORKER_HANDLE | string | 50 | number of blocks per sync TX task | 50 |
 | BEHIND_BLOCK_NUM | string | 0 | wait block num to handle tx | 0 |
 | PROMETHOUS_PORT | string | 9090 | promethous metrics server port | 9090 |
-: `option` `string` 
 
 - Remarks
   - synchronizes  block chain data from  specify block height(such as:17908 current time:1576208532)
