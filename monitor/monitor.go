@@ -110,15 +110,16 @@ func (node *clientNode) nodeStatusReport() {
 	if err != nil {
 		logger.Error("rpc node connection exception", logger.String("error", err.Error()))
 		node.nodeStatus.Set(float64(NodeStatusNotReachable))
-		return
+		//return
+	} else {
+		if status.SyncInfo.CatchingUp {
+			node.nodeStatus.Set(float64(NodeStatusCatchingUp))
+		} else {
+			node.nodeStatus.Set(float64(NodeStatusSyncing))
+		}
+		node.nodeHeight.Set(float64(status.SyncInfo.LatestBlockHeight))
 	}
 
-	if status.SyncInfo.CatchingUp {
-		node.nodeStatus.Set(float64(NodeStatusCatchingUp))
-	} else {
-		node.nodeStatus.Set(float64(NodeStatusSyncing))
-	}
-	node.nodeHeight.Set(float64(status.SyncInfo.LatestBlockHeight))
 	follow, err := new(model.SyncTask).QueryValidFollowTasks()
 	if err != nil {
 		logger.Error("query valid follow task exception", logger.String("error", err.Error()))
