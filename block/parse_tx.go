@@ -206,13 +206,6 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 					logger.Int("msg_index", i),
 					logger.Int64("height", height))
 			}
-		case MsgTypeRecvPacket:
-			if val, ok := eventsIndexMap[i]; ok {
-				denom := getIbcRecvPacketDenom(val.Events)
-				msgDocInfo.Denoms = append(msgDocInfo.Denoms, denom)
-				msgDocInfo.Denoms = removeDuplicatesFromSlice(msgDocInfo.Denoms)
-			}
-
 		}
 
 		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
@@ -277,22 +270,6 @@ func buildTxId(height int64, txIndex uint32) uint64 {
 		return uint64(height*10000 + 9999)
 	}
 	return uint64(height*10000) + uint64(txIndex)
-}
-
-func getIbcRecvPacketDenom(events []model.Event) string {
-	if len(events) > 0 {
-		for _, e := range events {
-			if len(e.Attributes) > 0 && e.Type == utils.IbcRecvPacketEventTypeDenomTrace {
-				for _, v := range e.Attributes {
-					if v.Key == utils.IbcRecvPacketEventAttrKeyDenomTrace {
-						return v.Value
-					}
-
-				}
-			}
-		}
-	}
-	return ""
 }
 
 func buildPacketId(events []model.Event) string {

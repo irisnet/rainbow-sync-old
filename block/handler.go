@@ -9,6 +9,7 @@ import (
 	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
 	"github.com/kaifei-bianjie/msg-parser/modules/staking"
 	"github.com/kaifei-bianjie/msg-parser/types"
+	"strings"
 )
 
 func HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
@@ -128,7 +129,18 @@ func HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
 			denoms = append(denoms, doc.Token.Denom)
 		case MsgTypeTimeout:
 			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgTimeout)
-			denoms = append(denoms, doc.Packet.Data.Denom)
+			denom := doc.Packet.Data.Denom
+			if strings.Contains(denom, "/") {
+				denom = ibc.GetIbcPacketDenom(doc.Packet, doc.Packet.Data.Denom)
+			}
+			denoms = append(denoms, denom)
+		case MsgTypeRecvPacket:
+			doc := ibcDocInfo.DocTxMsg.Msg.(*ibc.DocMsgRecvPacket)
+			denom := doc.Packet.Data.Denom
+			if strings.Contains(denom, "/") {
+				denom = ibc.GetIbcPacketDenom(doc.Packet, doc.Packet.Data.Denom)
+			}
+			denoms = append(denoms, denom)
 		}
 		msgDoc.Denoms = removeDuplicatesFromSlice(denoms)
 		return msgDoc
