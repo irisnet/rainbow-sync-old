@@ -1,9 +1,9 @@
 package model
 
 import (
+	"github.com/irisnet/rainbow-sync/db"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/irisnet/rainbow-sync/db"
 	"time"
 )
 
@@ -222,4 +222,32 @@ func (d SyncTask) UpdateLastUpdateTime(task SyncTask) error {
 	}
 
 	return db.ExecCollection(d.Name(), fn)
+}
+
+// query valid follow way
+func (d SyncTask) QueryValidFollowTasks() (bool, error) {
+	var syncTasks []SyncTask
+	q := bson.M{}
+
+	q["status"] = db.SyncTaskStatusUnderway
+
+	q["end_height"] = bson.M{
+		"$eq": 0,
+	}
+
+	fn := func(c *mgo.Collection) error {
+		return c.Find(q).All(&syncTasks)
+	}
+
+	err := db.ExecCollection(d.Name(), fn)
+
+	if err != nil {
+		return false, err
+	}
+
+	if len(syncTasks) == 1 {
+		return true, nil
+	}
+
+	return false, nil
 }
