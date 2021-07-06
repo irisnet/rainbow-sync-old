@@ -56,7 +56,7 @@ func NewMetricNode(server metrics.Monitor) clientNode {
 		"sync",
 		"status",
 		"node_seconds_gap",
-		"the seconds gap between node block time with sync db block time",
+		"the seconds gap between running env current time with sync db block time",
 		nil,
 	)
 	syncWorkwayMetric := metrics.NewGuage(
