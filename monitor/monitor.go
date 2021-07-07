@@ -130,7 +130,7 @@ func (node *clientNode) nodeStatusReport() {
 		node.nodeTimeGap.Set(float64(timeGap))
 	}
 
-	if !follow {
+	if follow {
 		node.syncWorkWay.Set(float64(SyncTaskFollowing))
 	} else {
 		node.syncWorkWay.Set(float64(SyncTaskCatchingUp))
