@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/lib/logger"
+	"github.com/irisnet/rainbow-sync/lib/msgparser"
 	"github.com/irisnet/rainbow-sync/lib/pool"
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
@@ -19,6 +20,30 @@ import (
 	"time"
 )
 
+var _parser msgparser.MsgParser
+
+func init() {
+	router := msgparser.RegisteRouter()
+	//if conf.Server.OnlySupportModule != "" {
+	//	modules := strings.Split(conf.Server.OnlySupportModule, ",")
+	//	msgRoute := msgparser.NewRouter()
+	//	for _, one := range modules {
+	//		fn, exist := msgparser.RouteHandlerMap[one]
+	//		if !exist {
+	//			logger.Fatal("no support module: " + one)
+	//		}
+	//		msgRoute = msgRoute.AddRoute(one, fn)
+	//		if one == msgparser.IbcRouteKey {
+	//			msgRoute = msgRoute.AddRoute(msgparser.IbcTransferRouteKey, msgparser.RouteHandlerMap[one])
+	//		}
+	//	}
+	//	if msgRoute.GetRoutesLen() > 0 {
+	//		router = msgRoute
+	//	}
+	//
+	//}
+	_parser = msgparser.NewMsgParser(router)
+}
 func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMsg, taskDoc model.SyncTask) error {
 	var (
 		ops, insertOps []txn.Op
@@ -187,7 +212,7 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		return docTx, docMsgs, nil
 	}
 	for i, v := range msgs {
-		msgDocInfo := HandleTxMsg(v)
+		msgDocInfo := _parser.HandleTxMsg(v)
 		if len(msgDocInfo.Addrs) == 0 {
 			continue
 		}
@@ -208,8 +233,8 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			}
 		}
 
-		docTx.Signers = append(docTx.Signers, removeDuplicatesFromSlice(msgDocInfo.Signers)...)
-		docTx.Addrs = append(docTx.Addrs, removeDuplicatesFromSlice(msgDocInfo.Addrs)...)
+		docTx.Signers = append(docTx.Signers, utils.RemoveDuplicatesFromSlice(msgDocInfo.Signers)...)
+		docTx.Addrs = append(docTx.Addrs, utils.RemoveDuplicatesFromSlice(msgDocInfo.Addrs)...)
 		docTxMsgs = append(docTxMsgs, msgDocInfo.DocTxMsg)
 		docTx.Types = append(docTx.Types, msgDocInfo.DocTxMsg.Type)
 
@@ -231,15 +256,15 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		if val, ok := eventsIndexMap[i]; ok {
 			docMsg.Events = val.Events
 		}
-		docMsg.Addrs = removeDuplicatesFromSlice(msgDocInfo.Addrs)
-		docMsg.Signers = removeDuplicatesFromSlice(msgDocInfo.Signers)
+		docMsg.Addrs = utils.RemoveDuplicatesFromSlice(msgDocInfo.Addrs)
+		docMsg.Signers = utils.RemoveDuplicatesFromSlice(msgDocInfo.Signers)
 		docMsg.Denoms = msgDocInfo.Denoms
 		docMsgs = append(docMsgs, docMsg)
 
 	}
-	docTx.Addrs = removeDuplicatesFromSlice(docTx.Addrs)
-	docTx.Types = removeDuplicatesFromSlice(docTx.Types)
-	docTx.Signers = removeDuplicatesFromSlice(docTx.Signers)
+	docTx.Addrs = utils.RemoveDuplicatesFromSlice(docTx.Addrs)
+	docTx.Types = utils.RemoveDuplicatesFromSlice(docTx.Types)
+	docTx.Signers = utils.RemoveDuplicatesFromSlice(docTx.Signers)
 	docTx.Msgs = docTxMsgs
 
 	// don't save txs which have not parsed
