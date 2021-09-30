@@ -4,11 +4,11 @@ go 1.15
 
 require (
 	github.com/jolestar/go-commons-pool v2.0.0+incompatible
-	github.com/kaifei-bianjie/msg-parser v0.0.0-20210827060841-2ef93a00a8ed
+	github.com/kaifei-bianjie/msg-parser v0.0.0-20210928092643-a6cb1aaa35f1
 	github.com/tendermint/tendermint v0.34.11
 	github.com/weichang-bianjie/metric-sdk v1.0.0
-	go.uber.org/zap v1.13.0
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974
+	go.uber.org/zap v1.17.0
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect

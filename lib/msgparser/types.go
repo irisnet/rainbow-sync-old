@@ -20,6 +20,9 @@ const (
 	RandomRouteKey       string = "random"
 	OracleRouteKey       string = "oracle"
 	RecordRouteKey       string = "record"
+	FarmRouteKey         string = "farm"
+	TIbcTransferRouteKey string = "NFT"
+	TIbcRouteKey         string = "tibc"
 )
 
 var RouteHandlerMap = map[string]Handler{
@@ -40,6 +43,9 @@ var RouteHandlerMap = map[string]Handler{
 	RandomRouteKey:       handleRandom,
 	OracleRouteKey:       handleOracle,
 	RecordRouteKey:       handleRecord,
+	FarmRouteKey:         handleFarm,
+	TIbcTransferRouteKey: handleTIbc,
+	TIbcRouteKey:         handleTIbc,
 }
 
 type CustomMsgDocInfo struct {

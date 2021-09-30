@@ -216,6 +216,20 @@ func handleHtlc(v types.SdkMsg) CustomMsgDocInfo {
 	return msgDoc
 }
 
+func handleTIbc(v types.SdkMsg) CustomMsgDocInfo {
+	docInfo, _ := _client.Tibc.HandleTxMsg(v)
+	var msgDoc CustomMsgDocInfo
+	msgDoc.MsgDocInfo = docInfo
+	return msgDoc
+}
+
+func handleFarm(v types.SdkMsg) CustomMsgDocInfo {
+	docInfo, _ := _client.Farm.HandleTxMsg(v)
+	var msgDoc CustomMsgDocInfo
+	msgDoc.MsgDocInfo = docInfo
+	return msgDoc
+}
+
 func handleCoinswap(v types.SdkMsg) CustomMsgDocInfo {
 	var (
 		msgDoc CustomMsgDocInfo
