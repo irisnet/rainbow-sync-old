@@ -32,12 +32,66 @@ type msgParser struct {
 	rh Router
 }
 
+// Handler returns the MsgServiceHandler for a given msg or nil if not found.
+func (parser msgParser) getModule(v types.SdkMsg) string {
+	var (
+		route string
+	)
+
+	data := types.MsgTypeURL(v)
+	if strings.HasPrefix(data, "/ibc.core.") {
+		route = IbcRouteKey
+	} else if strings.HasPrefix(data, "/ibc.applications.") {
+		route = IbcTransferRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.bank.") {
+		route = BankRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.crisis.") {
+		route = CrisisRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.distribution.") {
+		route = DistributionRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.slashing.") {
+		route = SlashingRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.evidence.") {
+		route = EvidenceRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.staking.") {
+		route = StakingRouteKey
+	} else if strings.HasPrefix(data, "/cosmos.gov.") {
+		route = GovRouteKey
+		//} else if strings.HasPrefix(data, "/tibc.core.") {
+		//	route = TIbcRouteKey
+		//} else if strings.HasPrefix(data, "/tibc.apps.") {
+		//	route = TIbcTransferRouteKey
+	} else if strings.HasPrefix(data, "/irismod.nft.") {
+		route = NftRouteKey
+		//} else if strings.HasPrefix(data, "/irismod.farm.") {
+		//	route = FarmRouteKey
+	} else if strings.HasPrefix(data, "/irismod.coinswap.") {
+		route = CoinswapRouteKey
+	} else if strings.HasPrefix(data, "/irismod.token.") {
+		route = TokenRouteKey
+	} else if strings.HasPrefix(data, "/irismod.record.") {
+		route = RecordRouteKey
+	} else if strings.HasPrefix(data, "/irismod.service.") {
+		route = ServiceRouteKey
+	} else if strings.HasPrefix(data, "/irismod.htlc.") {
+		route = HtlcRouteKey
+	} else if strings.HasPrefix(data, "/irismod.random.") {
+		route = RandomRouteKey
+	} else if strings.HasPrefix(data, "/irismod.oracle.") {
+		route = OracleRouteKey
+	} else {
+		route = data
+	}
+	return route
+}
+
 func (parser *msgParser) HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
-	handleFunc, err := parser.rh.GetRoute(v.Route())
+	module := parser.getModule(v)
+	handleFunc, err := parser.rh.GetRoute(module)
 	if err != nil {
 		logger.Error(err.Error(),
-			logger.String("route", v.Route()),
-			logger.String("type", v.Type()))
+			logger.String("route", module),
+			logger.String("type", module))
 		return CustomMsgDocInfo{}
 	}
 	return handleFunc(v)
@@ -162,6 +216,13 @@ func handleIbc(v types.SdkMsg) CustomMsgDocInfo {
 			denom = ibc.GetIbcPacketDenom(doc.Packet, doc.Packet.Data.Denom)
 		}
 		denoms = append(denoms, denom)
+	case MsgTypeAcknowledgement:
+		break
+	default:
+		// clear msgDoc info for skip no use ibc tx msg
+		msgDoc = CustomMsgDocInfo{}
+		logger.Warn("skip no use ibc tx",
+			logger.String("type", ibcDocInfo.DocTxMsg.Type))
 	}
 	msgDoc.Denoms = utils.RemoveDuplicatesFromSlice(denoms)
 	return msgDoc
