@@ -2,6 +2,7 @@ package block
 
 import (
 	"fmt"
+	"github.com/irisnet/rainbow-sync/conf"
 	"github.com/irisnet/rainbow-sync/db"
 	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/lib/msgparser"
@@ -44,13 +45,55 @@ func init() {
 	//}
 	_parser = msgparser.NewMsgParser(router)
 }
+
+func saveMsgDocsWithTxn(txMsgs []model.TxMsg) error {
+	txMsgOps := make([]txn.Op, 0, conf.SvrConf.InsertBatchLimit)
+	dataLen := 0
+	for _, msg := range txMsgs {
+		// ignore update_client msg
+		if msg.Type == MsgTypeUpdateClient {
+			continue
+		}
+		op := txn.Op{
+			C:      model.CollectionNameIrisTxMsg,
+			Id:     bson.NewObjectId(),
+			Insert: msg,
+		}
+		dataLen += 1
+		if dataLen >= conf.SvrConf.InsertBatchLimit {
+			if err := db.Txn(txMsgOps); err != nil {
+				return err
+			}
+			txMsgOps = make([]txn.Op, 0, conf.SvrConf.InsertBatchLimit)
+			txMsgOps = append(txMsgOps, op)
+			dataLen = 0
+		} else {
+			txMsgOps = append(txMsgOps, op)
+		}
+	}
+
+	if len(txMsgOps) > 0 {
+		err := db.Txn(txMsgOps)
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
 func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMsg, taskDoc model.SyncTask) error {
 	var (
-		ops, insertOps []txn.Op
+		insertOps []txn.Op
 	)
 
 	if blockDoc.Height == 0 {
 		return fmt.Errorf("invalid block, height equal 0")
+	}
+
+	//save txMsgs to iris_tx_msg
+	if err := saveMsgDocsWithTxn(txMsgs); err != nil {
+		return err
 	}
 
 	blockOp := txn.Op{
@@ -59,26 +102,29 @@ func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMs
 		Insert: blockDoc,
 	}
 
-	txAndMsgNum := len(txs) + len(txMsgs)
-	if txAndMsgNum > 0 {
-		insertOps = make([]txn.Op, 0, txAndMsgNum)
-		for _, v := range txs {
+	txNum := len(txs)
+	dataLen := 0
+	if txNum > 0 {
+		insertOps = make([]txn.Op, 0, conf.SvrConf.InsertBatchLimit)
+		for _, tx := range txs {
 			op := txn.Op{
 				C:      model.CollectionNameIrisTx,
 				Id:     bson.NewObjectId(),
-				Insert: v,
+				Insert: tx,
 			}
-			insertOps = append(insertOps, op)
+			dataLen += 1
+			if dataLen >= conf.SvrConf.InsertBatchLimit {
+				if err := db.Txn(insertOps); err != nil {
+					return err
+				}
+				insertOps = make([]txn.Op, 0, conf.SvrConf.InsertBatchLimit)
+				insertOps = append(insertOps, op)
+				dataLen = 0
+			} else {
+				insertOps = append(insertOps, op)
+			}
 		}
 
-		for _, v := range txMsgs {
-			op := txn.Op{
-				C:      model.CollectionNameIrisTxMsg,
-				Id:     bson.NewObjectId(),
-				Insert: v,
-			}
-			insertOps = append(insertOps, op)
-		}
 	}
 
 	updateOp := txn.Op{
@@ -94,7 +140,7 @@ func SaveDocsWithTxn(blockDoc *model.Block, txs []*model.Tx, txMsgs []model.TxMs
 		},
 	}
 
-	ops = make([]txn.Op, 0, txAndMsgNum+2)
+	ops := make([]txn.Op, 0, txNum+2)
 	ops = append(append(ops, blockOp, updateOp), insertOps...)
 
 	if len(ops) > 0 {

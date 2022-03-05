@@ -22,6 +22,7 @@ var (
 	behindBlockNum    = 0
 	bech32ChainPrefix = "i"
 	promethousPort    = 9090
+	insertBatchLimit  = 300
 )
 
 type ServerConf struct {
@@ -36,6 +37,7 @@ type ServerConf struct {
 	BehindBlockNum    int
 	Bech32ChainPrefix string
 	PromethousPort    int
+	InsertBatchLimit  int
 }
 
 const (
@@ -51,6 +53,7 @@ const (
 	EnvNameBehindBlockNum          = "BEHIND_BLOCK_NUM"
 	EnvNameBech32ChainPrefix       = "BECH32_CHAIN_PREFIX"
 	EnvNamePromethousPort          = "PROMETHOUS_PORT"
+	EnvNameInsertBatchLimit        = "INSERT_BATCH_LIMIT"
 )
 
 // get value of env var
@@ -98,6 +101,15 @@ func init() {
 			promethousPort = n
 		}
 	}
+
+	if v, ok := os.LookupEnv(EnvNameInsertBatchLimit); ok {
+		if n, err := strconv.Atoi(v); err != nil {
+			logger.Fatal("convert str to int fail", logger.String(EnvNameInsertBatchLimit, v))
+		} else {
+			insertBatchLimit = n
+		}
+	}
+
 	SvrConf = &ServerConf{
 		NodeUrls:                blockChainMonitorUrl,
 		WorkerNumCreateTask:     workerNumCreateTask,
@@ -110,6 +122,8 @@ func init() {
 		BehindBlockNum:    behindBlockNum,
 		Bech32ChainPrefix: bech32ChainPrefix,
 		PromethousPort:    promethousPort,
+
+		InsertBatchLimit: insertBatchLimit,
 	}
 	logger.Debug("print server config", logger.String("serverConf", utils.MarshalJsonIgnoreErr(SvrConf)))
 }
