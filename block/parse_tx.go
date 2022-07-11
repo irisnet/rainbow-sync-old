@@ -13,7 +13,6 @@ import (
 	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
 	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
 	aTypes "github.com/tendermint/tendermint/abci/types"
-	types2 "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
@@ -165,7 +164,7 @@ func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, []mode
 }
 
 // parse iris tx from iris block result tx
-func ParseTx(txBytes types.Tx, txResult *types2.ResponseDeliverTx, block *types.Block, index int) (model.Tx, []model.TxMsg, error) {
+func ParseTx(txBytes types.Tx, txResult *aTypes.ResponseDeliverTx, block *types.Block, index int) (model.Tx, []model.TxMsg, error) {
 
 	var (
 		docMsgs   []model.TxMsg
