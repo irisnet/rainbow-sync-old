@@ -132,10 +132,26 @@ func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, []mode
 		Height:     b,
 		CreateTime: time.Now().Unix(),
 	}
+
+	blockResults, err := client.BlockResults(ctx, &b)
+
+	if err != nil {
+		time.Sleep(1 * time.Second)
+		blockResults, err = client.BlockResults(ctx, &b)
+		if err != nil {
+			return &blockDoc, nil, nil, utils.ConvertErr(b, "", "ParseBlockResult", err)
+		}
+	}
+
+	if len(resblock.Block.Txs) != len(blockResults.TxsResults) {
+		return nil, nil, nil, utils.ConvertErr(b, "", "block.Txs length not equal blockResult", nil)
+	}
+
 	txs := make([]*model.Tx, 0, len(resblock.Block.Txs))
 	var docMsgs []model.TxMsg
-	for _, tx := range resblock.Block.Txs {
-		tx, msgs, err := ParseTx(tx, resblock.Block, client)
+	for index, tx := range resblock.Block.Txs {
+		txResult := blockResults.TxsResults[index]
+		tx, msgs, err := ParseTx(tx, txResult, resblock.Block, index)
 		if err != nil {
 			return &blockDoc, txs, docMsgs, err
 		}
@@ -148,7 +164,7 @@ func ParseBlock(b int64, client *pool.Client) (*model.Block, []*model.Tx, []mode
 }
 
 // parse iris tx from iris block result tx
-func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.Tx, []model.TxMsg, error) {
+func ParseTx(txBytes types.Tx, txResult *aTypes.ResponseDeliverTx, block *types.Block, index int) (model.Tx, []model.TxMsg, error) {
 
 	var (
 		docMsgs   []model.TxMsg
@@ -168,18 +184,6 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 	}
 	fee := msgsdktypes.BuildFee(authTx.GetFee(), authTx.GetGas())
 	memo := authTx.GetMemo()
-	ctx := context.Background()
-	res, err := client.Tx(ctx, txBytes.Hash(), false)
-	if err != nil {
-		time.Sleep(1 * time.Second)
-		var err1 error
-		client2 := pool.GetClient()
-		res, err1 = client2.Tx(ctx, txBytes.Hash(), false)
-		client2.Release()
-		if err1 != nil {
-			return docTx, docMsgs, utils.ConvertErr(block.Height, txHash, "TxResult", err1)
-		}
-	}
 
 	if len(fee.Amount) > 0 {
 		actualFee = fee.Amount[0]
@@ -192,19 +196,19 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 		Fee:       fee,
 		ActualFee: actualFee,
 		Memo:      memo,
-		TxIndex:   res.Index,
-		TxId:      buildTxId(height, res.Index),
+		TxIndex:   uint32(index),
+		TxId:      buildTxId(height, uint32(index)),
 	}
 	docTx.Status = utils.TxStatusSuccess
-	if res.TxResult.Code != 0 {
+	if txResult.Code != 0 {
 		docTx.Status = utils.TxStatusFail
-		docTx.Log = res.TxResult.Log
+		docTx.Log = txResult.Log
 
 	}
-	docTx.Events = parseEvents(res.TxResult.Events)
+	docTx.Events = parseEvents(txResult.Events)
 	eventsIndexMap := make(map[int]model.MsgEvent)
-	if res.TxResult.Code == 0 {
-		eventsIndexMap = splitEvents(res.TxResult.Log)
+	if txResult.Code == 0 {
+		eventsIndexMap = splitEvents(txResult.Log)
 	}
 
 	msgs := authTx.GetMsgs()
@@ -245,12 +249,12 @@ func ParseTx(txBytes types.Tx, block *types.Block, client *pool.Client) (model.T
 			TxHash:    docTx.TxHash,
 			Type:      msgDocInfo.DocTxMsg.Type,
 			MsgIndex:  i,
-			TxIndex:   res.Index,
+			TxIndex:   uint32(index),
 			TxStatus:  docTx.Status,
 			TxMemo:    memo,
 			TxLog:     docTx.Log,
-			GasUsed:   res.TxResult.GasUsed,
-			GasWanted: res.TxResult.GasWanted,
+			GasUsed:   txResult.GasUsed,
+			GasWanted: txResult.GasWanted,
 		}
 		docMsg.Msg = msgDocInfo.DocTxMsg
 		if val, ok := eventsIndexMap[i]; ok {
