@@ -9,11 +9,13 @@ ENV GO111MODULE on
 
 # RUN mkdir -p $REPO_PATH
 
+ARG GOPROXY=http://192.168.0.60:8081/repository/go-bianjie/,http://nexus.bianjie.ai/repository/golang-group,https://goproxy.cn,direct
 COPY . $REPO_PATH
 WORKDIR $REPO_PATH
 
 # Install minimum necessary dependencies, build binary
-RUN apk add --no-cache $PACKAGES && \
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
+apk add --no-cache $PACKAGES && \
     cd $REPO_PATH && make all
 
 FROM alpine:3.12

@@ -3,7 +3,7 @@ package msgparser
 import (
 	"fmt"
 	"github.com/irisnet/rainbow-sync/lib/logger"
-	"github.com/kaifei-bianjie/msg-parser/types"
+	"github.com/kaifei-bianjie/common-parser/types"
 	"regexp"
 )
 

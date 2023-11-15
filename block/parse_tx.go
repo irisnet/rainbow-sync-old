@@ -8,10 +8,10 @@ import (
 	"github.com/irisnet/rainbow-sync/lib/pool"
 	"github.com/irisnet/rainbow-sync/model"
 	"github.com/irisnet/rainbow-sync/utils"
-	"github.com/kaifei-bianjie/msg-parser/codec"
-	. "github.com/kaifei-bianjie/msg-parser/modules"
-	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
-	msgsdktypes "github.com/kaifei-bianjie/msg-parser/types"
+	"github.com/kaifei-bianjie/common-parser/codec"
+	msgsdktypes "github.com/kaifei-bianjie/common-parser/types"
+	. "github.com/kaifei-bianjie/cosmosmod-parser/modules"
+	"github.com/kaifei-bianjie/cosmosmod-parser/modules/ibc"
 	aTypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/types"
 	"golang.org/x/net/context"
@@ -288,9 +288,9 @@ func ParseTx(txBytes types.Tx, txResult *aTypes.ResponseDeliverTx, block *types.
 
 }
 
-//unique index: (height,tx_index)
-//txIndex: max value is 9999
-//return height*10000+tx_index
+// unique index: (height,tx_index)
+// txIndex: max value is 9999
+// return height*10000+tx_index
 func buildTxId(height int64, txIndex uint32) uint64 {
 	if txIndex > 9999 {
 		logger.Warn("build TxId failed for only support txIndex max value is 9999",

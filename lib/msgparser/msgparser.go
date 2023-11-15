@@ -3,14 +3,17 @@ package msgparser
 import (
 	"github.com/irisnet/rainbow-sync/lib/logger"
 	"github.com/irisnet/rainbow-sync/utils"
-	"github.com/kaifei-bianjie/msg-parser"
-	. "github.com/kaifei-bianjie/msg-parser/modules"
-	"github.com/kaifei-bianjie/msg-parser/modules/bank"
-	"github.com/kaifei-bianjie/msg-parser/modules/coinswap"
-	"github.com/kaifei-bianjie/msg-parser/modules/distribution"
-	"github.com/kaifei-bianjie/msg-parser/modules/ibc"
-	"github.com/kaifei-bianjie/msg-parser/modules/staking"
-	"github.com/kaifei-bianjie/msg-parser/types"
+	. "github.com/kaifei-bianjie/common-parser/modules"
+	"github.com/kaifei-bianjie/common-parser/types"
+	cosmosmod_parser "github.com/kaifei-bianjie/cosmosmod-parser"
+	. "github.com/kaifei-bianjie/cosmosmod-parser/modules"
+	"github.com/kaifei-bianjie/cosmosmod-parser/modules/bank"
+	"github.com/kaifei-bianjie/cosmosmod-parser/modules/distribution"
+	"github.com/kaifei-bianjie/cosmosmod-parser/modules/ibc"
+	"github.com/kaifei-bianjie/cosmosmod-parser/modules/staking"
+	irismod_parser "github.com/kaifei-bianjie/irismod-parser"
+	. "github.com/kaifei-bianjie/irismod-parser/modules"
+	"github.com/kaifei-bianjie/irismod-parser/modules/coinswap"
 	"strings"
 )
 
@@ -19,7 +22,8 @@ type MsgParser interface {
 }
 
 var (
-	_client msg_parser.MsgClient
+	irisModClient   irismod_parser.MsgClient
+	cosmosModClient cosmosmod_parser.MsgClient
 )
 
 func NewMsgParser(router Router) MsgParser {
@@ -98,7 +102,8 @@ func (parser *msgParser) HandleTxMsg(v types.SdkMsg) CustomMsgDocInfo {
 }
 
 func init() {
-	_client = msg_parser.NewMsgClient()
+	irisModClient = irismod_parser.NewMsgClient()
+	cosmosModClient = cosmosmod_parser.NewMsgClient()
 }
 
 func handleBank(v types.SdkMsg) CustomMsgDocInfo {
@@ -106,7 +111,7 @@ func handleBank(v types.SdkMsg) CustomMsgDocInfo {
 		msgDoc CustomMsgDocInfo
 		denoms []string
 	)
-	bankDocInfo, _ := _client.Bank.HandleTxMsg(v)
+	bankDocInfo, _ := cosmosModClient.Bank.HandleTxMsg(v)
 	msgDoc.MsgDocInfo = bankDocInfo
 	switch bankDocInfo.DocTxMsg.Type {
 	case MsgTypeSend:
@@ -129,7 +134,7 @@ func handleBank(v types.SdkMsg) CustomMsgDocInfo {
 	return msgDoc
 }
 func handleCrisis(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Crisis.HandleTxMsg(v)
+	docInfo, _ := cosmosModClient.Crisis.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
@@ -139,7 +144,7 @@ func handleDistribution(v types.SdkMsg) CustomMsgDocInfo {
 		msgDoc CustomMsgDocInfo
 		denoms []string
 	)
-	distrubutionDocInfo, _ := _client.Distribution.HandleTxMsg(v)
+	distrubutionDocInfo, _ := cosmosModClient.Distribution.HandleTxMsg(v)
 	msgDoc.MsgDocInfo = distrubutionDocInfo
 	switch distrubutionDocInfo.DocTxMsg.Type {
 	case MsgTypeMsgFundCommunityPool:
@@ -153,7 +158,7 @@ func handleDistribution(v types.SdkMsg) CustomMsgDocInfo {
 	return msgDoc
 }
 func handleSlashing(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Slashing.HandleTxMsg(v)
+	docInfo, _ := cosmosModClient.Slashing.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
@@ -163,7 +168,7 @@ func handleStaking(v types.SdkMsg) CustomMsgDocInfo {
 		msgDoc CustomMsgDocInfo
 		denoms []string
 	)
-	stakingDocInfo, _ := _client.Staking.HandleTxMsg(v)
+	stakingDocInfo, _ := cosmosModClient.Staking.HandleTxMsg(v)
 	msgDoc.MsgDocInfo = stakingDocInfo
 	switch stakingDocInfo.DocTxMsg.Type {
 	case MsgTypeStakeDelegate:
@@ -180,13 +185,13 @@ func handleStaking(v types.SdkMsg) CustomMsgDocInfo {
 	return msgDoc
 }
 func handleEvidence(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Evidence.HandleTxMsg(v)
+	docInfo, _ := cosmosModClient.Evidence.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 func handleGov(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Gov.HandleTxMsg(v)
+	docInfo, _ := cosmosModClient.Gov.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
@@ -196,7 +201,7 @@ func handleIbc(v types.SdkMsg) CustomMsgDocInfo {
 		msgDoc CustomMsgDocInfo
 		denoms []string
 	)
-	ibcDocInfo, _ := _client.Ibc.HandleTxMsg(v)
+	ibcDocInfo, _ := cosmosModClient.Ibc.HandleTxMsg(v)
 	msgDoc.MsgDocInfo = ibcDocInfo
 	switch ibcDocInfo.DocTxMsg.Type {
 	case MsgTypeIBCTransfer:
@@ -229,49 +234,49 @@ func handleIbc(v types.SdkMsg) CustomMsgDocInfo {
 }
 
 func handleNft(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Nft.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Nft.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleService(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Service.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Service.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleToken(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Token.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Token.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleOracle(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Oracle.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Oracle.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleRecord(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Record.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Record.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleRandom(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Random.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Random.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
 }
 
 func handleHtlc(v types.SdkMsg) CustomMsgDocInfo {
-	docInfo, _ := _client.Htlc.HandleTxMsg(v)
+	docInfo, _ := irisModClient.Htlc.HandleTxMsg(v)
 	var msgDoc CustomMsgDocInfo
 	msgDoc.MsgDocInfo = docInfo
 	return msgDoc
@@ -282,7 +287,7 @@ func handleCoinswap(v types.SdkMsg) CustomMsgDocInfo {
 		msgDoc CustomMsgDocInfo
 		denoms []string
 	)
-	coinswapDocInfo, _ := _client.Coinswap.HandleTxMsg(v)
+	coinswapDocInfo, _ := irisModClient.Coinswap.HandleTxMsg(v)
 	msgDoc.MsgDocInfo = coinswapDocInfo
 	switch coinswapDocInfo.DocTxMsg.Type {
 	case MsgTypeSwapOrder:
