@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/irisnet/rainbow-sync/db"
-	"github.com/kaifei-bianjie/msg-parser/types"
+	"github.com/kaifei-bianjie/common-parser/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
